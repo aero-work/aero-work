@@ -1,0 +1,166 @@
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import type { ToolCall, ToolCallStatus, ToolKind } from "@/types/acp";
+import {
+  FileText,
+  Pencil,
+  Trash2,
+  Move,
+  Search,
+  Terminal,
+  Brain,
+  Globe,
+  ToggleLeft,
+  Circle,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Clock,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
+
+interface ToolCallCardProps {
+  toolCall: ToolCall;
+}
+
+const kindIcons: Record<ToolKind, React.ComponentType<{ className?: string }>> = {
+  read: FileText,
+  edit: Pencil,
+  delete: Trash2,
+  move: Move,
+  search: Search,
+  execute: Terminal,
+  think: Brain,
+  fetch: Globe,
+  switch_mode: ToggleLeft,
+  other: Circle,
+};
+
+const statusConfig: Record<
+  ToolCallStatus,
+  { icon: React.ComponentType<{ className?: string }>; className: string; label: string }
+> = {
+  pending: { icon: Clock, className: "text-muted-foreground", label: "Pending" },
+  in_progress: { icon: Loader2, className: "text-blue-500 animate-spin", label: "Running" },
+  completed: { icon: CheckCircle, className: "text-green-500", label: "Completed" },
+  failed: { icon: XCircle, className: "text-destructive", label: "Failed" },
+};
+
+export function ToolCallCard({ toolCall }: ToolCallCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const kind = toolCall.kind || "other";
+  const status = toolCall.status || "pending";
+
+  const KindIcon = kindIcons[kind];
+  const { icon: StatusIcon, className: statusClassName } = statusConfig[status];
+
+  const hasContent =
+    toolCall.rawInput != null ||
+    (toolCall.content && toolCall.content.length > 0);
+
+  return (
+    <div className="border rounded-lg bg-muted/30 overflow-hidden">
+      {/* Header */}
+      <div
+        className={cn(
+          "flex items-center gap-2 px-3 py-2",
+          hasContent && "cursor-pointer hover:bg-muted/50"
+        )}
+        onClick={() => hasContent && setIsExpanded(!isExpanded)}
+      >
+        {hasContent && (
+          <Button variant="ghost" size="icon" className="h-5 w-5 p-0">
+            {isExpanded ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+          </Button>
+        )}
+
+        <KindIcon className="w-4 h-4 text-muted-foreground" />
+
+        <span className="flex-1 text-sm font-medium truncate">
+          {toolCall.title}
+        </span>
+
+        <StatusIcon className={cn("w-4 h-4", statusClassName)} />
+      </div>
+
+      {/* Expanded Content */}
+      {isExpanded && hasContent && (
+        <div className="border-t px-3 py-2 space-y-2">
+          {/* Raw Input */}
+          {toolCall.rawInput != null && (
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Input</div>
+              <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-40 font-mono">
+                {typeof toolCall.rawInput === "string"
+                  ? toolCall.rawInput
+                  : JSON.stringify(toolCall.rawInput, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {/* Content/Output */}
+          {toolCall.content && toolCall.content.length > 0 && (
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Output</div>
+              <div className="space-y-1">
+                {toolCall.content.map((item, index) => (
+                  <div key={index}>
+                    {item.type === "content" && "content" in item && (
+                      <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-40 font-mono whitespace-pre-wrap">
+                        {"text" in item.content
+                          ? item.content.text.slice(0, 1000) + (item.content.text.length > 1000 ? "..." : "")
+                          : "[Image]"}
+                      </pre>
+                    )}
+                    {item.type === "diff" && (
+                      <div className="text-xs bg-muted p-2 rounded font-mono">
+                        <div className="text-muted-foreground mb-1">
+                          {item.path}
+                        </div>
+                        <pre className="overflow-auto max-h-40 text-green-600 whitespace-pre-wrap">
+                          {item.newText.slice(0, 1000) + (item.newText.length > 1000 ? "..." : "")}
+                        </pre>
+                      </div>
+                    )}
+                    {item.type === "terminal" && (
+                      <div className="text-xs bg-zinc-900 text-green-400 p-2 rounded font-mono">
+                        Terminal: {item.terminalId}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Locations */}
+          {toolCall.locations && toolCall.locations.length > 0 && (
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">
+                Locations
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {toolCall.locations.map((loc, index) => (
+                  <span
+                    key={index}
+                    className="text-xs bg-muted px-2 py-0.5 rounded font-mono"
+                  >
+                    {loc.path}
+                    {loc.line && `:${loc.line}`}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

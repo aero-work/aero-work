@@ -1,0 +1,306 @@
+# Aero Code - Technology Stack
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Aero Code                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                    Frontend (React/TS)                    │  │
+│  │                                                           │  │
+│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────────────┐ │  │
+│  │  │  Chat   │ │  Files  │ │Terminal │ │    Settings     │ │  │
+│  │  │  View   │ │ Manager │ │  Panel  │ │     Panel       │ │  │
+│  │  └────┬────┘ └────┬────┘ └────┬────┘ └────────┬────────┘ │  │
+│  │       │           │           │               │          │  │
+│  │  ┌────┴───────────┴───────────┴───────────────┴────────┐ │  │
+│  │  │              State Management (Zustand)              │ │  │
+│  │  └─────────────────────────┬───────────────────────────┘ │  │
+│  │                            │                              │  │
+│  │  ┌─────────────────────────┴───────────────────────────┐ │  │
+│  │  │              Service Layer                          │ │  │
+│  │  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌───────────┐ │ │  │
+│  │  │  │ACP Svc  │ │File Svc │ │Term Svc │ │Config Svc │ │ │  │
+│  │  │  └────┬────┘ └────┬────┘ └────┬────┘ └─────┬─────┘ │ │  │
+│  │  └───────┼───────────┼───────────┼────────────┼───────┘ │  │
+│  └──────────┼───────────┼───────────┼────────────┼─────────┘  │
+│             │           │           │            │            │
+│  ┌──────────┴───────────┴───────────┴────────────┴─────────┐  │
+│  │              Transport Abstraction Layer                 │  │
+│  │  ┌─────────────────────┐  ┌─────────────────────────┐   │  │
+│  │  │   Tauri IPC Bridge  │  │   WebSocket Transport   │   │  │
+│  │  │  (Desktop Mode)     │  │   (Web Mode)            │   │  │
+│  │  └──────────┬──────────┘  └───────────┬─────────────┘   │  │
+│  └─────────────┼─────────────────────────┼─────────────────┘  │
+│                │                         │                    │
+├────────────────┴─────────────────────────┴────────────────────┤
+│                                                                │
+│  ┌──────────────────────────────────────────────────────────┐ │
+│  │              Unified Rust Backend                         │ │
+│  │                                                           │ │
+│  │  ┌─────────────────────┐  ┌─────────────────────────┐   │ │
+│  │  │   Tauri Commands    │  │   WebSocket Server      │   │ │
+│  │  │   (IPC Handler)     │  │   (axum/tungstenite)    │   │ │
+│  │  └──────────┬──────────┘  └───────────┬─────────────┘   │ │
+│  │             │                         │                  │ │
+│  │  ┌──────────┴─────────────────────────┴───────────────┐ │ │
+│  │  │              Core Services (Shared)                 │ │ │
+│  │  │  ┌─────────────┐ ┌─────────────┐ ┌──────────────┐  │ │ │
+│  │  │  │   Agent     │ │    ACP      │ │   Session    │  │ │ │
+│  │  │  │   Manager   │ │   Protocol  │ │   Manager    │  │ │ │
+│  │  │  └──────┬──────┘ └──────┬──────┘ └──────┬───────┘  │ │ │
+│  │  └─────────┼───────────────┼───────────────┼──────────┘ │ │
+│  │            │               │               │            │ │
+│  │  ┌─────────┴───────────────┴───────────────┴──────────┐ │ │
+│  │  │              Terminal Manager (PTY)                 │ │ │
+│  │  └─────────────────────────┬───────────────────────────┘ │ │
+│  └────────────────────────────┼─────────────────────────────┘ │
+│                               │                               │
+└───────────────────────────────┼───────────────────────────────┘
+                                │
+               ┌────────────────┴────────────────┐
+               │       AI Agent Process          │
+               │    (Claude Code, Aider, etc.)   │
+               │         stdin/stdout            │
+               └─────────────────────────────────┘
+```
+
+## Frontend Stack
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 18+ | UI framework |
+| TypeScript | 5+ | Type safety |
+| Tailwind CSS | 3+ | Utility-first styling |
+| shadcn/ui | latest | Component library (Radix UI based) |
+| Zustand | 4+ | State management with immer middleware |
+| xterm.js | 5+ | Terminal emulator |
+| Monaco Editor | latest | Code editing (or CodeMirror) |
+| Vite | 5+ | Build tool and dev server |
+
+### Frontend Patterns
+
+- **State Management**: Zustand stores with immer for immutable updates
+- **Component Structure**: Functional components with hooks
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **Transport Abstraction**: Factory pattern for Tauri IPC / WebSocket switching
+
+## Backend Stack (Tauri/Rust)
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Tauri | 2.0 | Desktop application framework |
+| Rust | 1.70+ | Backend language |
+| Axum | 0.7 | HTTP/WebSocket server |
+| tokio | 1.0 | Async runtime |
+| serde | 1.0 | JSON serialization |
+| serde_json | 1.0 | JSON parsing |
+| uuid | 1.0 | UUID generation |
+| tracing | 0.1 | Logging and diagnostics |
+| portable-pty | 0.8 | Cross-platform PTY support |
+| futures | 0.3 | Async stream utilities |
+
+### Rust Cargo Features
+
+```toml
+[features]
+default = ["websocket"]
+websocket = []  # Enable WebSocket server for web mode
+```
+
+## Development Tools
+
+| Tool | Purpose |
+|------|---------|
+| bun | Package manager and runtime |
+| ESLint | JavaScript/TypeScript linting |
+| Prettier | Code formatting |
+| Clippy | Rust linting |
+| Vitest | Frontend unit testing |
+| cargo test | Backend unit testing |
+
+### Running the App
+
+```bash
+# Install dependencies
+bun install
+
+# Development mode
+bun run tauri dev
+
+# Production build
+bun run tauri build
+```
+
+## Protocol: Agent Client Protocol (ACP)
+
+Communication between Aero Code and AI agents uses the **Agent Client Protocol**:
+
+- **Transport**: JSON-RPC 2.0 over stdio (agent subprocess)
+- **Protocol Version**: 1
+- **Reference**: https://agentclientprotocol.com/
+
+### Key ACP Concepts
+
+| Concept | Description |
+|---------|-------------|
+| Session | A conversation context with working directory |
+| ContentBlock | Text, image, resource, or resource_link |
+| SessionUpdate | Streaming updates (message chunks, tool calls, plan updates) |
+| ToolCall | Agent tool execution with status tracking |
+| Permission | Client-side approval for sensitive operations |
+
+## Deployment Modes
+
+### Desktop Mode
+- Frontend runs in Tauri WebView
+- Communication via Tauri IPC (`invoke()` / `listen()`)
+- Direct file system and terminal access
+- Agent processes spawned locally via stdio
+
+### Web Mode
+- Frontend served as static files or accessed remotely
+- Communication via WebSocket (Axum server embedded in Tauri backend)
+- Same Rust backend handles all operations
+- Optional JWT authentication
+- Can run headless (no WebView window)
+
+## Cargo Dependencies
+
+```toml
+[dependencies]
+tauri = { version = "2", features = ["devtools"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+tracing = "0.1"
+
+# WebSocket server
+axum = { version = "0.7", features = ["ws"] }
+futures = "0.3"
+tower = "0.4"
+
+# PTY support
+portable-pty = "0.8"
+```
+
+## NPM Dependencies (Frontend)
+
+```json
+{
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "zustand": "^4.0.0",
+    "@tauri-apps/api": "^2.0.0",
+    "xterm": "^5.0.0",
+    "xterm-addon-fit": "^0.8.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "tailwindcss": "^3.0.0",
+    "autoprefixer": "^10.0.0",
+    "postcss": "^8.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "vitest": "^1.0.0"
+  }
+}
+```
+
+## Technical Constraints
+
+### Performance Requirements
+- Message streaming with < 50ms latency perception
+- Virtualized lists for 1000+ messages
+- Terminal output buffering (batch updates)
+
+### Security Requirements
+- Path validation to prevent directory traversal
+- All external commands require permission
+- HTTPS required for web mode in production
+- JWT token expiration and refresh
+
+### Compatibility
+- macOS 10.15+, Windows 10+, Ubuntu 20.04+
+- Modern browsers (Chrome 90+, Firefox 90+, Safari 14+)
+- Node.js 18+ for agent processes
+
+## State Management (Zustand)
+
+### Store Interfaces
+
+```typescript
+// Session Store - manages chat sessions
+interface SessionStore {
+  sessions: Map<string, SessionState>;
+  activeSessionId: string | null;
+  createSession: (workDir: string) => Promise<string>;
+  sendPrompt: (sessionId: string, content: ContentBlock[]) => Promise<void>;
+  cancelPrompt: (sessionId: string) => Promise<void>;
+}
+
+// Agent Store - manages agent connections
+interface AgentStore {
+  agents: AgentConfig[];
+  activeAgentId: string | null;
+  connectionStatus: ConnectionStatus;
+  connect: (agentId: string) => Promise<void>;
+  disconnect: () => Promise<void>;
+}
+
+// File Store - manages file browser state
+interface FileStore {
+  workingDirectory: string;
+  fileTree: FileNode[];
+  openFiles: OpenFile[];
+  setWorkingDirectory: (path: string) => Promise<void>;
+  openFile: (path: string) => Promise<void>;
+}
+
+// Permission Store - manages permission requests
+interface PermissionStore {
+  pendingRequests: PermissionRequest[];
+  rules: PermissionRule[];
+  respond: (requestId: string, response: PermissionResponse) => void;
+}
+```
+
+## Performance Optimizations
+
+### Message Streaming
+- Use `requestAnimationFrame` for batching DOM updates
+- Virtualize long message lists with `react-window`
+- Debounce rapid state updates
+
+### File Operations
+- Lazy-load file contents
+- Cache recently viewed files
+- Use web workers for large file parsing
+
+### Terminal
+- Buffer terminal output and batch updates
+- Use canvas-based rendering (xterm.js default)
+- Limit scrollback buffer size
+
+## Error Handling
+
+### Connection Errors
+- Auto-reconnect with exponential backoff
+- Queue messages during disconnection
+- Show connection status indicator
+
+### Agent Errors
+- Display error messages in chat
+- Allow retry for failed operations
+- Log errors for debugging
+
+### Permission Errors
+- Handle cancelled permissions gracefully
+- Show reason for denied permissions
+- Allow editing permission rules
