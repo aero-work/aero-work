@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "AI Code Agent Application"
 authors = ["Aero Code Team"]
 edition = "2021"
+default-run = "aero-code"
 
 [lib]
 name = "aero_code_lib"
