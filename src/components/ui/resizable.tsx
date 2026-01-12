@@ -33,21 +33,17 @@ function ResizablePanel({
 function ResizableHandle({
   className,
   ...props
-}: Omit<React.ComponentProps<typeof Separator>, 'withHandle'>) {
+}: React.ComponentProps<typeof Separator>) {
   return (
     <Separator
       className={cn(
-        // Base styles - thin line that expands on hover
-        "bg-border relative flex items-center justify-center transition-colors",
-        // Horizontal separator (between left/right panels)
-        "w-px hover:w-1 hover:bg-primary/40 active:bg-primary/60 cursor-col-resize",
-        // Wider invisible hit area for easier grabbing
-        "after:absolute after:inset-y-0 after:left-1/2 after:w-4 after:-translate-x-1/2",
-        // Vertical separator (between top/bottom panels)
-        "data-[orientation=vertical]:w-full data-[orientation=vertical]:h-px",
-        "data-[orientation=vertical]:hover:h-1 data-[orientation=vertical]:cursor-row-resize",
-        "data-[orientation=vertical]:after:inset-x-0 data-[orientation=vertical]:after:top-1/2 data-[orientation=vertical]:after:h-4 data-[orientation=vertical]:after:w-full",
-        "data-[orientation=vertical]:after:left-0 data-[orientation=vertical]:after:-translate-y-1/2 data-[orientation=vertical]:after:translate-x-0",
+        // Base styles
+        "bg-border relative shrink-0 select-none touch-none transition-colors",
+        "hover:bg-primary/40 active:bg-primary/60",
+        // Horizontal (default): vertical line between left/right panels
+        "w-1 cursor-col-resize",
+        // Vertical: horizontal line between top/bottom panels
+        "data-[orientation=vertical]:h-1 data-[orientation=vertical]:w-full data-[orientation=vertical]:cursor-row-resize",
         className
       )}
       {...props}
