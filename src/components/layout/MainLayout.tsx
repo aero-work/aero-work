@@ -5,7 +5,6 @@ import { ChatView } from "@/components/chat";
 import { EditorPanel } from "@/components/editor";
 import { TerminalPanel } from "@/components/terminal";
 import { PermissionDialog } from "@/components/common/PermissionDialog";
-import { ThreePanelLayout } from "@/components/ui/resizable";
 import { useFileStore } from "@/stores/fileStore";
 import { useTerminalStore } from "@/stores/terminalStore";
 import {
@@ -18,46 +17,72 @@ export function MainLayout() {
   const hasOpenFiles = useFileStore((state) => state.openFiles.length > 0);
   const isTerminalPanelOpen = useTerminalStore((state) => state.isTerminalPanelOpen);
 
-  const renderMainContent = () => {
+  // Main horizontal content (sidebar + chat + optional editor)
+  const renderHorizontalContent = () => {
     if (hasOpenFiles) {
+      // Three-panel layout: sidebar | chat | editor
       return (
-        <ThreePanelLayout
-          sidebar={<Sidebar />}
-          center={<ChatView />}
-          right={<EditorPanel />}
-        />
+        <ResizablePanelGroup direction="horizontal" className="h-full">
+          {/* Sidebar */}
+          <ResizablePanel defaultSize={15} minSize={10} maxSize={30}>
+            <div className="h-full border-r overflow-hidden">
+              <Sidebar />
+            </div>
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+
+          {/* Center (chat) */}
+          <ResizablePanel defaultSize={45} minSize={20}>
+            <div className="h-full border-r overflow-hidden">
+              <ChatView />
+            </div>
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+
+          {/* Right panel (editor) */}
+          <ResizablePanel defaultSize={40} minSize={20} maxSize={60}>
+            <div className="h-full overflow-hidden">
+              <EditorPanel />
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       );
     }
 
+    // Two-panel layout: sidebar | chat
     return (
-      <div className="flex h-full">
-        {/* Two-panel layout when no files open */}
-        <div className="w-60 border-r flex-shrink-0">
-          <Sidebar />
-        </div>
-        <div className="flex-1 min-w-0">
-          <ChatView />
-        </div>
-      </div>
+      <ResizablePanelGroup direction="horizontal" className="h-full">
+        <ResizablePanel defaultSize={20} minSize={12} maxSize={35}>
+          <div className="h-full border-r overflow-hidden">
+            <Sidebar />
+          </div>
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={80} minSize={50}>
+          <div className="h-full overflow-hidden">
+            <ChatView />
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     );
   };
 
   return (
     <div className="h-screen flex flex-col">
       <Header />
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 min-h-0 overflow-hidden">
         {isTerminalPanelOpen ? (
-          <ResizablePanelGroup direction="vertical">
-            <ResizablePanel defaultSize={70} minSize={30}>
-              {renderMainContent()}
+          <ResizablePanelGroup direction="vertical" className="h-full">
+            <ResizablePanel defaultSize={65} minSize={20}>
+              {renderHorizontalContent()}
             </ResizablePanel>
             <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={30} minSize={15} maxSize={60}>
+            <ResizablePanel defaultSize={35} minSize={10} maxSize={80}>
               <TerminalPanel />
             </ResizablePanel>
           </ResizablePanelGroup>
         ) : (
-          renderMainContent()
+          renderHorizontalContent()
         )}
       </main>
       <StatusBar />

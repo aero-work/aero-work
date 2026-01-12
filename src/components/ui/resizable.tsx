@@ -41,72 +41,31 @@ function ResizableHandle({
   return (
     <Separator
       className={cn(
-        "bg-border focus-visible:ring-ring relative flex w-px items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden data-[orientation=vertical]:h-px data-[orientation=vertical]:w-full data-[orientation=vertical]:after:left-0 data-[orientation=vertical]:after:h-1 data-[orientation=vertical]:after:w-full data-[orientation=vertical]:after:translate-x-0 data-[orientation=vertical]:after:-translate-y-1/2 [&[data-orientation=vertical]>div]:rotate-90",
+        // Base styles
+        "bg-border relative flex items-center justify-center",
+        // Horizontal separator (between left/right panels)
+        "w-[3px] cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors",
+        // Wider hit area
+        "after:absolute after:inset-y-0 after:left-1/2 after:w-3 after:-translate-x-1/2",
+        // Vertical separator (between top/bottom panels)
+        "data-[orientation=vertical]:h-[3px] data-[orientation=vertical]:w-full data-[orientation=vertical]:cursor-row-resize",
+        "data-[orientation=vertical]:after:left-0 data-[orientation=vertical]:after:h-3 data-[orientation=vertical]:after:w-full",
+        "data-[orientation=vertical]:after:translate-x-0 data-[orientation=vertical]:after:-translate-y-1/2",
+        // Handle icon rotation for vertical
+        "[&[data-orientation=vertical]>div]:rotate-90",
+        // Focus styles
+        "focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden",
         className
       )}
       {...props}
     >
       {withHandle && (
-        <div className="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border">
-          <GripVertical className="size-2.5" />
+        <div className="bg-muted hover:bg-accent z-10 flex h-6 w-4 items-center justify-center rounded-sm border shadow-sm transition-colors">
+          <GripVertical className="size-3 text-muted-foreground" />
         </div>
       )}
     </Separator>
   )
 }
 
-// Three-panel layout: sidebar | center | right panel
-interface ThreePanelLayoutProps {
-  sidebar: React.ReactNode
-  center: React.ReactNode
-  right: React.ReactNode
-  sidebarDefaultSize?: number
-  sidebarMinSize?: number
-  sidebarMaxSize?: number
-  rightDefaultSize?: number
-  rightMinSize?: number
-  rightMaxSize?: number
-}
-
-function ThreePanelLayout({
-  sidebar,
-  center,
-  right,
-  sidebarDefaultSize = 15,
-  sidebarMinSize = 10,
-  sidebarMaxSize = 25,
-  rightDefaultSize = 35,
-  rightMinSize = 20,
-  rightMaxSize = 50,
-}: ThreePanelLayoutProps) {
-  return (
-    <ResizablePanelGroup direction="horizontal" className="h-full">
-      {/* Sidebar */}
-      <ResizablePanel
-        defaultSize={sidebarDefaultSize}
-        minSize={sidebarMinSize}
-        maxSize={sidebarMaxSize}
-      >
-        <div className="h-full border-r">{sidebar}</div>
-      </ResizablePanel>
-      <ResizableHandle />
-
-      {/* Center (chat) */}
-      <ResizablePanel defaultSize={100 - sidebarDefaultSize - rightDefaultSize} minSize={25}>
-        <div className="h-full border-r">{center}</div>
-      </ResizablePanel>
-      <ResizableHandle />
-
-      {/* Right panel (editor) */}
-      <ResizablePanel
-        defaultSize={rightDefaultSize}
-        minSize={rightMinSize}
-        maxSize={rightMaxSize}
-      >
-        {right}
-      </ResizablePanel>
-    </ResizablePanelGroup>
-  )
-}
-
-export { ResizablePanelGroup, ResizablePanel, ResizableHandle, ThreePanelLayout }
+export { ResizablePanelGroup, ResizablePanel, ResizableHandle }
