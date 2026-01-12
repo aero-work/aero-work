@@ -20,12 +20,14 @@ aero-code/
 │   │   ├── core/                 # Core business logic
 │   │   │   ├── mod.rs
 │   │   │   ├── agent.rs          # AgentManager (spawn, message handling)
-│   │   │   └── state.rs          # AppState (shared state)
+│   │   │   ├── state.rs          # AppState (shared state)
+│   │   │   └── terminal.rs       # TerminalManager (PTY management)
 │   │   └── commands/             # Tauri IPC commands
 │   │       ├── mod.rs
 │   │       ├── agent.rs          # connect, disconnect, initialize, respond_permission
 │   │       ├── session.rs        # create_session, send_prompt, cancel, set_mode
-│   │       └── file.rs           # list_directory, read_file, write_file, create, delete, rename
+│   │       ├── file.rs           # list_directory, read_file, write_file, create, delete, rename
+│   │       └── terminal.rs       # create_terminal, write, resize, kill, list
 │   ├── Cargo.toml
 │   └── tauri.conf.json
 ├── src/                          # Frontend (React/TypeScript)
@@ -42,6 +44,10 @@ aero-code/
 │   │   │   ├── MessageList.tsx   # Message list with auto-scroll
 │   │   │   ├── MessageItem.tsx   # Single message rendering
 │   │   │   └── ToolCallCard.tsx  # Tool execution with expand/collapse
+│   │   ├── terminal/             # Terminal components
+│   │   │   ├── index.ts          # Barrel export
+│   │   │   ├── XTerminal.tsx     # xterm.js terminal wrapper
+│   │   │   └── TerminalPanel.tsx # Terminal panel with tabs
 │   │   ├── common/               # Shared UI components
 │   │   │   ├── PermissionDialog.tsx  # Permission request modal
 │   │   │   └── ProjectSelector.tsx   # Project/directory picker
@@ -55,7 +61,8 @@ aero-code/
 │   ├── stores/                   # Zustand state stores
 │   │   ├── sessionStore.ts       # Sessions, messages, tool calls
 │   │   ├── agentStore.ts         # Agent connections, agent info
-│   │   └── fileStore.ts          # Working directory, recent projects
+│   │   ├── fileStore.ts          # Working directory, recent projects
+│   │   └── terminalStore.ts      # Terminal instances and state
 │   ├── services/                 # Backend communication layer
 │   │   ├── transport/
 │   │   │   ├── index.ts          # Transport factory

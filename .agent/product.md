@@ -185,7 +185,7 @@ Build a unified interface for AI-powered code development that works seamlessly 
 - [x] File browser component (FileTree)
 - [x] Code viewer with syntax highlighting (Monaco Editor)
 - [x] File operations (create, delete, rename via context menu)
-- [ ] Terminal integration (xterm.js + PTY)
+- [x] Terminal integration (xterm.js + PTY)
 - [ ] Diff viewer for file changes
 
 ### Phase 3: Session Management
