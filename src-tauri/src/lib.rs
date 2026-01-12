@@ -1,6 +1,8 @@
 pub mod acp;
 pub mod commands;
 pub mod core;
+#[cfg(feature = "websocket")]
+pub mod server;
 
 use std::sync::Arc;
 use tauri::{Emitter, Manager};
@@ -69,6 +71,23 @@ pub fn run() {
                     }
                 }
             });
+
+            // Start WebSocket server if enabled
+            #[cfg(feature = "websocket")]
+            {
+                let ws_state = app.state::<Arc<AppState>>().inner().clone();
+                let port = std::env::var("AERO_WS_PORT")
+                    .ok()
+                    .and_then(|p| p.parse().ok())
+                    .unwrap_or(8765);
+
+                tauri::async_runtime::spawn(async move {
+                    let server = server::WebSocketServer::new(ws_state);
+                    if let Err(e) = server.start(port).await {
+                        tracing::error!("WebSocket server error: {}", e);
+                    }
+                });
+            }
 
             Ok(())
         })

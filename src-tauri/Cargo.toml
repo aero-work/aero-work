@@ -28,3 +28,12 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 async-trait = "0.1"
 parking_lot = "0.12"
 portable-pty = "0.8"
+
+# WebSocket server
+axum = { version = "0.7", features = ["ws"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+[features]
+default = ["websocket"]
+websocket = []

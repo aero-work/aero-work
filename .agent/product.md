@@ -193,9 +193,9 @@ Build a unified interface for AI-powered code development that works seamlessly 
 - [ ] Session persistence (save/restore)
 - [ ] Session fork and resume
 
-### Phase 4: Web Server Mode
-- [ ] Axum HTTP server embedded in Tauri
-- [ ] WebSocket transport implementation
+### Phase 4: Web Server Mode (In Progress)
+- [x] Axum HTTP server embedded in Tauri
+- [x] WebSocket transport implementation
 - [ ] Authentication system (JWT)
 - [ ] Headless mode (no window)
 

@@ -17,6 +17,9 @@ aero-code/
 │   │   │   ├── mod.rs
 │   │   │   ├── types.rs          # Protocol types (JsonRpc, ContentBlock, etc.)
 │   │   │   └── client.rs         # ACP client (JSON-RPC over stdio)
+│   │   ├── server/               # WebSocket server for web mode
+│   │   │   ├── mod.rs
+│   │   │   └── websocket.rs      # Axum WebSocket server (JSON-RPC)
 │   │   ├── core/                 # Core business logic
 │   │   │   ├── mod.rs
 │   │   │   ├── agent.rs          # AgentManager (spawn, message handling)
@@ -71,9 +74,10 @@ aero-code/
 │   │   └── terminalStore.ts      # Terminal instances and state
 │   ├── services/                 # Backend communication layer
 │   │   ├── transport/
-│   │   │   ├── index.ts          # Transport factory
+│   │   │   ├── index.ts          # Transport factory (auto-detect mode)
 │   │   │   ├── types.ts          # Transport interface
-│   │   │   └── tauri.ts          # TauriTransport (invoke/listen)
+│   │   │   ├── tauri.ts          # TauriTransport (invoke/listen)
+│   │   │   └── websocket.ts      # WebSocketTransport (JSON-RPC over WS)
 │   │   └── api.ts                # AgentAPI class (high-level wrapper)
 │   ├── types/
 │   │   └── acp.ts                # ACP protocol types (must match Rust)
