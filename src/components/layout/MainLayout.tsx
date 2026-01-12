@@ -24,23 +24,23 @@ export function MainLayout() {
       return (
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Sidebar */}
-          <ResizablePanel defaultSize={15} minSize={10} maxSize={30}>
+          <ResizablePanel defaultSize={18} minSize={5} maxSize={40}>
             <div className="h-full border-r overflow-hidden">
               <Sidebar />
             </div>
           </ResizablePanel>
-          <ResizableHandle withHandle />
+          <ResizableHandle />
 
           {/* Center (chat) */}
-          <ResizablePanel defaultSize={45} minSize={20}>
+          <ResizablePanel defaultSize={42} minSize={15}>
             <div className="h-full border-r overflow-hidden">
               <ChatView />
             </div>
           </ResizablePanel>
-          <ResizableHandle withHandle />
+          <ResizableHandle />
 
           {/* Right panel (editor) */}
-          <ResizablePanel defaultSize={40} minSize={20} maxSize={60}>
+          <ResizablePanel defaultSize={40} minSize={15}>
             <div className="h-full overflow-hidden">
               <EditorPanel />
             </div>
@@ -52,13 +52,13 @@ export function MainLayout() {
     // Two-panel layout: sidebar | chat
     return (
       <ResizablePanelGroup direction="horizontal" className="h-full">
-        <ResizablePanel defaultSize={20} minSize={12} maxSize={35}>
+        <ResizablePanel defaultSize={18} minSize={5} maxSize={50}>
           <div className="h-full border-r overflow-hidden">
             <Sidebar />
           </div>
         </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={80} minSize={50}>
+        <ResizableHandle />
+        <ResizablePanel defaultSize={82} minSize={30}>
           <div className="h-full overflow-hidden">
             <ChatView />
           </div>
@@ -73,11 +73,11 @@ export function MainLayout() {
       <main className="flex-1 min-h-0 overflow-hidden">
         {isTerminalPanelOpen ? (
           <ResizablePanelGroup direction="vertical" className="h-full">
-            <ResizablePanel defaultSize={65} minSize={20}>
+            <ResizablePanel defaultSize={70} minSize={15}>
               {renderHorizontalContent()}
             </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={35} minSize={10} maxSize={80}>
+            <ResizableHandle />
+            <ResizablePanel defaultSize={30} minSize={10} maxSize={85}>
               <TerminalPanel />
             </ResizablePanel>
           </ResizablePanelGroup>
