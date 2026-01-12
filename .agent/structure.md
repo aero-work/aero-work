@@ -48,6 +48,12 @@ aero-code/
 │   │   │   ├── index.ts          # Barrel export
 │   │   │   ├── XTerminal.tsx     # xterm.js terminal wrapper
 │   │   │   └── TerminalPanel.tsx # Terminal panel with tabs
+│   │   ├── editor/               # Code editor components
+│   │   │   ├── index.ts          # Barrel export
+│   │   │   ├── FileTree.tsx      # File browser with context menu
+│   │   │   ├── CodeEditor.tsx    # Monaco editor wrapper
+│   │   │   ├── EditorTabs.tsx    # Open file tabs
+│   │   │   └── EditorPanel.tsx   # Editor panel container
 │   │   ├── common/               # Shared UI components
 │   │   │   ├── PermissionDialog.tsx  # Permission request modal
 │   │   │   └── ProjectSelector.tsx   # Project/directory picker

@@ -77,7 +77,8 @@
 | shadcn/ui | latest | Component library (Radix UI based) |
 | Zustand | 4+ | State management with immer middleware |
 | xterm.js | 5+ | Terminal emulator |
-| Monaco Editor | latest | Code editing (or CodeMirror) |
+| Monaco Editor | latest | Code editing with syntax highlighting |
+| react-resizable-panels | 4+ | Resizable panel layout |
 | Vite | 5+ | Build tool and dev server |
 
 ### Frontend Patterns
