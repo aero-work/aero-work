@@ -155,6 +155,8 @@ export function Sidebar() {
     setResumingSessionId(sessionInfo.id);
     try {
       await agentAPI.resumeSession(sessionInfo.id, sessionInfo.cwd || currentWorkingDir);
+      // Refresh sessions list to show the session as active
+      await agentAPI.listSessions(currentWorkingDir, 20, 0);
     } catch (error) {
       console.error("Failed to resume session:", error);
     } finally {
@@ -168,6 +170,8 @@ export function Sidebar() {
     setResumingSessionId(sessionInfo.id);
     try {
       await agentAPI.forkSession(sessionInfo.id, sessionInfo.cwd || currentWorkingDir);
+      // Refresh sessions list to show the forked session as active
+      await agentAPI.listSessions(currentWorkingDir, 20, 0);
     } catch (error) {
       console.error("Failed to fork session:", error);
     } finally {
@@ -185,7 +189,7 @@ export function Sidebar() {
   const historicalSessions = availableSessions.filter((s) => !s.active);
 
   return (
-    <div className="h-full flex flex-col bg-muted/30 overflow-hidden">
+    <div className="h-full flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border overflow-hidden">
         {/* Sessions Section */}
         <CollapsibleSection
           title="Sessions"

@@ -2,6 +2,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { TransportProvider } from "@/services/transport";
 import { useAutoConnect } from "@/hooks/useAutoConnect";
 import { useZoom } from "@/hooks/useZoom";
+import { useTheme } from "@/hooks/useTheme";
 
 function AppContent() {
   // Auto-connect to backend when app loads
@@ -9,6 +10,9 @@ function AppContent() {
 
   // Enable Cmd+/Cmd- zoom shortcuts
   useZoom();
+
+  // Apply theme to document
+  useTheme();
 
   return <MainLayout />;
 }

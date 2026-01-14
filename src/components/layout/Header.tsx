@@ -45,7 +45,7 @@ export function Header() {
   }, [connectionStatus, isConnected]);
 
   return (
-    <header className="h-12 border-b bg-background flex items-center justify-between px-4">
+    <header className="h-12 border-b border-border bg-card flex items-center justify-between px-4">
       <h1 className="font-semibold text-lg" style={{ fontFamily: 'Quantico, sans-serif', fontStyle: 'italic' }}>
         Aero Code
       </h1>

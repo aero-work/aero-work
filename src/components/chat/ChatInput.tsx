@@ -1,4 +1,4 @@
-import { useState, useCallback, KeyboardEvent } from "react";
+import { useState, useCallback, useRef, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Send, Square } from "lucide-react";
 
@@ -16,6 +16,7 @@ export function ChatInput({
   disabled,
 }: ChatInputProps) {
   const [input, setInput] = useState("");
+  const isComposingRef = useRef(false);
 
   const handleSend = useCallback(() => {
     const trimmed = input.trim();
@@ -27,13 +28,25 @@ export function ChatInput({
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
+      // Check both e.isComposing (native) and isComposingRef (manual tracking for webkit)
+      if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && !isComposingRef.current) {
         e.preventDefault();
         handleSend();
       }
     },
     [handleSend]
   );
+
+  const handleCompositionStart = useCallback(() => {
+    isComposingRef.current = true;
+  }, []);
+
+  const handleCompositionEnd = useCallback(() => {
+    // Delay reset to ensure keydown event has been processed
+    setTimeout(() => {
+      isComposingRef.current = false;
+    }, 0);
+  }, []);
 
   return (
     <div className="border-t bg-background p-4">
@@ -43,6 +56,8 @@ export function ChatInput({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
             placeholder={
               disabled
                 ? "Connect to an agent to start chatting..."
