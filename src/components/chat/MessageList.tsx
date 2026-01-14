@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import type { Message, ChatItem } from "@/types/acp";
 import { ToolCallCard } from "./ToolCallCard";
-import { Bot, User, Copy, Check } from "lucide-react";
+import { Bot, User, Copy, Check, ArrowDown } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { useSettingsStore } from "@/stores/settingsStore";
+import { useIsDarkMode } from "@/hooks/useIsDarkMode";
 
 interface MessageListProps {
   chatItems: ChatItem[];
@@ -16,13 +16,76 @@ interface MessageListProps {
 }
 
 export function MessageList({ chatItems, isLoading }: MessageListProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const isUserScrollingRef = useRef(false);
+  const lastScrollTopRef = useRef(0);
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  // Check if scrolled to bottom (with some tolerance)
+  const checkIfAtBottom = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return true;
+
+    const threshold = 100; // pixels from bottom
+    const isBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+    return isBottom;
+  }, []);
+
+  // Scroll to bottom
+  const scrollToBottom = useCallback((smooth = true) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: smooth ? "smooth" : "instant",
+    });
+    setIsAtBottom(true);
+    setShowScrollButton(false);
+  }, []);
+
+  // Handle scroll events
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const currentScrollTop = container.scrollTop;
+    const wasScrollingUp = currentScrollTop < lastScrollTopRef.current;
+    lastScrollTopRef.current = currentScrollTop;
+
+    const atBottom = checkIfAtBottom();
+
+    // If user scrolled up, mark as user scrolling
+    if (wasScrollingUp && !atBottom) {
+      isUserScrollingRef.current = true;
     }
-  }, [chatItems]);
+
+    // If at bottom, reset user scrolling flag
+    if (atBottom) {
+      isUserScrollingRef.current = false;
+    }
+
+    setIsAtBottom(atBottom);
+    setShowScrollButton(!atBottom);
+  }, [checkIfAtBottom]);
+
+  // Auto-scroll when new messages arrive (only if at bottom)
+  useEffect(() => {
+    if (isAtBottom && !isUserScrollingRef.current) {
+      // Use requestAnimationFrame to ensure DOM is updated
+      requestAnimationFrame(() => {
+        scrollToBottom(false);
+      });
+    }
+  }, [chatItems, isAtBottom, scrollToBottom]);
+
+  // Initial scroll to bottom
+  useEffect(() => {
+    scrollToBottom(false);
+  }, []);
 
   // Check if the last item is an assistant message (for loading indicator)
   const lastItem = chatItems[chatItems.length - 1];
@@ -30,73 +93,69 @@ export function MessageList({ chatItems, isLoading }: MessageListProps) {
     lastItem?.type === "message" && lastItem.message.role === "assistant";
 
   return (
-    <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-      <div className="space-y-4 max-w-4xl mx-auto">
-        {chatItems.length === 0 && !isLoading && (
-          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-            <Bot className="w-12 h-12 mb-4 opacity-50" />
-            <p className="text-lg">Start a conversation</p>
-            <p className="text-sm">Type a message below to begin</p>
-          </div>
-        )}
-
-        {chatItems.map((item) => {
-          if (item.type === "message") {
-            return <MessageBubble key={item.message.id} message={item.message} />;
-          } else {
-            return (
-              <ToolCallCard key={item.toolCall.toolCallId} toolCall={item.toolCall} />
-            );
-          }
-        })}
-
-        {isLoading && !lastIsAssistantMessage && (
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <Bot className="w-4 h-4 text-primary" />
+    <div className="flex-1 relative overflow-hidden">
+      <div
+        ref={scrollContainerRef}
+        className="h-full overflow-y-auto p-4"
+        onScroll={handleScroll}
+      >
+        <div className="space-y-4 max-w-4xl mx-auto">
+          {chatItems.length === 0 && !isLoading && (
+            <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+              <Bot className="w-12 h-12 mb-4 opacity-50" />
+              <p className="text-lg">Start a conversation</p>
+              <p className="text-sm">Type a message below to begin</p>
             </div>
-            <div className="flex-1 bg-muted rounded-lg p-3">
-              <div className="flex space-x-1">
-                <span className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce" />
-                <span
-                  className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce"
-                  style={{ animationDelay: "0.1s" }}
-                />
-                <span
-                  className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce"
-                  style={{ animationDelay: "0.2s" }}
-                />
+          )}
+
+          {chatItems.map((item) => {
+            if (item.type === "message") {
+              return <MessageBubble key={item.message.id} message={item.message} />;
+            } else {
+              return (
+                <ToolCallCard key={item.toolCall.toolCallId} toolCall={item.toolCall} />
+              );
+            }
+          })}
+
+          {isLoading && !lastIsAssistantMessage && (
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <Bot className="w-4 h-4 text-primary" />
+              </div>
+              <div className="flex-1 bg-muted rounded-lg p-3">
+                <div className="flex space-x-1">
+                  <span className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce" />
+                  <span
+                    className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.1s" }}
+                  />
+                  <span
+                    className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.2s" }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+
+          <div ref={bottomRef} />
+        </div>
       </div>
-    </ScrollArea>
+
+      {/* Scroll to bottom button */}
+      {showScrollButton && (
+        <Button
+          variant="secondary"
+          size="icon"
+          className="absolute bottom-4 right-4 rounded-full shadow-lg h-10 w-10 z-10"
+          onClick={() => scrollToBottom(true)}
+        >
+          <ArrowDown className="w-5 h-5" />
+        </Button>
+      )}
+    </div>
   );
-}
-
-function useIsDarkMode(): boolean {
-  const theme = useSettingsStore((state) => state.theme);
-  const [isDark, setIsDark] = useState(() => {
-    if (theme === "system") {
-      return window.matchMedia("(prefers-color-scheme: dark)").matches;
-    }
-    return theme === "dark";
-  });
-
-  useEffect(() => {
-    if (theme === "system") {
-      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-      setIsDark(mediaQuery.matches);
-      const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
-      mediaQuery.addEventListener("change", handler);
-      return () => mediaQuery.removeEventListener("change", handler);
-    } else {
-      setIsDark(theme === "dark");
-    }
-  }, [theme]);
-
-  return isDark;
 }
 
 function MessageBubble({ message }: { message: Message }) {

@@ -508,6 +508,20 @@ async fn dispatch_method(
             rename_path_handler(from, to).await?;
             Ok(serde_json::Value::Null)
         }
+        "read_file_binary" => {
+            let path = params.get("path")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing path parameter")?;
+            let content = read_file_binary_handler(path).await?;
+            serde_json::to_value(content).map_err(|e| e.to_string())
+        }
+        "get_file_info" => {
+            let path = params.get("path")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing path parameter")?;
+            let info = get_file_info_handler(path).await?;
+            serde_json::to_value(info).map_err(|e| e.to_string())
+        }
 
         // Terminal commands
         "create_terminal" => {
@@ -1135,7 +1149,7 @@ async fn get_session_info_handler(state: &Arc<AppState>, session_id: &str) -> Re
 }
 
 // File handlers
-use crate::commands::file::{DirEntry};
+use crate::commands::file::{DirEntry, FileInfo, BinaryFileContent};
 
 async fn list_directory_handler(path: &str) -> Result<Vec<DirEntry>, String> {
     crate::commands::file::list_directory_impl(path).await
@@ -1143,6 +1157,14 @@ async fn list_directory_handler(path: &str) -> Result<Vec<DirEntry>, String> {
 
 async fn read_file_handler(path: &str) -> Result<String, String> {
     crate::commands::file::read_file_impl(path).await
+}
+
+async fn read_file_binary_handler(path: &str) -> Result<BinaryFileContent, String> {
+    crate::commands::file::read_file_binary_impl(path).await
+}
+
+async fn get_file_info_handler(path: &str) -> Result<FileInfo, String> {
+    crate::commands::file::get_file_info_impl(path).await
 }
 
 async fn write_file_handler(path: &str, content: &str) -> Result<(), String> {

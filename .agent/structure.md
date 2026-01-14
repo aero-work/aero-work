@@ -58,6 +58,7 @@ aero-code/
 │   │   ├── editor/               # Code editor components
 │   │   │   ├── index.ts          # Barrel export
 │   │   │   ├── FileTree.tsx      # File browser with context menu
+│   │   │   ├── FileViewer.tsx    # Multi-type file viewer (text/image/pdf/binary)
 │   │   │   ├── CodeEditor.tsx    # Monaco editor wrapper
 │   │   │   ├── EditorTabs.tsx    # Open file tabs
 │   │   │   └── EditorPanel.tsx   # Editor panel container
@@ -72,19 +73,29 @@ aero-code/
 │   │   │   ├── ModelSettings.tsx     # AI model configuration
 │   │   │   ├── MCPSettings.tsx       # MCP server management
 │   │   │   └── PermissionSettings.tsx # Tool permission rules
-│   │   └── ui/                   # shadcn/ui components
-│   │       ├── button.tsx
-│   │       ├── dialog.tsx
-│   │       ├── input.tsx
-│   │       ├── resizable.tsx     # Resizable panel layout
-│   │       ├── scroll-area.tsx
-│   │       └── ... (other shadcn components)
+│   │   ├── ui/                   # shadcn/ui components
+│   │   │   ├── button.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── resizable.tsx     # Resizable panel layout
+│   │   │   ├── scroll-area.tsx
+│   │   │   └── ... (other shadcn components)
+│   │   └── layout/               # Layout components (desktop + mobile)
+│   │       ├── MainLayout.tsx    # Main layout with responsive switching
+│   │       ├── MobileLayout.tsx  # Mobile-specific layout container
+│   │       ├── MobileHeader.tsx  # Mobile top header with hamburger menu
+│   │       ├── MobileNavBar.tsx  # Mobile bottom navigation tabs
+│   │       ├── MobileSidebar.tsx # Mobile slide-out sidebar panel
+│   │       ├── Header.tsx        # Desktop top header
+│   │       ├── Sidebar.tsx       # Desktop left sidebar
+│   │       └── StatusBar.tsx     # Desktop bottom status bar
 │   ├── stores/                   # Zustand state stores
 │   │   ├── sessionStore.ts       # Sessions, messages, tool calls
 │   │   ├── agentStore.ts         # Agent connections, agent info
-│   │   ├── fileStore.ts          # Working directory, recent projects
+│   │   ├── fileStore.ts          # Working directory, recent projects, file types
 │   │   ├── terminalStore.ts      # Terminal instances and state
-│   │   └── settingsStore.ts      # Settings, MCP servers, models, permissions
+│   │   ├── settingsStore.ts      # Settings, MCP servers, models, permissions
+│   │   └── mobileNavStore.ts     # Mobile navigation state (view, sidebar)
 │   ├── services/                 # Backend communication layer
 │   │   ├── transport/
 │   │   │   ├── index.ts          # Transport factory + TauriTransport + context
@@ -93,11 +104,15 @@ aero-code/
 │   │   └── api.ts                # AgentAPI class (high-level wrapper)
 │   ├── hooks/                    # Custom React hooks
 │   │   ├── useAutoConnect.ts     # Auto-connect to backend on mount
-│   │   └── useZoom.ts            # Cmd+/- zoom functionality
+│   │   ├── useZoom.ts            # Cmd+/- zoom functionality
+│   │   ├── useIsMobile.ts        # Responsive breakpoint detection
+│   │   ├── useIsDarkMode.ts      # Dark mode detection hook
+│   │   └── useSessionData.ts     # Session data subscription hook
 │   ├── types/
 │   │   └── acp.ts                # ACP protocol types (must match Rust)
 │   ├── lib/
-│   │   └── utils.ts              # cn(), formatters, etc.
+│   │   ├── utils.ts              # cn(), formatters, etc.
+│   │   └── fileTypes.ts          # File type detection, MIME types, language mappings
 │   ├── App.tsx                   # Root component
 │   ├── main.tsx                  # React entry point
 │   └── index.css                 # Global styles + Tailwind
@@ -252,8 +267,208 @@ Agent Process (stdio)
 |-------|---------------|
 | `sessionStore` | Sessions, messages, tool calls, plan, streaming state |
 | `agentStore` | Agent configurations, active agent, connection status |
-| `fileStore` | Working directory, file tree, open files |
+| `fileStore` | Working directory, file tree, open files, file types |
+| `terminalStore` | Terminal instances, active terminal |
 | `settingsStore` | MCP servers, models, permission rules, UI preferences |
+| `mobileNavStore` | Mobile navigation view, sidebar state, file viewer path |
+
+## Mobile Architecture
+
+### Overview
+
+The application supports responsive design with dedicated mobile layouts. On screens narrower than 768px, the UI switches to a mobile-optimized layout with bottom navigation and a slide-out sidebar.
+
+### Mobile Navigation Flow
+
+```
+┌─────────────────────────────────────────┐
+│  MobileHeader                           │
+│  [≡] Aero Code              [...]       │
+├─────────────────────────────────────────┤
+│                                         │
+│  Current View Content                   │
+│  (Chat | Files | FileViewer | Terminal) │
+│                                         │
+├─────────────────────────────────────────┤
+│  MobileNavBar                           │
+│  [Chat]  [Files]  [Terminal]  [⚙]      │
+└─────────────────────────────────────────┘
+        │
+        │ Hamburger menu tap
+        ▼
+┌─────────────────────────────────────────┐
+│ MobileSidebar (slide from left)         │
+│  ┌────────────────────────────┐         │
+│  │ Sessions list              │         │
+│  │ Project selector           │         │
+│  │ Agent status               │         │
+│  └────────────────────────────┘         │
+└─────────────────────────────────────────┘
+```
+
+### Mobile Views (mobileNavStore)
+
+```typescript
+type MobileView = 'chat' | 'files' | 'file-viewer' | 'terminal' | 'settings';
+
+interface MobileNavStore {
+  currentView: MobileView;
+  sidebarOpen: boolean;
+  viewingFilePath: string | null;
+
+  setView: (view: MobileView) => void;
+  openSidebar: () => void;
+  closeSidebar: () => void;
+  openFileViewer: (path: string) => void;
+}
+```
+
+### Mobile Components
+
+| Component | Purpose |
+|-----------|---------|
+| `MobileLayout` | Main container, switches between view components |
+| `MobileHeader` | Top bar with hamburger menu and status icons |
+| `MobileNavBar` | Bottom tab navigation between main views |
+| `MobileSidebar` | Slide-out panel for sessions/projects |
+| `MobileFilesView` | File tree with upload button |
+| `MobileFileViewer` | Read-only file preview with syntax highlighting |
+| `MobileTerminalView` | Full-screen terminal with tab management |
+
+### Responsive Detection
+
+```typescript
+// src/hooks/useIsMobile.ts
+export function useIsMobile(breakpoint = 768): boolean {
+  const [isMobile, setIsMobile] = useState(
+    window.innerWidth < breakpoint
+  );
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < breakpoint);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
+// Usage in MainLayout
+export function MainLayout() {
+  const isMobile = useIsMobile();
+  return isMobile ? <MobileLayout /> : <DesktopLayout />;
+}
+```
+
+## File Type System
+
+### File Type Detection
+
+The application categorizes files into four types for appropriate handling:
+
+| Type | Extensions | Handling |
+|------|-----------|----------|
+| `text` | js, ts, py, rs, md, json, etc. | Monaco editor / syntax highlighting |
+| `image` | png, jpg, gif, svg, webp, etc. | Image preview with download |
+| `pdf` | pdf | Embedded PDF viewer |
+| `binary` | everything else | File info + force edit option |
+
+### File Type Utilities (src/lib/fileTypes.ts)
+
+```typescript
+// Determine file type from path
+export function getFileType(path: string): FileType {
+  const ext = getFileExtension(path);
+  if (TEXT_EXTENSIONS.has(ext)) return 'text';
+  if (IMAGE_EXTENSIONS.has(ext)) return 'image';
+  if (PDF_EXTENSIONS.has(ext)) return 'pdf';
+  return 'binary';
+}
+
+// Get MIME type for proper content handling
+export function getMimeType(path: string): string;
+
+// Get Monaco editor language ID
+export function getMonacoLanguage(path: string): string;
+
+// Get Prism syntax highlighter language (for mobile)
+export function getLanguageFromPath(path: string): string;
+
+// Format file size for display (e.g., "1.5 MB")
+export function formatFileSize(bytes?: number): string;
+
+// Format timestamp for display
+export function formatModifiedDate(timestamp?: number): string;
+```
+
+### OpenFile Interface
+
+```typescript
+export type FileType = 'text' | 'image' | 'pdf' | 'binary';
+
+export interface OpenFile {
+  path: string;
+  name: string;
+  content: string;          // Text content or base64 for binary
+  language?: string;        // Monaco language ID
+  isDirty: boolean;
+  originalContent: string;
+  size?: number;            // File size in bytes
+  modified?: number;        // Unix timestamp
+  fileType?: FileType;      // Detected file type
+  mimeType?: string;        // MIME type string
+}
+```
+
+### File Opening Flow
+
+```
+User clicks file in FileTree
+    │
+    ▼
+getFileType(path) → Determine type
+    │
+    ├─── text ────► fileService.readFile() → Text content
+    │               openFile({ fileType: 'text', language })
+    │
+    ├─── image ───► fileService.readFileBinary() → Base64
+    │               openFile({ fileType: 'image', mimeType })
+    │
+    ├─── pdf ─────► fileService.readFileBinary() → Base64
+    │               openFile({ fileType: 'pdf', mimeType })
+    │
+    └─── binary ──► fileService.getFileInfo() → Metadata only
+                    openFile({ fileType: 'binary', content: '' })
+```
+
+### File Viewers
+
+**Desktop (FileViewer.tsx)**
+- `CodeEditor`: Monaco editor for text files
+- `ImageViewer`: img tag with base64 data URL, download button
+- `PdfViewer`: iframe with PDF data URL
+- `BinaryViewer`: File metadata display, force edit button
+
+**Mobile (MobileLayout.tsx)**
+- `TextFileViewer`: Prism syntax highlighter (read-only)
+- `ImageFileViewer`: Centered image preview
+- `PdfFileViewer`: iframe PDF viewer
+- `BinaryFileViewer`: Metadata + force edit option
+
+### Backend File Operations
+
+```rust
+// src-tauri/src/commands/file.rs
+
+// Read text file
+pub async fn read_file(path: String) -> Result<FileContent, String>
+
+// Read binary file as base64
+pub async fn read_file_binary(path: String) -> Result<BinaryFileContent, String>
+
+// Get file metadata without content
+pub async fn get_file_info(path: String) -> Result<FileInfo, String>
+```
 
 ## Key Interfaces
 

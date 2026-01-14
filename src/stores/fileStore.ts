@@ -17,6 +17,8 @@ export interface FileEntry {
   modified?: number;
 }
 
+export type FileType = "text" | "image" | "pdf" | "binary";
+
 export interface OpenFile {
   path: string;
   name: string;
@@ -24,6 +26,11 @@ export interface OpenFile {
   language?: string;
   isDirty: boolean;
   originalContent: string;
+  // File metadata
+  size?: number;
+  modified?: number;
+  fileType?: FileType;
+  mimeType?: string;
 }
 
 export interface FileTreeNode extends FileEntry {
@@ -31,6 +38,8 @@ export interface FileTreeNode extends FileEntry {
   isExpanded?: boolean;
   isLoading?: boolean;
 }
+
+export type MainViewMode = "chat" | "editor";
 
 interface FileState {
   currentWorkingDir: string | null;
@@ -42,8 +51,12 @@ interface FileState {
   // Open files (tabs)
   openFiles: OpenFile[];
   activeFilePath: string | null;
+  // Main view mode (chat or editor)
+  mainViewMode: MainViewMode;
   // Settings
   showHiddenFiles: boolean;
+  // Refresh trigger (increment to trigger reload)
+  refreshTrigger: number;
 }
 
 interface FileActions {
@@ -61,11 +74,18 @@ interface FileActions {
   // Open files
   openFile: (file: OpenFile) => void;
   closeFile: (path: string) => void;
+  closeAllFiles: () => void;
   setActiveFile: (path: string | null) => void;
   updateFileContent: (path: string, content: string) => void;
   markFileSaved: (path: string, newContent?: string) => void;
+  // View mode
+  setMainViewMode: (mode: MainViewMode) => void;
+  showChat: () => void;
+  showEditor: () => void;
   // Settings
   toggleHiddenFiles: () => void;
+  // Refresh
+  triggerRefresh: () => void;
 }
 
 const MAX_RECENT_PROJECTS = 10;
@@ -80,7 +100,9 @@ export const useFileStore = create<FileState & FileActions>()(
       selectedPath: null,
       openFiles: [],
       activeFilePath: null,
+      mainViewMode: "chat",
       showHiddenFiles: false,
+      refreshTrigger: 0,
 
       setWorkingDir: (path) => {
         set((state) => {
@@ -239,6 +261,13 @@ export const useFileStore = create<FileState & FileActions>()(
         });
       },
 
+      closeAllFiles: () => {
+        set((state) => {
+          state.openFiles = [];
+          state.activeFilePath = null;
+        });
+      },
+
       setActiveFile: (path) => {
         set((state) => {
           state.activeFilePath = path;
@@ -270,9 +299,33 @@ export const useFileStore = create<FileState & FileActions>()(
         });
       },
 
+      setMainViewMode: (mode) => {
+        set((state) => {
+          state.mainViewMode = mode;
+        });
+      },
+
+      showChat: () => {
+        set((state) => {
+          state.mainViewMode = "chat";
+        });
+      },
+
+      showEditor: () => {
+        set((state) => {
+          state.mainViewMode = "editor";
+        });
+      },
+
       toggleHiddenFiles: () => {
         set((state) => {
           state.showHiddenFiles = !state.showHiddenFiles;
+        });
+      },
+
+      triggerRefresh: () => {
+        set((state) => {
+          state.refreshTrigger += 1;
         });
       },
     })),

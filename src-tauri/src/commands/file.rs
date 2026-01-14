@@ -1,3 +1,4 @@
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -23,6 +24,25 @@ pub struct FileContent {
     pub path: String,
     pub content: String,
     pub language: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FileInfo {
+    pub path: String,
+    pub name: String,
+    pub size: u64,
+    pub modified: Option<u64>,
+    pub is_dir: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BinaryFileContent {
+    pub path: String,
+    pub content: String, // base64 encoded
+    pub size: u64,
+    pub modified: Option<u64>,
 }
 
 fn detect_language(path: &str) -> Option<String> {
@@ -414,4 +434,70 @@ pub async fn rename_path_impl(old_path: &str, new_path: &str) -> Result<(), Stri
     fs::rename(&old, &new).map_err(|e| format!("Failed to rename: {}", e))?;
 
     Ok(())
+}
+
+// Get file info without reading content
+pub async fn get_file_info_impl(path: &str) -> Result<FileInfo, String> {
+    let file_path = PathBuf::from(path);
+
+    if !file_path.exists() {
+        return Err(format!("Path does not exist: {}", path));
+    }
+
+    let metadata = fs::metadata(&file_path).map_err(|e| format!("Failed to read metadata: {}", e))?;
+
+    let name = file_path
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_default();
+
+    let modified = metadata
+        .modified()
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_secs());
+
+    Ok(FileInfo {
+        path: path.to_string(),
+        name,
+        size: metadata.len(),
+        modified,
+        is_dir: metadata.is_dir(),
+    })
+}
+
+// Read file as binary (base64 encoded)
+pub async fn read_file_binary_impl(path: &str) -> Result<BinaryFileContent, String> {
+    let file_path = PathBuf::from(path);
+
+    if !file_path.exists() {
+        return Err(format!("File does not exist: {}", path));
+    }
+
+    if !file_path.is_file() {
+        return Err(format!("Path is not a file: {}", path));
+    }
+
+    let metadata = fs::metadata(&file_path).map_err(|e| format!("Failed to read metadata: {}", e))?;
+
+    // Limit to 50MB for binary files
+    if metadata.len() > 50 * 1024 * 1024 {
+        return Err("File is too large (max 50MB)".to_string());
+    }
+
+    let bytes = fs::read(&file_path).map_err(|e| format!("Failed to read file: {}", e))?;
+    let content = BASE64.encode(&bytes);
+
+    let modified = metadata
+        .modified()
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_secs());
+
+    Ok(BinaryFileContent {
+        path: path.to_string(),
+        content,
+        size: metadata.len(),
+        modified,
+    })
 }

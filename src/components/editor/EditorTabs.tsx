@@ -1,7 +1,9 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { useFileStore, type OpenFile } from "@/stores/fileStore";
-import { X, FileText } from "lucide-react";
+import { useFileStore, useActiveFile, type OpenFile } from "@/stores/fileStore";
+import { Button } from "@/components/ui/button";
+import * as fileService from "@/services/fileService";
+import { X, FileText, Save, Download, Upload } from "lucide-react";
 
 interface TabProps {
   file: OpenFile;
@@ -50,6 +52,11 @@ export function EditorTabs() {
   const activeFilePath = useFileStore((state) => state.activeFilePath);
   const setActiveFile = useFileStore((state) => state.setActiveFile);
   const closeFile = useFileStore((state) => state.closeFile);
+  const markFileSaved = useFileStore((state) => state.markFileSaved);
+  const currentWorkingDir = useFileStore((state) => state.currentWorkingDir);
+  const triggerRefresh = useFileStore((state) => state.triggerRefresh);
+  const activeFile = useActiveFile();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSelect = useCallback(
     (path: string) => {
@@ -66,21 +73,124 @@ export function EditorTabs() {
     [closeFile]
   );
 
+  // Save file to backend
+  const handleSave = useCallback(async () => {
+    if (!activeFile || !activeFile.isDirty) return;
+    try {
+      await fileService.writeFile(activeFile.path, activeFile.content);
+      markFileSaved(activeFile.path);
+    } catch (error) {
+      console.error("Failed to save file:", error);
+    }
+  }, [activeFile, markFileSaved]);
+
+  // Download file to local machine
+  const handleDownload = useCallback(() => {
+    if (!activeFile) return;
+    const blob = new Blob([activeFile.content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = activeFile.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [activeFile]);
+
+  // Upload file from local machine to current working directory
+  const handleUpload = useCallback(() => {
+    if (!currentWorkingDir) {
+      console.warn("Please open a project first");
+      return;
+    }
+    fileInputRef.current?.click();
+  }, [currentWorkingDir]);
+
+  const handleFileChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file || !currentWorkingDir) return;
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const content = event.target?.result as string;
+        // Save file to current working directory
+        const filePath = `${currentWorkingDir}/${file.name}`;
+        try {
+          await fileService.writeFile(filePath, content);
+          // Refresh file tree to show the new file
+          triggerRefresh();
+        } catch (error) {
+          console.error("Failed to upload file:", error);
+        }
+      };
+      reader.readAsText(file);
+
+      // Reset input so same file can be uploaded again
+      e.target.value = "";
+    },
+    [currentWorkingDir, triggerRefresh]
+  );
+
   if (openFiles.length === 0) {
     return null;
   }
 
   return (
-    <div className="flex items-center border-b border-border bg-muted/30 overflow-x-auto">
-      {openFiles.map((file) => (
-        <Tab
-          key={file.path}
-          file={file}
-          isActive={activeFilePath === file.path}
-          onSelect={() => handleSelect(file.path)}
-          onClose={() => handleClose(file.path)}
+    <div className="flex items-center border-b border-border bg-muted/30">
+      {/* File tabs */}
+      <div className="flex-1 flex items-center overflow-x-auto">
+        {openFiles.map((file) => (
+          <Tab
+            key={file.path}
+            file={file}
+            isActive={activeFilePath === file.path}
+            onSelect={() => handleSelect(file.path)}
+            onClose={() => handleClose(file.path)}
+          />
+        ))}
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex items-center gap-1 px-2 border-l border-border">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={handleSave}
+          disabled={!activeFile?.isDirty}
+          title="Save (Ctrl+S)"
+        >
+          <Save className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={handleDownload}
+          disabled={!activeFile}
+          title="Download file"
+        >
+          <Download className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={handleUpload}
+          title="Upload file"
+        >
+          <Upload className="w-4 h-4" />
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={handleFileChange}
+          accept="*/*"
         />
-      ))}
+      </div>
     </div>
   );
 }

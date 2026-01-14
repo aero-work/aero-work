@@ -9,6 +9,7 @@ import { GeneralSettings } from "./GeneralSettings";
 import { AgentSettings } from "./AgentSettings";
 import { PluginsSettings } from "./PluginsSettings";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 const PANEL_CONFIG: { id: SettingsPanel; label: string; icon: React.ReactNode }[] = [
   { id: "general", label: "General", icon: <Settings2 className="w-4 h-4" /> },
@@ -23,21 +24,24 @@ export function SettingsPage() {
   const activePanel = useSettingsStore((state) => state.activePanel);
   const setActivePanel = useSettingsStore((state) => state.setActivePanel);
   const closeSettings = useSettingsStore((state) => state.closeSettings);
+  const isMobile = useIsMobile();
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b">
-        <h2 className="text-lg font-semibold">Settings</h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={closeSettings}
-          className="h-8 w-8"
-        >
-          <X className="w-4 h-4" />
-        </Button>
-      </div>
+      {/* Header - only show on desktop */}
+      {!isMobile && (
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <h2 className="text-lg font-semibold">Settings</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={closeSettings}
+            className="h-8 w-8"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs

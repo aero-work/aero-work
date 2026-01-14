@@ -19,6 +19,21 @@ export interface FileContent {
   language?: string;
 }
 
+export interface FileInfo {
+  path: string;
+  name: string;
+  size: number;
+  modified?: number;
+  isDir: boolean;
+}
+
+export interface BinaryFileContent {
+  path: string;
+  content: string; // base64 encoded
+  size: number;
+  modified?: number;
+}
+
 function getWsTransport(): WebSocketTransport {
   const transport = getTransport();
   return transport as WebSocketTransport;
@@ -51,4 +66,12 @@ export async function deletePath(path: string): Promise<void> {
 
 export async function renamePath(oldPath: string, newPath: string): Promise<void> {
   await getWsTransport().send<void>("rename_path", { from: oldPath, to: newPath });
+}
+
+export async function readFileBinary(path: string): Promise<BinaryFileContent> {
+  return getWsTransport().send<BinaryFileContent>("read_file_binary", { path });
+}
+
+export async function getFileInfo(path: string): Promise<FileInfo> {
+  return getWsTransport().send<FileInfo>("get_file_info", { path });
 }

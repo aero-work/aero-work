@@ -60,8 +60,13 @@ Build a unified interface for AI-powered code development that works seamlessly 
 ### File Management
 - **Project Switching**: Switch between different working directories
 - **File Browser**: Navigate project file structure with tree view
-- **File Preview**: View file contents with syntax highlighting
+- **Multi-Type File Preview**:
+  - Text files: Syntax highlighting (Monaco for desktop, Prism for mobile)
+  - Images (PNG, JPG, GIF, SVG, WebP, etc.): Inline preview with download
+  - PDF: Embedded PDF viewer
+  - Binary/Unknown: File metadata display with "Force Edit" option
 - **File Editor**: Basic editing with diff view for agent changes
+- **File Upload**: Upload files directly to current working directory
 - **Workspace Scope**: Files scoped to current project, with ability to navigate elsewhere
 
 ### Terminal Integration
@@ -112,26 +117,40 @@ Build a unified interface for AI-powered code development that works seamlessly 
 ### Mobile Layout
 ```
 +---------------------------+
-|  [=] Aero Code    [...]   |  <- Header with hamburger menu
+|  [≡] Aero Code    [⚡...]  |  <- Header with hamburger menu + status
 +---------------------------+
 |                           |
-|   Chat Messages           |
+|   Current View            |
+|   (Chat/Files/Terminal)   |
 |                           |
 |   ┌─────────────────────┐ |
-|   │ Agent Response      │ |
-|   │ with markdown       │ |
-|   └─────────────────────┘ |
-|                           |
-|   ┌─────────────────────┐ |
-|   │ Tool Call Card      │ |
-|   │ [Expand/Collapse]   │ |
+|   │ View-specific       │ |
+|   │ content here        │ |
 |   └─────────────────────┘ |
 |                           |
 +---------------------------+
-|  [Message Input]    [>]   |  <- Input area with send button
+|  [💬] [📁] [>_] [⚙]      |  <- Bottom navigation tabs
 +---------------------------+
-|  [Chat] [Files] [Term]    |  <- Bottom navigation tabs
-+---------------------------+
+
+Views:
+- Chat: Messages + Input area at bottom
+- Files: File tree with floating upload button
+- File Viewer: Read-only preview (text/image/PDF/binary)
+- Terminal: xterm.js with tab management
+- Settings: Full settings page
+
+Sidebar (slide from left):
+┌────────────────────────────┐
+│ Sessions                   │
+│  > Session 1 (active)      │
+│    Session 2               │
+├────────────────────────────┤
+│ Project: ~/my-project      │
+│ [Select Project]           │
+├────────────────────────────┤
+│ Agent: Claude Code ⚡       │
+│ [Connect] [Disconnect]     │
+└────────────────────────────┘
 ```
 
 ### Key UI Components
@@ -140,7 +159,9 @@ Build a unified interface for AI-powered code development that works seamlessly 
 2. **Tool Call Card**: Collapsible card showing tool execution status, input, and output
 3. **Diff Viewer**: Side-by-side or unified diff view with accept/reject controls
 4. **Terminal Panel**: xterm.js based terminal with multiple tabs support
-5. **File Tree**: Expandable/collapsible directories with search/filter
+5. **File Tree**: Expandable/collapsible directories with context menu (new file/folder, rename, delete)
+6. **File Viewer**: Multi-type viewer supporting text (syntax highlighted), images, PDFs, and binary file info
+7. **Mobile Navigation**: Bottom tab bar + slide-out sidebar for mobile layouts
 
 ## Security Considerations
 
@@ -181,11 +202,13 @@ Build a unified interface for AI-powered code development that works seamlessly 
 - [x] Project/directory management with persistence
 - [x] Tool Call Cards with expand/collapse
 
-### Phase 2: File & Terminal (In Progress)
+### Phase 2: File & Terminal (Complete)
 - [x] File browser component (FileTree)
 - [x] Code viewer with syntax highlighting (Monaco Editor)
 - [x] File operations (create, delete, rename via context menu)
 - [x] Terminal integration (xterm.js + PTY)
+- [x] Multi-type file viewer (text, image, PDF, binary)
+- [x] File upload to working directory
 - [ ] Diff viewer for file changes
 
 ### Phase 3: Session Management
@@ -202,8 +225,8 @@ Build a unified interface for AI-powered code development that works seamlessly 
 ### Phase 5: Multi-Agent & Polish
 - [ ] Multiple agent configuration
 - [ ] Agent switching UI
-- [ ] Mobile responsive design
-- [ ] Theme support (light/dark)
+- [x] Mobile responsive design (complete mobile UI with navigation)
+- [x] Theme support (light/dark with system detection)
 
 ### Phase 6: Advanced Features
 - [ ] Remote agent connections

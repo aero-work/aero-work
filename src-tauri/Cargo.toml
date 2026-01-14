@@ -31,6 +31,7 @@ parking_lot = "0.12"
 portable-pty = "0.8"
 chrono = { version = "0.4", features = ["serde"] }
 dirs = "5"
+base64 = "0.22"
 
 # WebSocket server
 axum = { version = "0.7", features = ["ws"] }

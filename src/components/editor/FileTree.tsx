@@ -4,6 +4,9 @@ import * as fileService from "@/services/fileService";
 import { useFileStore, type FileEntry, type FileTreeNode } from "@/stores/fileStore";
 import { useAgentStore } from "@/stores/agentStore";
 import { useSettingsStore } from "@/stores/settingsStore";
+import { useMobileNavStore } from "@/stores/mobileNavStore";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { getFileType, getMimeType, getMonacoLanguage } from "@/lib/fileTypes";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -25,11 +28,6 @@ import {
   Pencil,
 } from "lucide-react";
 
-// File icon based on extension
-function getFileIcon(_name: string) {
-  // Could add more specific icons later based on extension
-  return <File className="w-4 h-4 text-muted-foreground" />;
-}
 
 interface FileTreeItemProps {
   node: FileTreeNode;
@@ -37,6 +35,7 @@ interface FileTreeItemProps {
   isExpanded: boolean;
   isSelected: boolean;
   isRenaming: boolean;
+  isMobile: boolean;
   onToggle: (path: string) => void;
   onSelect: (node: FileTreeNode) => void;
   onOpen: (node: FileTreeNode) => void;
@@ -54,6 +53,7 @@ function FileTreeItem({
   isExpanded,
   isSelected,
   isRenaming,
+  isMobile,
   onToggle,
   onSelect,
   onOpen,
@@ -70,11 +70,8 @@ function FileTreeItem({
     onSelect(node);
     if (node.isDir) {
       onToggle(node.path);
-    }
-  };
-
-  const handleDoubleClick = () => {
-    if (!node.isDir) {
+    } else {
+      // Single click opens the file on both mobile and desktop
       onOpen(node);
     }
   };
@@ -100,37 +97,37 @@ function FileTreeItem({
       <ContextMenuTrigger>
         <div
           className={cn(
-            "flex items-center gap-1 px-2 py-0.5 cursor-pointer hover:bg-accent/50 rounded-sm text-sm",
+            "flex items-center gap-1 px-2 cursor-pointer hover:bg-accent/50 rounded-sm",
+            isMobile ? "py-2.5 text-base gap-2" : "py-0.5 text-sm gap-1",
             isSelected && "bg-accent text-accent-foreground"
           )}
-          style={{ paddingLeft: `${depth * 12 + 8}px` }}
+          style={{ paddingLeft: `${depth * (isMobile ? 16 : 12) + 8}px` }}
           onClick={handleClick}
-          onDoubleClick={handleDoubleClick}
         >
           {/* Expand/collapse chevron for directories */}
           {node.isDir ? (
-            <span className="w-4 h-4 flex items-center justify-center">
+            <span className={cn("flex items-center justify-center flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")}>
               {node.isLoading ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
+                <Loader2 className={cn("animate-spin", isMobile ? "w-4 h-4" : "w-3 h-3")} />
               ) : isExpanded ? (
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className={isMobile ? "w-4 h-4" : "w-3 h-3"} />
               ) : (
-                <ChevronRight className="w-3 h-3" />
+                <ChevronRight className={isMobile ? "w-4 h-4" : "w-3 h-3"} />
               )}
             </span>
           ) : (
-            <span className="w-4 h-4" />
+            <span className={cn("flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")} />
           )}
 
           {/* Icon */}
           {node.isDir ? (
             isExpanded ? (
-              <FolderOpen className="w-4 h-4 text-yellow-500" />
+              <FolderOpen className={cn("text-yellow-500 flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")} />
             ) : (
-              <Folder className="w-4 h-4 text-yellow-500" />
+              <Folder className={cn("text-yellow-500 flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")} />
             )
           ) : (
-            getFileIcon(node.name)
+            <File className={cn("text-muted-foreground flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")} />
           )}
 
           {/* Name or rename input */}
@@ -140,12 +137,12 @@ function FileTreeItem({
               onChange={(e) => setNewName(e.target.value)}
               onBlur={handleRenameSubmit}
               onKeyDown={handleRenameKeyDown}
-              className="h-5 py-0 px-1 text-sm"
+              className="h-5 py-0 px-1 text-sm flex-1 min-w-0"
               autoFocus
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <span className={cn("truncate", node.isHidden && "opacity-60")}>
+            <span className={cn("truncate min-w-0", node.isHidden && "opacity-60")}>
               {node.name}
             </span>
           )}
@@ -184,6 +181,7 @@ interface FileTreeBranchProps {
   expandedPaths: Set<string>;
   selectedPath: string | null;
   renamingPath: string | null;
+  isMobile: boolean;
   onToggle: (path: string) => void;
   onSelect: (node: FileTreeNode) => void;
   onOpen: (node: FileTreeNode) => void;
@@ -201,6 +199,7 @@ function FileTreeBranch({
   expandedPaths,
   selectedPath,
   renamingPath,
+  isMobile,
   onToggle,
   onSelect,
   onOpen,
@@ -226,6 +225,7 @@ function FileTreeBranch({
               isExpanded={isExpanded}
               isSelected={isSelected}
               isRenaming={isRenaming}
+              isMobile={isMobile}
               onToggle={onToggle}
               onSelect={onSelect}
               onOpen={onOpen}
@@ -243,6 +243,7 @@ function FileTreeBranch({
                 expandedPaths={expandedPaths}
                 selectedPath={selectedPath}
                 renamingPath={renamingPath}
+                isMobile={isMobile}
                 onToggle={onToggle}
                 onSelect={onSelect}
                 onOpen={onOpen}
@@ -329,6 +330,9 @@ export function FileTree() {
   const connectionStatus = useAgentStore((state) => state.connectionStatus);
   const isConnected = connectionStatus === "connected";
   const closeSettings = useSettingsStore((state) => state.closeSettings);
+  const showEditor = useFileStore((state) => state.showEditor);
+  const isMobile = useIsMobile();
+  const openFileViewer = useMobileNavStore((state) => state.openFileViewer);
 
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
   const [newItem, setNewItem] = useState<{
@@ -379,7 +383,10 @@ export function FileTree() {
     }
   }, [isConnected, currentWorkingDir, fileTree.length, loadDirectory]);
 
-  // Reload when hidden files toggle changes
+  // Get refresh trigger for external refresh requests
+  const refreshTrigger = useFileStore((state) => state.refreshTrigger);
+
+  // Reload when hidden files toggle changes or refresh is triggered
   useEffect(() => {
     if (isConnected && currentWorkingDir) {
       loadDirectory(currentWorkingDir);
@@ -388,7 +395,7 @@ export function FileTree() {
         loadDirectory(path);
       });
     }
-  }, [showHiddenFiles]);
+  }, [showHiddenFiles, refreshTrigger]);
 
   // Handle directory toggle
   const handleToggle = useCallback(
@@ -413,27 +420,75 @@ export function FileTree() {
     [setSelectedPath]
   );
 
-  // Handle file open (double click)
+  // Handle file open (single click on both desktop and mobile)
   const handleOpen = useCallback(
     async (node: FileTreeNode) => {
       if (node.isDir) return;
 
       closeSettings(); // Close settings when opening a file
+
+      const fileType = getFileType(node.path);
+      const mimeType = getMimeType(node.path);
+
       try {
-        const result = await fileService.readFile(node.path);
-        openFile({
-          path: result.path,
-          name: node.name,
-          content: result.content,
-          language: result.language,
-          isDirty: false,
-          originalContent: result.content,
-        });
+        if (fileType === "text") {
+          // Text files - read as text
+          const result = await fileService.readFile(node.path);
+          const language = getMonacoLanguage(node.path);
+          openFile({
+            path: result.path,
+            name: node.name,
+            content: result.content,
+            language,
+            isDirty: false,
+            originalContent: result.content,
+            size: node.size,
+            modified: node.modified,
+            fileType: "text",
+            mimeType,
+          });
+        } else if (fileType === "image" || fileType === "pdf") {
+          // Images and PDFs - read as binary (base64)
+          const result = await fileService.readFileBinary(node.path);
+          openFile({
+            path: result.path,
+            name: node.name,
+            content: result.content, // base64 encoded
+            isDirty: false,
+            originalContent: result.content,
+            size: result.size,
+            modified: result.modified,
+            fileType,
+            mimeType,
+          });
+        } else {
+          // Binary/unknown files - just get file info, don't read content
+          const info = await fileService.getFileInfo(node.path);
+          openFile({
+            path: info.path,
+            name: info.name,
+            content: "", // No content for binary files
+            isDirty: false,
+            originalContent: "",
+            size: info.size,
+            modified: info.modified,
+            fileType: "binary",
+            mimeType,
+          });
+        }
+
+        if (isMobile) {
+          // On mobile, navigate to file viewer
+          openFileViewer(node.path);
+        } else {
+          // On desktop, switch to editor view
+          showEditor();
+        }
       } catch (error) {
         console.error("Failed to open file:", error);
       }
     },
-    [openFile, closeSettings]
+    [openFile, closeSettings, isMobile, openFileViewer, showEditor]
   );
 
   // Handle rename
@@ -578,6 +633,7 @@ export function FileTree() {
             expandedPaths={expandedPaths}
             selectedPath={selectedPath}
             renamingPath={renamingPath}
+            isMobile={isMobile}
             onToggle={handleToggle}
             onSelect={handleSelect}
             onOpen={handleOpen}

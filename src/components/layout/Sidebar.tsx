@@ -106,6 +106,7 @@ export function Sidebar() {
   const connectionStatus = useAgentStore((state) => state.connectionStatus);
 
   const currentWorkingDir = useFileStore((state) => state.currentWorkingDir);
+  const showChat = useFileStore((state) => state.showChat);
   const closeSettings = useSettingsStore((state) => state.closeSettings);
   const showHiddenFiles = useFileStore((state) => state.showHiddenFiles);
   const toggleHiddenFiles = useFileStore((state) => state.toggleHiddenFiles);
@@ -152,6 +153,7 @@ export function Sidebar() {
   const handleResumeSession = async (sessionInfo: SessionInfo) => {
     if (!currentWorkingDir) return;
     closeSettings();
+    showChat();
     setResumingSessionId(sessionInfo.id);
     try {
       await agentAPI.resumeSession(sessionInfo.id, sessionInfo.cwd || currentWorkingDir);
@@ -167,6 +169,7 @@ export function Sidebar() {
   const handleForkSession = async (e: React.MouseEvent, sessionInfo: SessionInfo) => {
     e.stopPropagation();
     if (!currentWorkingDir) return;
+    showChat();
     setResumingSessionId(sessionInfo.id);
     try {
       await agentAPI.forkSession(sessionInfo.id, sessionInfo.cwd || currentWorkingDir);
@@ -252,7 +255,7 @@ export function Sidebar() {
                             ? "bg-accent text-accent-foreground ring-2 ring-primary ring-offset-1 ring-offset-background"
                             : "hover:bg-accent/50"
                         )}
-                        onClick={() => { setActiveSession(session.id); closeSettings(); }}
+                        onClick={() => { setActiveSession(session.id); closeSettings(); showChat(); }}
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <MessageSquare className="w-3 h-3 flex-shrink-0" />

@@ -3,6 +3,7 @@ import Editor, { type OnMount, type OnChange } from "@monaco-editor/react";
 import type * as Monaco from "monaco-editor";
 import { useFileStore, useActiveFile } from "@/stores/fileStore";
 import * as fileService from "@/services/fileService";
+import { useIsDarkMode } from "@/hooks/useIsDarkMode";
 import { Loader2 } from "lucide-react";
 
 export function CodeEditor() {
@@ -10,6 +11,7 @@ export function CodeEditor() {
   const updateFileContent = useFileStore((state) => state.updateFileContent);
   const markFileSaved = useFileStore((state) => state.markFileSaved);
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const isDark = useIsDarkMode();
 
   const handleEditorMount: OnMount = useCallback((editor, monaco) => {
     editorRef.current = editor;
@@ -59,7 +61,7 @@ export function CodeEditor() {
         value={activeFile.content}
         onChange={handleChange}
         onMount={handleEditorMount}
-        theme="vs-dark"
+        theme={isDark ? "vs-dark" : "light"}
         loading={
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-6 h-6 animate-spin" />
