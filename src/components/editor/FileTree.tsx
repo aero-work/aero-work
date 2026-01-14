@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import * as fileService from "@/services/fileService";
 import { useFileStore, type FileEntry, type FileTreeNode } from "@/stores/fileStore";
 import { useAgentStore } from "@/stores/agentStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -327,6 +328,7 @@ export function FileTree() {
 
   const connectionStatus = useAgentStore((state) => state.connectionStatus);
   const isConnected = connectionStatus === "connected";
+  const closeSettings = useSettingsStore((state) => state.closeSettings);
 
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
   const [newItem, setNewItem] = useState<{
@@ -416,6 +418,7 @@ export function FileTree() {
     async (node: FileTreeNode) => {
       if (node.isDir) return;
 
+      closeSettings(); // Close settings when opening a file
       try {
         const result = await fileService.readFile(node.path);
         openFile({
@@ -430,7 +433,7 @@ export function FileTree() {
         console.error("Failed to open file:", error);
       }
     },
-    [openFile]
+    [openFile, closeSettings]
   );
 
   // Handle rename
