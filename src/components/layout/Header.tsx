@@ -9,7 +9,6 @@ import {
   PlugZap,
   Loader2,
   AlertCircle,
-  Bot,
   FolderOpen,
 } from "lucide-react";
 
@@ -47,12 +46,9 @@ export function Header() {
 
   return (
     <header className="h-12 border-b bg-background flex items-center justify-between px-4">
-      <div className="flex items-center gap-3">
-        <Bot className="w-5 h-5 text-primary" />
-        <h1 className="font-semibold text-lg" style={{ fontFamily: 'Quantico, sans-serif', fontStyle: 'italic' }}>
-          Aero Code
-        </h1>
-      </div>
+      <h1 className="font-semibold text-lg" style={{ fontFamily: 'Quantico, sans-serif', fontStyle: 'italic' }}>
+        Aero Code
+      </h1>
 
       <div className="flex items-center gap-2">
         {/* Project Selector */}
