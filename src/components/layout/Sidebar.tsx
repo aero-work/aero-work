@@ -9,7 +9,6 @@ import { FileTree } from "@/components/editor/FileTree";
 import {
   MessageSquare,
   FolderTree,
-  Bot,
   Settings,
   ChevronDown,
   ChevronRight,
@@ -21,15 +20,11 @@ import {
   RefreshCw,
   GitFork,
   Loader2,
-  Server,
-  Shield,
-  Settings2,
-  Check,
 } from "lucide-react";
 import { agentAPI } from "@/services/api";
 import type { SessionInfo } from "@/types/acp";
 
-type SidebarSection = "sessions" | "files" | "agents" | "settings";
+type SidebarSection = "sessions" | "files";
 
 interface CollapsibleSectionProps {
   title: string;
@@ -77,60 +72,29 @@ function CollapsibleSection({
   );
 }
 
-function SettingsMenu() {
+function SettingsButton() {
   const openSettings = useSettingsStore((state) => state.openSettings);
   const isSettingsOpen = useSettingsStore((state) => state.isOpen);
-  const activePanel = useSettingsStore((state) => state.activePanel);
-  const connectionStatus = useAgentStore((state) => state.connectionStatus);
-  const agentInfo = useAgentStore((state) => state.agentInfo);
-
-  const isConnected = connectionStatus === "connected";
-
-  const menuItems = [
-    { id: "general", label: "General", icon: Settings2, description: "App preferences" },
-    { id: "agents", label: "Agents", icon: Bot, description: agentInfo ? `${agentInfo.name} v${agentInfo.version}` : "Not connected" },
-    { id: "models", label: "Models", icon: Bot, description: "AI model config" },
-    { id: "mcp", label: "MCP Servers", icon: Server, description: "Protocol servers" },
-    { id: "permissions", label: "Permissions", icon: Shield, description: "Tool access rules" },
-  ] as const;
 
   return (
-    <div className="px-2 space-y-1">
-      {menuItems.map((item) => {
-        const isActive = isSettingsOpen && activePanel === item.id;
-        return (
-          <button
-            key={item.id}
-            onClick={() => openSettings(item.id)}
-            className={cn(
-              "w-full flex items-center gap-3 px-2 py-2 rounded-md text-left group",
-              isActive ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"
-            )}
-          >
-            <div className="relative">
-              <item.icon className={cn(
-                "w-4 h-4",
-                isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
-              )} />
-              {item.id === "agents" && isConnected && (
-                <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-green-500" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium">{item.label}</div>
-              <div className="text-xs text-muted-foreground truncate">{item.description}</div>
-            </div>
-            {isActive && <Check className="w-4 h-4 text-primary" />}
-          </button>
-        );
-      })}
-    </div>
+    <button
+      onClick={() => openSettings("general")}
+      className={cn(
+        "w-full flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors",
+        isSettingsOpen
+          ? "bg-accent text-accent-foreground"
+          : "hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+      )}
+    >
+      <Settings className="w-4 h-4" />
+      <span>Settings</span>
+    </button>
   );
 }
 
 export function Sidebar() {
   const [openSections, setOpenSections] = useState<Set<SidebarSection>>(
-    new Set(["sessions", "files", "settings"])
+    new Set(["sessions", "files"])
   );
   const [resumingSessionId, setResumingSessionId] = useState<string | null>(null);
 
@@ -399,15 +363,10 @@ export function Sidebar() {
           </div>
         </CollapsibleSection>
 
-        {/* Settings Section */}
-        <CollapsibleSection
-          title="Settings"
-          icon={<Settings className="w-4 h-4" />}
-          isOpen={openSections.has("settings")}
-          onToggle={() => toggleSection("settings")}
-        >
-          <SettingsMenu />
-        </CollapsibleSection>
+        {/* Settings Button - fixed at bottom */}
+        <div className="border-t">
+          <SettingsButton />
+        </div>
     </div>
   );
 }
