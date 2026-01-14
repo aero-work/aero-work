@@ -73,8 +73,8 @@
 |------------|---------|---------|
 | React | 18+ | UI framework |
 | TypeScript | 5+ | Type safety |
-| Tailwind CSS | 3+ | Utility-first styling |
-| shadcn/ui | latest | Component library (Radix UI based) |
+| Tailwind CSS | 4+ | Utility-first styling (with oklch colors) |
+| shadcn/ui | latest | Component library (Radix UI based, Slate theme) |
 | Zustand | 4+ | State management with immer middleware |
 | xterm.js | 5+ | Terminal emulator |
 | Monaco Editor | latest | Code editing with syntax highlighting |

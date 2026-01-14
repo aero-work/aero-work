@@ -8,7 +8,9 @@ aero-code/
 │   ├── AGENT.md                  # Main Claude Code instructions (READ FIRST)
 │   ├── product.md                # Product overview and features
 │   ├── tech.md                   # Technology stack
-│   └── structure.md              # This file
+│   ├── structure.md              # This file
+│   ├── known-issues.md           # Known bugs and workarounds
+│   └── code-review-issues.md     # Code review results (2026-01-15)
 ├── src-tauri/                    # Rust Backend (Tauri)
 │   ├── src/
 │   │   ├── main.rs               # Application entry point
@@ -103,7 +105,9 @@ aero-code/
 │   │   │   ├── index.ts          # Transport factory + TauriTransport + context
 │   │   │   ├── types.ts          # Transport interface definitions
 │   │   │   └── websocket.ts      # WebSocketTransport (JSON-RPC over WS)
-│   │   └── api.ts                # AgentAPI class (high-level wrapper)
+│   │   ├── api.ts                # AgentAPI class (high-level wrapper)
+│   │   ├── fileService.ts        # File operations via WebSocket
+│   │   └── terminalService.ts    # Terminal operations via WebSocket
 │   ├── hooks/                    # Custom React hooks
 │   │   ├── useAutoConnect.ts     # Auto-connect to backend on mount
 │   │   ├── useZoom.ts            # Cmd+/- zoom functionality (desktop only)
