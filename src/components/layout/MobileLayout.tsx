@@ -35,18 +35,26 @@ function MobileFilesView() {
 
       const reader = new FileReader();
       reader.onload = async (event) => {
-        const content = event.target?.result as string;
+        const arrayBuffer = event.target?.result as ArrayBuffer;
+        // Convert ArrayBuffer to base64
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = "";
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64Content = btoa(binary);
+
         // Save file to current working directory
         const filePath = `${currentWorkingDir}/${file.name}`;
         try {
-          await fileService.writeFile(filePath, content);
+          await fileService.writeFileBinary(filePath, base64Content);
           // Refresh file tree to show the new file
           triggerRefresh();
         } catch (error) {
           console.error("Failed to upload file:", error);
         }
       };
-      reader.readAsText(file);
+      reader.readAsArrayBuffer(file);
 
       // Reset input so same file can be uploaded again
       e.target.value = "";

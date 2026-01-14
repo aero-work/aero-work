@@ -372,6 +372,25 @@ pub async fn write_file_impl(path: &str, content: &str) -> Result<(), String> {
     Ok(())
 }
 
+// Write binary file from base64 encoded content
+pub async fn write_file_binary_impl(path: &str, content: &str) -> Result<(), String> {
+    let file_path = PathBuf::from(path);
+
+    // Ensure parent directory exists
+    if let Some(parent) = file_path.parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent).map_err(|e| format!("Failed to create directory: {}", e))?;
+        }
+    }
+
+    // Decode base64 content
+    let bytes = BASE64.decode(content).map_err(|e| format!("Failed to decode base64: {}", e))?;
+
+    fs::write(&file_path, bytes).map_err(|e| format!("Failed to write file: {}", e))?;
+
+    Ok(())
+}
+
 pub async fn create_file_impl(path: &str) -> Result<(), String> {
     let file_path = PathBuf::from(path);
 

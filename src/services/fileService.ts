@@ -52,6 +52,11 @@ export async function writeFile(path: string, content: string): Promise<void> {
   await getWsTransport().send<void>("write_file", { path, content });
 }
 
+export async function writeFileBinary(path: string, content: string): Promise<void> {
+  // content should be base64 encoded
+  await getWsTransport().send<void>("write_file_binary", { path, content });
+}
+
 export async function createFile(path: string): Promise<void> {
   await getWsTransport().send<void>("create_file", { path });
 }

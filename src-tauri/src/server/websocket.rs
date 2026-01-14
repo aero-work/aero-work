@@ -477,6 +477,16 @@ async fn dispatch_method(
             write_file_handler(path, content).await?;
             Ok(serde_json::Value::Null)
         }
+        "write_file_binary" => {
+            let path = params.get("path")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing path parameter")?;
+            let content = params.get("content")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing content parameter (base64)")?;
+            write_file_binary_handler(path, content).await?;
+            Ok(serde_json::Value::Null)
+        }
         "create_file" => {
             let path = params.get("path")
                 .and_then(|v| v.as_str())
@@ -1169,6 +1179,10 @@ async fn get_file_info_handler(path: &str) -> Result<FileInfo, String> {
 
 async fn write_file_handler(path: &str, content: &str) -> Result<(), String> {
     crate::commands::file::write_file_impl(path, content).await
+}
+
+async fn write_file_binary_handler(path: &str, content: &str) -> Result<(), String> {
+    crate::commands::file::write_file_binary_impl(path, content).await
 }
 
 async fn create_file_handler(path: &str) -> Result<(), String> {
