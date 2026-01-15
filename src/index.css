@@ -123,12 +123,21 @@
   }
 }
 
-/* Mobile safe area support */
+/* Mobile safe area support - spacer divs */
 .safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  height: env(safe-area-inset-bottom, 0);
 }
 
 .safe-area-top {
+  height: env(safe-area-inset-top, 0);
+}
+
+/* Safe area padding utilities (for elements with content) */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.pt-safe {
   padding-top: env(safe-area-inset-top, 0);
 }
 
@@ -271,5 +280,68 @@
     border-radius: 0.375rem;
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
+  }
+}
+
+/* User message markdown (white text on blue background) */
+.prose-user {
+  /* Override colors for user messages */
+  & h1, & h2, & h3, & h4, & h5, & h6 {
+    color: white;
+  }
+
+  & p {
+    color: white;
+  }
+
+  & strong {
+    color: white;
+  }
+
+  & a {
+    color: white;
+    text-decoration: underline;
+    opacity: 0.9;
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  & code:not(pre code) {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+
+  & pre {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+
+    & code {
+      color: white;
+    }
+  }
+
+  & li {
+    color: white;
+  }
+
+  & blockquote {
+    border-left-color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  & th {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  & td {
+    color: white;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  & hr {
+    border-color: rgba(255, 255, 255, 0.3);
   }
 }

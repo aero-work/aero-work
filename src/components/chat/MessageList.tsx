@@ -232,88 +232,85 @@ function MessageBubble({ message }: { message: Message }) {
         </button>
 
         {/* Message content with markdown */}
-        {isUser ? (
-          // User messages: plain text (no markdown)
-          <p className="whitespace-pre-wrap text-sm pr-6">{message.content}</p>
-        ) : (
-          // Assistant messages: markdown rendered with custom prose styling
-          <div className="prose-custom text-sm pr-6 max-w-none">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                code({ className, children, ...props }) {
-                  const match = /language-(\w+)/.exec(className || "");
-                  const isInline = !match && !className;
+        <div className={cn(
+          "prose-custom text-sm pr-6 max-w-none",
+          isUser && "prose-user"
+        )}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              code({ className, children, ...props }) {
+                const match = /language-(\w+)/.exec(className || "");
+                const isInline = !match && !className;
 
-                  if (isInline) {
-                    return (
-                      <code {...props}>
-                        {children}
-                      </code>
-                    );
-                  }
+                if (isInline) {
+                  return (
+                    <code {...props}>
+                      {children}
+                    </code>
+                  );
+                }
 
-                  return (
-                    <SyntaxHighlighter
-                      style={isDark ? oneDark : oneLight}
-                      language={match?.[1] || "text"}
-                      PreTag="div"
-                      customStyle={{
-                        margin: 0,
-                        borderRadius: "0.5rem",
-                        fontSize: "0.875rem",
-                        background: isDark
-                          ? "hsl(220, 13%, 12%)"
-                          : "hsl(220, 13%, 18%)",
-                      }}
-                    >
-                      {String(children).replace(/\n$/, "")}
-                    </SyntaxHighlighter>
-                  );
-                },
-                // Links use CSS variables
-                a({ children, href, ...props }) {
-                  return (
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      {...props}
-                    >
+                return (
+                  <SyntaxHighlighter
+                    style={isDark ? oneDark : oneLight}
+                    language={match?.[1] || "text"}
+                    PreTag="div"
+                    customStyle={{
+                      margin: 0,
+                      borderRadius: "0.5rem",
+                      fontSize: "0.875rem",
+                      background: isDark
+                        ? "hsl(220, 13%, 12%)"
+                        : "hsl(220, 13%, 18%)",
+                    }}
+                  >
+                    {String(children).replace(/\n$/, "")}
+                  </SyntaxHighlighter>
+                );
+              },
+              // Links use CSS variables
+              a({ children, href, ...props }) {
+                return (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    {...props}
+                  >
+                    {children}
+                  </a>
+                );
+              },
+              // Tables use CSS variables
+              table({ children, ...props }) {
+                return (
+                  <div className="overflow-x-auto">
+                    <table {...props}>
                       {children}
-                    </a>
-                  );
-                },
-                // Tables use CSS variables
-                table({ children, ...props }) {
-                  return (
-                    <div className="overflow-x-auto">
-                      <table {...props}>
-                        {children}
-                      </table>
-                    </div>
-                  );
-                },
-                th({ children, ...props }) {
-                  return (
-                    <th {...props}>
-                      {children}
-                    </th>
-                  );
-                },
-                td({ children, ...props }) {
-                  return (
-                    <td {...props}>
-                      {children}
-                    </td>
-                  );
-                },
-              }}
-            >
-              {message.content}
-            </ReactMarkdown>
-          </div>
-        )}
+                    </table>
+                  </div>
+                );
+              },
+              th({ children, ...props }) {
+                return (
+                  <th {...props}>
+                    {children}
+                  </th>
+                );
+              },
+              td({ children, ...props }) {
+                return (
+                  <td {...props}>
+                    {children}
+                  </td>
+                );
+              },
+            }}
+          >
+            {message.content}
+          </ReactMarkdown>
+        </div>
       </div>
     </div>
   );
