@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect } from "react";
+import { useCallback, useMemo, useEffect, useState } from "react";
 import { SwipeableSessionCard } from "@/components/chat/SwipeableSessionCard";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -31,6 +31,7 @@ function sortSessions(sessions: SessionInfo[]): SessionInfo[] {
 }
 
 export function MobileSessionList() {
+  const [isCreating, setIsCreating] = useState(false);
   const availableSessions = useSessionStore((state) => state.availableSessions);
   const availableSessionsLoading = useSessionStore((state) => state.availableSessionsLoading);
 
@@ -58,16 +59,19 @@ export function MobileSessionList() {
 
   // Create new session
   const handleNewSession = useCallback(async () => {
-    if (!isConnected) return;
+    if (!isConnected || isCreating) return;
 
+    setIsCreating(true);
     try {
       const sessionId = await agentAPI.createSession(currentWorkingDir || undefined);
       setActiveSession(sessionId);
       enterConversation();
     } catch (error) {
       console.error("Failed to create session:", error);
+    } finally {
+      setIsCreating(false);
     }
-  }, [isConnected, currentWorkingDir, setActiveSession, enterConversation]);
+  }, [isConnected, isCreating, currentWorkingDir, setActiveSession, enterConversation]);
 
   // Open existing session
   const handleOpenSession = useCallback(
@@ -113,7 +117,7 @@ export function MobileSessionList() {
     return (
       <div className="flex flex-col h-full items-center justify-center text-muted-foreground px-6">
         <Bot className="w-16 h-16 opacity-20 mb-4" />
-        <h2 className="text-lg font-medium text-foreground mb-2">
+        <h2 className="text-xl font-semibold text-foreground mb-2">
           Welcome to Aero Work
         </h2>
         <p className="text-sm text-center mb-4">
@@ -149,9 +153,19 @@ export function MobileSessionList() {
           onClick={handleNewSession}
           className="w-full h-12 text-base"
           size="lg"
+          disabled={isCreating}
         >
-          <Plus className="w-5 h-5 mr-2" />
-          New Conversation
+          {isCreating ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Creating...
+            </>
+          ) : (
+            <>
+              <Plus className="w-5 h-5 mr-2" />
+              New Conversation
+            </>
+          )}
         </Button>
       </div>
 

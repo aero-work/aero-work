@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useSessionStore } from "@/stores/sessionStore";
@@ -97,6 +97,7 @@ export function Sidebar() {
     new Set(["sessions", "files"])
   );
   const [resumingSessionId, setResumingSessionId] = useState<string | null>(null);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
 
   const activeSessionId = useSessionStore((state) => state.activeSessionId);
   const setActiveSession = useSessionStore((state) => state.setActiveSession);
@@ -132,14 +133,17 @@ export function Sidebar() {
     });
   };
 
-  const handleNewSession = async () => {
-    if (!currentWorkingDir) return;
+  const handleNewSession = useCallback(async () => {
+    if (!currentWorkingDir || isCreatingSession) return;
+    setIsCreatingSession(true);
     try {
       await agentAPI.createSession(currentWorkingDir);
     } catch (error) {
       console.error("Failed to create session:", error);
+    } finally {
+      setIsCreatingSession(false);
     }
-  };
+  }, [currentWorkingDir, isCreatingSession]);
 
   const handleDeleteSession = async (
     e: React.MouseEvent,
@@ -225,9 +229,14 @@ export function Sidebar() {
                   size="icon"
                   className="h-6 w-6"
                   onClick={handleNewSession}
+                  disabled={isCreatingSession}
                   title="New session"
                 >
-                  <Plus className="w-3 h-3" />
+                  {isCreatingSession ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Plus className="w-3 h-3" />
+                  )}
                 </Button>
               </div>
             ) : null
