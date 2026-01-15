@@ -1,13 +1,14 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { SessionInfo } from "@/types/acp";
-import { MessageSquare, Clock, Trash2 } from "lucide-react";
+import { MessageSquare, Clock, Trash2, Square } from "lucide-react";
 
 interface SwipeableSessionCardProps {
   session: SessionInfo;
   isActive?: boolean;
   onClick: () => void;
   onDelete?: () => void;
+  onStop?: () => void;
 }
 
 function formatRelativeTime(timestamp: string | number): string {
@@ -45,6 +46,7 @@ export function SwipeableSessionCard({
   isActive,
   onClick,
   onDelete,
+  onStop,
 }: SwipeableSessionCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [translateX, setTranslateX] = useState(0);
@@ -82,16 +84,13 @@ export function SwipeableSessionCard({
   }, [isOpen]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // Don't allow swipe for active sessions
-    if (isActive) return;
-
     const touch = e.touches[0];
     startX.current = touch.clientX;
     startY.current = touch.clientY;
     currentX.current = touch.clientX;
     isHorizontalSwipe.current = null;
     setIsDragging(true);
-  }, [isActive]);
+  }, []);
 
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
@@ -181,13 +180,38 @@ export function SwipeableSessionCard({
     [onDelete]
   );
 
+  const handleStop = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (onStop) {
+        onStop();
+      }
+      setTranslateX(0);
+      setIsOpen(false);
+    },
+    [onStop]
+  );
+
   return (
     <div
       ref={containerRef}
       className="relative overflow-hidden"
     >
-      {/* Delete button (behind the card) - only for non-active sessions */}
-      {!isActive && (
+      {/* Action button (behind the card) */}
+      {isActive ? (
+        /* Stop button for active sessions */
+        <div
+          className="absolute right-0 top-0 bottom-0 flex items-center justify-center bg-orange-500 text-white"
+          style={{ width: DELETE_WIDTH }}
+          onClick={handleStop}
+          role="button"
+          tabIndex={0}
+        >
+          <Square className="w-6 h-6 fill-current" />
+        </div>
+      ) : (
+        /* Delete button for inactive sessions */
         <div
           className="absolute right-0 top-0 bottom-0 flex items-center justify-center bg-destructive text-destructive-foreground"
           style={{ width: DELETE_WIDTH }}
