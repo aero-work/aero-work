@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -12,14 +13,15 @@ import { ModelSettings } from "./ModelSettings";
 import { PermissionSettings } from "./PermissionSettings";
 import { GeneralSettings } from "./GeneralSettings";
 
-const PANEL_CONFIG: { id: SettingsPanel; label: string; icon: React.ReactNode }[] = [
-  { id: "general", label: "General", icon: <Settings2 className="w-4 h-4" /> },
-  { id: "models", label: "Models", icon: <Bot className="w-4 h-4" /> },
-  { id: "mcp", label: "MCP Servers", icon: <Server className="w-4 h-4" /> },
-  { id: "permissions", label: "Permissions", icon: <Shield className="w-4 h-4" /> },
+const PANEL_CONFIG: { id: SettingsPanel; labelKey: string; icon: React.ReactNode }[] = [
+  { id: "general", labelKey: "settings.general", icon: <Settings2 className="w-4 h-4" /> },
+  { id: "models", labelKey: "settings.models", icon: <Bot className="w-4 h-4" /> },
+  { id: "mcp", labelKey: "settings.mcpServers", icon: <Server className="w-4 h-4" /> },
+  { id: "permissions", labelKey: "settings.permissions", icon: <Shield className="w-4 h-4" /> },
 ];
 
 export function SettingsDialog() {
+  const { t } = useTranslation();
   const isOpen = useSettingsStore((state) => state.isOpen);
   const activePanel = useSettingsStore((state) => state.activePanel);
   const closeSettings = useSettingsStore((state) => state.closeSettings);
@@ -29,7 +31,7 @@ export function SettingsDialog() {
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeSettings()}>
       <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
+          <DialogTitle>{t("settings.title")}</DialogTitle>
         </DialogHeader>
 
         <Tabs
@@ -45,7 +47,7 @@ export function SettingsDialog() {
                 className="flex items-center gap-2"
               >
                 {panel.icon}
-                <span className="hidden sm:inline">{panel.label}</span>
+                <span className="hidden sm:inline">{t(panel.labelKey)}</span>
               </TabsTrigger>
             ))}
           </TabsList>

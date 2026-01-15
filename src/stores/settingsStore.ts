@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { persist } from "zustand/middleware";
 import { generateUUID } from "@/lib/utils";
+import i18n, { detectLanguage } from "@/i18n";
 
 /**
  * MCP Server configuration
@@ -64,6 +65,7 @@ interface SettingsState {
   autoConnect: boolean;
   theme: "light" | "dark" | "system";
   autoCleanEmptySessions: boolean;
+  language: string; // Empty string means auto-detect from system
 }
 
 interface SettingsActions {
@@ -95,6 +97,7 @@ interface SettingsActions {
   setAutoConnect: (auto: boolean) => void;
   setTheme: (theme: "light" | "dark" | "system") => void;
   setAutoCleanEmptySessions: (auto: boolean) => void;
+  setLanguage: (lang: string) => void;
 }
 
 const initialState: SettingsState = {
@@ -154,6 +157,7 @@ const initialState: SettingsState = {
   autoConnect: true,
   theme: "system",
   autoCleanEmptySessions: true,
+  language: "", // Empty means auto-detect
 };
 
 export const useSettingsStore = create<SettingsState & SettingsActions>()(
@@ -310,6 +314,19 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           state.autoCleanEmptySessions = auto;
         });
       },
+
+      setLanguage: (lang) => {
+        set((state) => {
+          state.language = lang;
+        });
+        // Update i18n language
+        if (lang) {
+          i18n.changeLanguage(lang);
+        } else {
+          // Auto-detect from system
+          i18n.changeLanguage(detectLanguage());
+        }
+      },
     })),
     {
       name: "aero-code-settings",
@@ -322,6 +339,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
         autoConnect: state.autoConnect,
         theme: state.theme,
         autoCleanEmptySessions: state.autoCleanEmptySessions,
+        language: state.language,
       }),
     }
   )

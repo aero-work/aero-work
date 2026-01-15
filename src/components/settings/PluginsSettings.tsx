@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,6 +63,7 @@ async function openExternalUrl(url: string) {
 }
 
 export function PluginsSettings() {
+  const { t } = useTranslation();
   const transport = useTransport();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -224,7 +226,7 @@ export function PluginsSettings() {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-muted-foreground">Loading plugins...</span>
+        <span className="ml-2 text-muted-foreground">{t("pluginSettings.loadingPlugins")}</span>
       </div>
     );
   }
@@ -234,35 +236,34 @@ export function PluginsSettings() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
         <div>
-          <h3 className="text-lg font-medium">Plugins</h3>
+          <h3 className="text-lg font-medium">{t("pluginSettings.title")}</h3>
           <p className="text-sm text-muted-foreground">
-            Manage plugins and marketplaces
+            {t("pluginSettings.description")}
           </p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
           <Button variant="outline" size="sm" onClick={fetchPlugins} className="text-xs sm:text-sm">
             <RefreshCw className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Refresh</span>
+            <span className="hidden sm:inline">{t("common.refresh")}</span>
           </Button>
           <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="text-xs sm:text-sm">
                 <Plus className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Add Marketplace</span>
-                <span className="sm:hidden">Add</span>
+                <span className="hidden sm:inline">{t("pluginSettings.addMarketplace")}</span>
+                <span className="sm:hidden">{t("common.add")}</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add Marketplace</DialogTitle>
+                <DialogTitle>{t("pluginSettings.addMarketplace")}</DialogTitle>
                 <DialogDescription>
-                  Add a new plugin marketplace by providing its Git repository
-                  URL.
+                  {t("pluginSettings.addMarketplaceDescription")}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="name">{t("common.name")}</Label>
                   <Input
                     id="name"
                     placeholder="my-marketplace"
@@ -271,7 +272,7 @@ export function PluginsSettings() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="url">Git URL</Label>
+                  <Label htmlFor="url">{t("pluginSettings.gitUrl")}</Label>
                   <Input
                     id="url"
                     placeholder="https://github.com/user/marketplace.git"
@@ -285,7 +286,7 @@ export function PluginsSettings() {
                   variant="outline"
                   onClick={() => setAddDialogOpen(false)}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   onClick={handleAddMarketplace}
@@ -298,7 +299,7 @@ export function PluginsSettings() {
                   {addingMarketplace && (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   )}
-                  Add
+                  {t("common.add")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -317,7 +318,7 @@ export function PluginsSettings() {
             className="ml-auto"
             onClick={() => setError(null)}
           >
-            Dismiss
+            {t("common.dismiss")}
           </Button>
         </div>
       )}
@@ -328,11 +329,11 @@ export function PluginsSettings() {
           <CardContent className="flex flex-col items-center justify-center py-8">
             <Package className="w-12 h-12 text-muted-foreground mb-4" />
             <p className="text-muted-foreground mb-4">
-              No marketplaces added yet
+              {t("pluginSettings.noMarketplaces")}
             </p>
             <Button size="sm" onClick={() => setAddDialogOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              Add Your First Marketplace
+              {t("pluginSettings.addFirstMarketplace")}
             </Button>
           </CardContent>
         </Card>
@@ -388,6 +389,7 @@ function MarketplaceCard({
   isPluginInstalled,
   operationLoading,
 }: MarketplaceCardProps) {
+  const { t } = useTranslation();
   const isDeleting = operationLoading === `delete-${marketplace.name}`;
   const isUpdating = operationLoading === `update-${marketplace.name}`;
   const isToggling = operationLoading === `toggle-${marketplace.name}`;
@@ -429,7 +431,7 @@ function MarketplaceCard({
                   onUpdate();
                 }}
                 disabled={isUpdating || !marketplace.enabled}
-                title="Update marketplace"
+                title={t("pluginSettings.updateMarketplace")}
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isUpdating ? "animate-spin" : ""}`}
@@ -444,7 +446,7 @@ function MarketplaceCard({
                   onDelete();
                 }}
                 disabled={isDeleting}
-                title="Delete marketplace"
+                title={t("pluginSettings.deleteMarketplace")}
               >
                 {isDeleting ? (
                   <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
@@ -460,7 +462,7 @@ function MarketplaceCard({
                   <Switch
                     checked={marketplace.enabled}
                     onCheckedChange={onToggleMarketplace}
-                    title={marketplace.enabled ? "Disable marketplace" : "Enable marketplace"}
+                    title={marketplace.enabled ? t("pluginSettings.disableMarketplace") : t("pluginSettings.enableMarketplace")}
                   />
                 )}
               </div>
@@ -474,11 +476,11 @@ function MarketplaceCard({
           <CardContent className="pt-0">
             {!marketplace.enabled ? (
               <p className="text-sm text-muted-foreground py-2 italic">
-                Marketplace is disabled. Enable it to manage plugins.
+                {t("pluginSettings.marketplaceDisabled")}
               </p>
             ) : marketplace.plugins.length === 0 ? (
               <p className="text-sm text-muted-foreground py-2">
-                No plugins available in this marketplace
+                {t("pluginSettings.noPluginsAvailable")}
               </p>
             ) : (
               <div className="space-y-3">

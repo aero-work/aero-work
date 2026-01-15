@@ -1,0 +1,238 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "open": "Open",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "copy": "Copy",
+    "download": "Download",
+    "upload": "Upload",
+    "search": "Search",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "edit": "Edit",
+    "create": "Create",
+    "rename": "Rename",
+    "options": "Options",
+    "add": "Add",
+    "dismiss": "Dismiss",
+    "name": "Name",
+    "version": "Version",
+    "type": "Type",
+    "use": "Use",
+    "current": "Current"
+  },
+  "header": {
+    "connecting": "Connecting...",
+    "failed": "Failed",
+    "offline": "Offline"
+  },
+  "tabs": {
+    "chat": "Chat",
+    "files": "Files",
+    "terminal": "Terminal",
+    "settings": "Settings"
+  },
+  "session": {
+    "newConversation": "New Conversation",
+    "noConversations": "No Conversations Yet",
+    "tapToStart": "Tap the button above to start your first conversation.",
+    "loadingSessions": "Loading sessions...",
+    "conversation": "Conversation",
+    "status": {
+      "ready": "Ready",
+      "running": "Running",
+      "pending": "Pending",
+      "stopped": "Stopped"
+    },
+    "messages": "{{count}} msgs",
+    "welcome": {
+      "title": "Welcome to Aero Code",
+      "connectMessage": "Connecting to the AI agent...",
+      "checkSettings": "Check Settings if connection fails."
+    },
+    "selectProject": {
+      "title": "Select a Project",
+      "message": "Tap the Open button in the header to select a project folder."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "agents": "Agents",
+    "models": "Models",
+    "mcp": "MCP",
+    "mcpServers": "MCP Servers",
+    "plugins": "Plugins",
+    "permissions": "Permissions",
+    "language": {
+      "title": "Language",
+      "description": "Choose your preferred language",
+      "auto": "Auto (System)"
+    },
+    "theme": {
+      "title": "Theme",
+      "description": "Choose your preferred theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "autoConnect": {
+      "title": "Auto Connect",
+      "description": "Automatically connect to server on startup"
+    },
+    "autoCleanEmptySessions": {
+      "title": "Auto Clean Empty Sessions",
+      "description": "Automatically delete sessions with no agent response"
+    },
+    "hideHiddenFiles": {
+      "title": "Hide Hidden Files",
+      "description": "Hide files and folders starting with dot (.)"
+    }
+  },
+  "agent": {
+    "title": "Agent Connection",
+    "description": "Manage the connection to the AI coding agent.",
+    "noAgentConnected": "No Agent Connected",
+    "clickToConnect": "Click connect to start",
+    "details": "Agent Details",
+    "protocol": "Protocol",
+    "info": "The agent runs as a subprocess and communicates via the Agent Client Protocol (ACP). Currently using claude-code-acp adapter."
+  },
+  "model": {
+    "title": "Model Configuration",
+    "description": "View and switch AI models for the current session.",
+    "notConnected": "Not Connected",
+    "connectToView": "Connect to the agent to view available models.",
+    "noActiveSession": "No Active Session",
+    "createSession": "Create or select a session to view available models.",
+    "loadingModels": "Loading Models",
+    "fetchingModels": "Fetching available models from the agent...",
+    "useThisModel": "Use This Model",
+    "switching": "Switching...",
+    "aboutTitle": "About Model Selection",
+    "aboutDescription": "Available models depend on your agent config and API keys. Switching only affects the current session."
+  },
+  "mcpSettings": {
+    "title": "MCP Servers",
+    "description": "Configure Model Context Protocol servers in ~/.claude.json",
+    "shortDescription": "Configure MCP servers",
+    "connectToManage": "Connect to the agent to manage MCP servers",
+    "noServers": "No MCP Servers Configured",
+    "noServersDescription": "Add MCP servers to extend the agent with custom tools and resources.",
+    "addServer": "Add MCP Server",
+    "addServerShort": "Add Server",
+    "newServer": "New MCP Server",
+    "editServer": "Edit",
+    "serverName": "Server Name",
+    "serverType": "Type",
+    "command": "Command",
+    "arguments": "Arguments (space-separated)",
+    "envVars": "Environment Variables (optional)",
+    "envVarsPlaceholder": "KEY=VALUE (one per line)",
+    "url": "URL",
+    "configFiles": "Config Files",
+    "storedIn": "Stored in"
+  },
+  "pluginSettings": {
+    "title": "Plugins",
+    "description": "Manage plugins and marketplaces",
+    "loadingPlugins": "Loading plugins...",
+    "addMarketplace": "Add Marketplace",
+    "addMarketplaceDescription": "Add a new plugin marketplace by providing its Git repository URL.",
+    "gitUrl": "Git URL",
+    "noMarketplaces": "No marketplaces added yet",
+    "addFirstMarketplace": "Add Your First Marketplace",
+    "updateMarketplace": "Update marketplace",
+    "deleteMarketplace": "Delete marketplace",
+    "enableMarketplace": "Enable marketplace",
+    "disableMarketplace": "Disable marketplace",
+    "marketplaceDisabled": "Marketplace is disabled. Enable it to manage plugins.",
+    "noPluginsAvailable": "No plugins available in this marketplace"
+  },
+  "permissionSettings": {
+    "title": "Permission Rules",
+    "description": "Configure automatic permission rules for tool calls.",
+    "shortDescription": "Auto-allow or deny tool calls",
+    "connectToManage": "Connect to the agent to manage permission rules",
+    "noRules": "No Permission Rules",
+    "noRulesDescription": "Add rules to automatically allow or deny tool calls.",
+    "addRule": "Add Rule",
+    "newRule": "New Rule",
+    "editRule": "Edit Rule",
+    "toolPattern": "Tool Pattern (regex)",
+    "toolPatternHelp": "Use | for multiple tools: Read|Glob|Grep",
+    "pathPattern": "Path Pattern (optional)",
+    "descriptionLabel": "Description (optional)",
+    "action": "Action",
+    "allow": "Allow",
+    "deny": "Deny",
+    "ask": "Ask",
+    "rulePriority": "Rule Priority",
+    "rulePriorityDescription": "Rules are evaluated top to bottom. First match wins."
+  },
+  "chat": {
+    "startConversation": "Start a conversation",
+    "typeMessage": "Type a message below to begin",
+    "placeholder": "Type your message...",
+    "send": "Send",
+    "stop": "Stop"
+  },
+  "files": {
+    "title": "Files",
+    "noProject": "No project selected",
+    "selectProject": "Select a project to browse files",
+    "emptyFolder": "This folder is empty",
+    "file": "File",
+    "newFile": "New File",
+    "newFolder": "New Folder",
+    "uploadFile": "Upload File",
+    "forceEdit": "Force Edit"
+  },
+  "projectSelector": {
+    "title": "Open Project",
+    "recent": "Recent",
+    "browse": "Browse",
+    "enterPath": "Enter directory path...",
+    "noRecentProjects": "No Recent Projects",
+    "getStarted": "Enter a path above to get started",
+    "notConnected": "Not Connected",
+    "connectFirst": "Connect to server first to browse",
+    "noSubdirectories": "No subdirectories",
+    "openThisFolder": "Open This Folder"
+  },
+  "permission": {
+    "title": "Permission Required",
+    "allowOnce": "Allow Once",
+    "allowAlways": "Allow Always",
+    "deny": "Deny"
+  },
+  "sidebar": {
+    "sessions": "Sessions",
+    "recentProjects": "Recent Projects",
+    "noRecentProjects": "No recent projects"
+  },
+  "connection": {
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "connecting": "Connecting",
+    "error": "Connection Error"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{count}}d ago"
+  }
+}

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useSettingsStore, type SettingsPanel } from "@/stores/settingsStore";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,16 +13,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 
-const PANEL_CONFIG: { id: SettingsPanel; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "general", label: "General", icon: Settings2 },
-  { id: "agents", label: "Agents", icon: Bot },
-  { id: "models", label: "Models", icon: Sparkles },
-  { id: "mcp", label: "MCP Servers", icon: Wrench },
-  { id: "plugins", label: "Plugins", icon: Puzzle },
-  { id: "permissions", label: "Permissions", icon: Shield },
+const PANEL_CONFIG: { id: SettingsPanel; labelKey: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: "general", labelKey: "settings.general", icon: Settings2 },
+  { id: "agents", labelKey: "settings.agents", icon: Bot },
+  { id: "models", labelKey: "settings.models", icon: Sparkles },
+  { id: "mcp", labelKey: "settings.mcpServers", icon: Wrench },
+  { id: "plugins", labelKey: "settings.plugins", icon: Puzzle },
+  { id: "permissions", labelKey: "settings.permissions", icon: Shield },
 ];
 
 export function SettingsPage() {
+  const { t } = useTranslation();
   const activePanel = useSettingsStore((state) => state.activePanel);
   const setActivePanel = useSettingsStore((state) => state.setActivePanel);
   const closeSettings = useSettingsStore((state) => state.closeSettings);
@@ -32,7 +34,7 @@ export function SettingsPage() {
       {/* Header - only show on desktop */}
       {!isMobile && (
         <div className="flex items-center justify-between px-4 py-3 border-b">
-          <h2 className="text-lg font-semibold">Settings</h2>
+          <h2 className="text-lg font-semibold">{t("settings.title")}</h2>
           <Button
             variant="ghost"
             size="icon"
@@ -74,7 +76,7 @@ export function SettingsPage() {
                     <span className={cn(
                       isMobile ? "text-[10px] leading-none" : "hidden sm:inline text-sm"
                     )}>
-                      {isMobile ? panel.label.split(" ")[0] : panel.label}
+                      {isMobile ? t(panel.labelKey).split(" ")[0] : t(panel.labelKey)}
                     </span>
                   </div>
                 </TabsTrigger>

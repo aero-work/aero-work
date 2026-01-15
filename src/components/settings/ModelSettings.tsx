@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useAgentStore } from "@/stores/agentStore";
 import { useSessionData } from "@/hooks/useSessionData";
@@ -9,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Check, Star, Cpu, AlertCircle, Loader2, Info } from "lucide-react";
 
 export function ModelSettings() {
+  const { t } = useTranslation();
   const activeSessionId = useSessionStore((state) => state.activeSessionId);
   const connectionStatus = useAgentStore((state) => state.connectionStatus);
   const isConnected = connectionStatus === "connected";
@@ -41,34 +43,34 @@ export function ModelSettings() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">Model Configuration</h3>
+        <h3 className="text-lg font-medium">{t("model.title")}</h3>
         <p className="text-sm text-muted-foreground">
-          View and switch AI models for the current session.
+          {t("model.description")}
         </p>
       </div>
 
       {!isConnected ? (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <Cpu className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-          <h4 className="font-medium mb-2">Not Connected</h4>
+          <h4 className="font-medium mb-2">{t("model.notConnected")}</h4>
           <p className="text-sm text-muted-foreground">
-            Connect to the agent to view available models.
+            {t("model.connectToView")}
           </p>
         </div>
       ) : !activeSessionId ? (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <Cpu className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-          <h4 className="font-medium mb-2">No Active Session</h4>
+          <h4 className="font-medium mb-2">{t("model.noActiveSession")}</h4>
           <p className="text-sm text-muted-foreground">
-            Create or select a session to view available models.
+            {t("model.createSession")}
           </p>
         </div>
       ) : !models ? (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <Loader2 className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4 animate-spin" />
-          <h4 className="font-medium mb-2">Loading Models</h4>
+          <h4 className="font-medium mb-2">{t("model.loadingModels")}</h4>
           <p className="text-sm text-muted-foreground">
-            Fetching available models from the agent...
+            {t("model.fetchingModels")}
           </p>
         </div>
       ) : (
@@ -113,7 +115,7 @@ export function ModelSettings() {
 
                   <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto">
                     {isCurrent ? (
-                      <span className="text-xs sm:text-sm text-primary font-medium">Current</span>
+                      <span className="text-xs sm:text-sm text-primary font-medium">{t("common.current")}</span>
                     ) : (
                       <Button
                         variant="outline"
@@ -125,14 +127,14 @@ export function ModelSettings() {
                         {isSwitching ? (
                           <>
                             <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 animate-spin" />
-                            <span className="hidden sm:inline">Switching...</span>
+                            <span className="hidden sm:inline">{t("model.switching")}</span>
                             <span className="sm:hidden">...</span>
                           </>
                         ) : (
                           <>
                             <Check className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
-                            <span className="hidden sm:inline">Use This Model</span>
-                            <span className="sm:hidden">Use</span>
+                            <span className="hidden sm:inline">{t("model.useThisModel")}</span>
+                            <span className="sm:hidden">{t("common.use")}</span>
                           </>
                         )}
                       </Button>
@@ -149,10 +151,9 @@ export function ModelSettings() {
         <div className="flex gap-2 sm:gap-3">
           <Info className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0 mt-0.5" />
           <div className="text-xs sm:text-sm">
-            <p className="font-medium text-blue-500 mb-1">About Model Selection</p>
+            <p className="font-medium text-blue-500 mb-1">{t("model.aboutTitle")}</p>
             <p className="text-muted-foreground">
-              Available models depend on your agent config and API keys.
-              Switching only affects the current session.
+              {t("model.aboutDescription")}
             </p>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,12 +70,13 @@ const DEFAULT_RULES: PermissionRule[] = [
 ];
 
 const ACTION_CONFIG = {
-  allow: { icon: ShieldCheck, label: "Allow", className: "text-green-500" },
-  deny: { icon: ShieldAlert, label: "Deny", className: "text-red-500" },
-  ask: { icon: ShieldQuestion, label: "Ask", className: "text-yellow-500" },
+  allow: { icon: ShieldCheck, labelKey: "permissionSettings.allow", className: "text-green-500" },
+  deny: { icon: ShieldAlert, labelKey: "permissionSettings.deny", className: "text-red-500" },
+  ask: { icon: ShieldQuestion, labelKey: "permissionSettings.ask", className: "text-yellow-500" },
 };
 
 export function PermissionSettings() {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<PermissionConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -201,15 +203,15 @@ export function PermissionSettings() {
     return (
       <div className="space-y-6">
         <div>
-          <h3 className="text-lg font-medium">Permission Rules</h3>
+          <h3 className="text-lg font-medium">{t("permissionSettings.title")}</h3>
           <p className="text-sm text-muted-foreground">
-            Configure automatic permission rules for tool calls.
+            {t("permissionSettings.description")}
           </p>
         </div>
         <div className="rounded-lg border border-dashed p-8 text-center">
           <Shield className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
           <p className="text-muted-foreground">
-            Connect to the agent to manage permission rules
+            {t("permissionSettings.connectToManage")}
           </p>
         </div>
       </div>
@@ -220,9 +222,9 @@ export function PermissionSettings() {
     return (
       <div className="space-y-6">
         <div>
-          <h3 className="text-lg font-medium">Permission Rules</h3>
+          <h3 className="text-lg font-medium">{t("permissionSettings.title")}</h3>
           <p className="text-sm text-muted-foreground">
-            Configure automatic permission rules for tool calls.
+            {t("permissionSettings.description")}
           </p>
         </div>
         <div className="flex items-center justify-center py-8">
@@ -236,9 +238,9 @@ export function PermissionSettings() {
     <div className="space-y-4 sm:space-y-6 overflow-hidden">
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="text-base sm:text-lg font-medium">Permission Rules</h3>
+          <h3 className="text-base sm:text-lg font-medium">{t("permissionSettings.title")}</h3>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Auto-allow or deny tool calls
+            {t("permissionSettings.shortDescription")}
           </p>
         </div>
         <Button
@@ -247,7 +249,7 @@ export function PermissionSettings() {
           className="h-8 w-8 flex-shrink-0"
           onClick={loadConfig}
           disabled={loading}
-          title="Refresh"
+          title={t("common.refresh")}
         >
           <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
         </Button>
@@ -265,13 +267,13 @@ export function PermissionSettings() {
       {rules.length === 0 && !isAdding ? (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <Shield className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-          <h4 className="font-medium mb-2">No Permission Rules</h4>
+          <h4 className="font-medium mb-2">{t("permissionSettings.noRules")}</h4>
           <p className="text-sm text-muted-foreground mb-4">
-            Add rules to automatically allow or deny tool calls.
+            {t("permissionSettings.noRulesDescription")}
           </p>
           <Button onClick={() => setIsAdding(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            Add Rule
+            {t("permissionSettings.addRule")}
           </Button>
         </div>
       ) : (
@@ -323,7 +325,7 @@ export function PermissionSettings() {
               onClick={() => setIsAdding(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Rule
+              {t("permissionSettings.addRule")}
             </Button>
           )}
         </>
@@ -333,10 +335,9 @@ export function PermissionSettings() {
         <div className="flex gap-2">
           <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
           <div className="text-xs min-w-0 overflow-hidden">
-            <p className="font-medium text-blue-500 mb-1">Rule Priority</p>
+            <p className="font-medium text-blue-500 mb-1">{t("permissionSettings.rulePriority")}</p>
             <p className="text-muted-foreground">
-              Rules are evaluated top to bottom. First match wins.
-              Stored in <span className="font-mono">~/.config/aerowork/</span>
+              {t("permissionSettings.rulePriorityDescription")}
             </p>
           </div>
         </div>
@@ -366,6 +367,7 @@ function RuleCard({
   onDelete,
   saving,
 }: RuleCardProps) {
+  const { t } = useTranslation();
   const ActionIcon = ACTION_CONFIG[rule.action].icon;
 
   return (
@@ -403,7 +405,7 @@ function RuleCard({
             rule.action === "ask" && "bg-yellow-500/20 text-yellow-600"
           )}
         >
-          {rule.action}
+          {t(ACTION_CONFIG[rule.action].labelKey)}
         </span>
 
         {/* Actions */}
@@ -452,6 +454,7 @@ interface RuleEditorProps {
 }
 
 function RuleEditor({ rule: initialRule, onSave, onCancel, isNew }: RuleEditorProps) {
+  const { t } = useTranslation();
   const [toolPattern, setToolPattern] = useState(initialRule.toolPattern);
   const [pathPattern, setPathPattern] = useState(initialRule.pathPattern || "");
   const [action, setAction] = useState<PermissionAction>(initialRule.action);
@@ -483,13 +486,13 @@ function RuleEditor({ rule: initialRule, onSave, onCancel, isNew }: RuleEditorPr
       <div className="flex items-center gap-2">
         <Shield className="w-5 h-5 text-muted-foreground" />
         <span className="font-medium">
-          {isNew ? "New Rule" : "Edit Rule"}
+          {isNew ? t("permissionSettings.newRule") : t("permissionSettings.editRule")}
         </span>
       </div>
 
       <div className="grid gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="tool-pattern">Tool Pattern (regex)</Label>
+          <Label htmlFor="tool-pattern">{t("permissionSettings.toolPattern")}</Label>
           <Input
             id="tool-pattern"
             placeholder="e.g., AskUserQuestion|Read|Glob"
@@ -497,12 +500,12 @@ function RuleEditor({ rule: initialRule, onSave, onCancel, isNew }: RuleEditorPr
             onChange={(e) => setToolPattern(e.target.value)}
           />
           <p className="text-xs text-muted-foreground">
-            Use | for multiple tools: Read|Glob|Grep
+            {t("permissionSettings.toolPatternHelp")}
           </p>
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="path-pattern">Path Pattern (optional)</Label>
+          <Label htmlFor="path-pattern">{t("permissionSettings.pathPattern")}</Label>
           <Input
             id="path-pattern"
             placeholder="e.g., /home/user/.* or ./src/**"
@@ -512,7 +515,7 @@ function RuleEditor({ rule: initialRule, onSave, onCancel, isNew }: RuleEditorPr
         </div>
 
         <div className="grid gap-2">
-          <Label>Action</Label>
+          <Label>{t("permissionSettings.action")}</Label>
           <div className="flex gap-2">
             {(["allow", "deny", "ask"] as const).map((a) => {
               const ActionIcon = ACTION_CONFIG[a].icon;
@@ -528,7 +531,7 @@ function RuleEditor({ rule: initialRule, onSave, onCancel, isNew }: RuleEditorPr
                   )}
                 >
                   <ActionIcon className="w-4 h-4" />
-                  {ACTION_CONFIG[a].label}
+                  {t(ACTION_CONFIG[a].labelKey)}
                 </button>
               );
             })}
@@ -536,7 +539,7 @@ function RuleEditor({ rule: initialRule, onSave, onCancel, isNew }: RuleEditorPr
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="description">Description (optional)</Label>
+          <Label htmlFor="description">{t("permissionSettings.descriptionLabel")}</Label>
           <Input
             id="description"
             placeholder="e.g., Auto-allow read operations"
@@ -549,11 +552,11 @@ function RuleEditor({ rule: initialRule, onSave, onCancel, isNew }: RuleEditorPr
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onCancel}>
           <X className="w-4 h-4 mr-2" />
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button onClick={handleSave} disabled={!isValid}>
           <Check className="w-4 h-4 mr-2" />
-          {isNew ? "Add" : "Save"}
+          {isNew ? t("common.add") : t("common.save")}
         </Button>
       </div>
     </div>

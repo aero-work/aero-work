@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useAgentStore } from "@/stores/agentStore";
 import { Button } from "@/components/ui/button";
 import { Bot, Power, PowerOff, RefreshCw } from "lucide-react";
@@ -5,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { agentAPI } from "@/services/api";
 
 export function AgentSettings() {
+  const { t } = useTranslation();
   const connectionStatus = useAgentStore((state) => state.connectionStatus);
   const agentInfo = useAgentStore((state) => state.agentInfo);
 
@@ -30,9 +32,9 @@ export function AgentSettings() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">Agent Connection</h3>
+        <h3 className="text-lg font-medium">{t("agent.title")}</h3>
         <p className="text-sm text-muted-foreground">
-          Manage the connection to the AI coding agent.
+          {t("agent.description")}
         </p>
       </div>
 
@@ -59,9 +61,9 @@ export function AgentSettings() {
                 </>
               ) : (
                 <>
-                  <div className="font-medium">No Agent Connected</div>
+                  <div className="font-medium">{t("agent.noAgentConnected")}</div>
                   <div className="text-sm text-muted-foreground">
-                    Click connect to start
+                    {t("agent.clickToConnect")}
                   </div>
                 </>
               )}
@@ -76,7 +78,7 @@ export function AgentSettings() {
                 isConnected ? "bg-green-500" :
                 isConnecting ? "bg-yellow-500 animate-pulse" : "bg-muted-foreground"
               )} />
-              <span className="capitalize">{connectionStatus}</span>
+              <span className="capitalize">{t(`connection.${connectionStatus}`)}</span>
             </div>
 
             {/* Connect/Disconnect button */}
@@ -88,7 +90,7 @@ export function AgentSettings() {
                 className="text-xs sm:text-sm"
               >
                 <PowerOff className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Disconnect</span>
+                <span className="hidden sm:inline">{t("connection.disconnect")}</span>
               </Button>
             ) : (
               <Button
@@ -102,7 +104,7 @@ export function AgentSettings() {
                 ) : (
                   <Power className="w-4 h-4 sm:mr-2" />
                 )}
-                <span className="hidden sm:inline">{isConnecting ? "Connecting..." : "Connect"}</span>
+                <span className="hidden sm:inline">{isConnecting ? t("connection.connecting") : t("connection.connect")}</span>
               </Button>
             )}
           </div>
@@ -112,10 +114,10 @@ export function AgentSettings() {
       {/* Agent Details */}
       {agentInfo && (
         <div className="rounded-lg border p-3 sm:p-4 space-y-3">
-          <h4 className="font-medium text-sm sm:text-base">Agent Details</h4>
+          <h4 className="font-medium text-sm sm:text-base">{t("agent.details")}</h4>
           <div className="grid gap-2 text-xs sm:text-sm">
             <div className="flex justify-between gap-2 py-1 border-b border-border/50">
-              <span className="text-muted-foreground flex-shrink-0">Name</span>
+              <span className="text-muted-foreground flex-shrink-0">{t("common.name")}</span>
               <span className="truncate text-right">{agentInfo.name}</span>
             </div>
             {agentInfo.title && (
@@ -125,11 +127,11 @@ export function AgentSettings() {
               </div>
             )}
             <div className="flex justify-between gap-2 py-1 border-b border-border/50">
-              <span className="text-muted-foreground flex-shrink-0">Version</span>
+              <span className="text-muted-foreground flex-shrink-0">{t("common.version")}</span>
               <span>{agentInfo.version}</span>
             </div>
             <div className="flex justify-between gap-2 py-1">
-              <span className="text-muted-foreground flex-shrink-0">Protocol</span>
+              <span className="text-muted-foreground flex-shrink-0">{t("agent.protocol")}</span>
               <span>ACP v1</span>
             </div>
           </div>
@@ -139,8 +141,7 @@ export function AgentSettings() {
       {/* Info Box */}
       <div className="rounded-lg bg-muted/50 p-3 sm:p-4">
         <p className="text-xs sm:text-sm text-muted-foreground">
-          The agent runs as a subprocess and communicates via the Agent Client Protocol (ACP).
-          Currently using <code className="bg-muted px-1 rounded text-xs">claude-code-acp</code> adapter.
+          {t("agent.info")}
         </p>
       </div>
     </div>

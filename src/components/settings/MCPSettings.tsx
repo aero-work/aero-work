@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +73,7 @@ const AEROWORK_CONFIG_PATH = "~/.config/aerowork/mcp.json";
 const CLAUDE_CONFIG_PATH = "~/.claude.json";
 
 export function MCPSettings() {
+  const { t } = useTranslation();
   const [aeroworkConfig, setAeroworkConfig] = useState<AeroworkMCPConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -281,15 +283,15 @@ export function MCPSettings() {
     return (
       <div className="space-y-6">
         <div>
-          <h3 className="text-lg font-medium">MCP Servers</h3>
+          <h3 className="text-lg font-medium">{t("mcpSettings.title")}</h3>
           <p className="text-sm text-muted-foreground">
-            Configure Model Context Protocol servers in ~/.claude.json
+            {t("mcpSettings.description")}
           </p>
         </div>
         <div className="rounded-lg border border-dashed p-8 text-center">
           <Server className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
           <p className="text-muted-foreground">
-            Connect to the agent to manage MCP servers
+            {t("mcpSettings.connectToManage")}
           </p>
         </div>
       </div>
@@ -300,9 +302,9 @@ export function MCPSettings() {
     return (
       <div className="space-y-6">
         <div>
-          <h3 className="text-lg font-medium">MCP Servers</h3>
+          <h3 className="text-lg font-medium">{t("mcpSettings.title")}</h3>
           <p className="text-sm text-muted-foreground">
-            Configure Model Context Protocol servers in ~/.claude.json
+            {t("mcpSettings.description")}
           </p>
         </div>
         <div className="flex items-center justify-center py-8">
@@ -316,9 +318,9 @@ export function MCPSettings() {
     <div className="space-y-4 sm:space-y-6 overflow-hidden">
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="text-base sm:text-lg font-medium">MCP Servers</h3>
+          <h3 className="text-base sm:text-lg font-medium">{t("mcpSettings.title")}</h3>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Configure MCP servers
+            {t("mcpSettings.shortDescription")}
           </p>
         </div>
         <Button
@@ -327,7 +329,7 @@ export function MCPSettings() {
           className="h-8 w-8 flex-shrink-0"
           onClick={loadConfig}
           disabled={loading}
-          title="Refresh"
+          title={t("common.refresh")}
         >
           <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
         </Button>
@@ -345,13 +347,13 @@ export function MCPSettings() {
       {serverNames.length === 0 && !isAdding ? (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <Server className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-          <h4 className="font-medium mb-2">No MCP Servers Configured</h4>
+          <h4 className="font-medium mb-2">{t("mcpSettings.noServers")}</h4>
           <p className="text-sm text-muted-foreground mb-4">
-            Add MCP servers to extend the agent with custom tools and resources.
+            {t("mcpSettings.noServersDescription")}
           </p>
           <Button onClick={() => setIsAdding(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            Add MCP Server
+            {t("mcpSettings.addServer")}
           </Button>
         </div>
       ) : (
@@ -403,7 +405,7 @@ export function MCPSettings() {
               onClick={() => setIsAdding(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Server
+              {t("mcpSettings.addServerShort")}
             </Button>
           )}
         </>
@@ -413,9 +415,9 @@ export function MCPSettings() {
         <div className="flex gap-2">
           <AlertCircle className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
           <div className="text-xs min-w-0 overflow-hidden">
-            <p className="font-medium text-blue-500 mb-1">Config Files</p>
+            <p className="font-medium text-blue-500 mb-1">{t("mcpSettings.configFiles")}</p>
             <p className="text-muted-foreground">
-              Stored in <span className="font-mono">~/.config/aerowork/</span>
+              {t("mcpSettings.storedIn")} <span className="font-mono">~/.config/aerowork/</span>
             </p>
           </div>
         </div>
@@ -507,6 +509,7 @@ interface ServerEditorProps {
 }
 
 function ServerEditor({ name: initialName, server: initialServer, onSave, onCancel, isNew }: ServerEditorProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState(initialName);
   const [type, setType] = useState<MCPServerType>(initialServer.type);
 
@@ -579,13 +582,13 @@ function ServerEditor({ name: initialName, server: initialServer, onSave, onCanc
       <div className="flex items-center gap-2">
         <Server className="w-5 h-5 text-muted-foreground" />
         <span className="font-medium">
-          {isNew ? "New MCP Server" : `Edit: ${initialName}`}
+          {isNew ? t("mcpSettings.newServer") : `${t("mcpSettings.editServer")}: ${initialName}`}
         </span>
       </div>
 
       <div className="grid gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="server-name">Server Name</Label>
+          <Label htmlFor="server-name">{t("mcpSettings.serverName")}</Label>
           <Input
             id="server-name"
             placeholder="e.g., web-search"
@@ -596,7 +599,7 @@ function ServerEditor({ name: initialName, server: initialServer, onSave, onCanc
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="server-type">Type</Label>
+          <Label htmlFor="server-type">{t("mcpSettings.serverType")}</Label>
           <Select value={type} onValueChange={(v: string) => setType(v as MCPServerType)}>
             <SelectTrigger>
               <SelectValue />
@@ -627,7 +630,7 @@ function ServerEditor({ name: initialName, server: initialServer, onSave, onCanc
         {type === "stdio" ? (
           <>
             <div className="grid gap-2">
-              <Label htmlFor="server-command">Command</Label>
+              <Label htmlFor="server-command">{t("mcpSettings.command")}</Label>
               <Input
                 id="server-command"
                 placeholder="e.g., npx"
@@ -637,7 +640,7 @@ function ServerEditor({ name: initialName, server: initialServer, onSave, onCanc
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="server-args">Arguments (space-separated)</Label>
+              <Label htmlFor="server-args">{t("mcpSettings.arguments")}</Label>
               <Input
                 id="server-args"
                 placeholder="e.g., -y @modelcontextprotocol/server-filesystem /path"
@@ -647,10 +650,10 @@ function ServerEditor({ name: initialName, server: initialServer, onSave, onCanc
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="server-env">Environment Variables (optional)</Label>
+              <Label htmlFor="server-env">{t("mcpSettings.envVars")}</Label>
               <Textarea
                 id="server-env"
-                placeholder={"KEY=VALUE (one per line)\ne.g.,\nAPI_KEY=sk-...\nDEBUG=true"}
+                placeholder={t("mcpSettings.envVarsPlaceholder")}
                 value={envInput}
                 onChange={(e) => setEnvInput(e.target.value)}
                 rows={3}
@@ -660,7 +663,7 @@ function ServerEditor({ name: initialName, server: initialServer, onSave, onCanc
           </>
         ) : (
           <div className="grid gap-2">
-            <Label htmlFor="server-url">URL</Label>
+            <Label htmlFor="server-url">{t("mcpSettings.url")}</Label>
             <Input
               id="server-url"
               placeholder="e.g., https://mcp.example.com/mcp/"
@@ -674,11 +677,11 @@ function ServerEditor({ name: initialName, server: initialServer, onSave, onCanc
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onCancel}>
           <X className="w-4 h-4 mr-2" />
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button onClick={handleSave} disabled={!isValid}>
           <Check className="w-4 h-4 mr-2" />
-          {isNew ? "Add" : "Save"}
+          {isNew ? t("common.add") : t("common.save")}
         </Button>
       </div>
     </div>

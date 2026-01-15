@@ -1,0 +1,238 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "open": "打开",
+    "close": "关闭",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "confirm": "确认",
+    "retry": "重试",
+    "refresh": "刷新",
+    "copy": "复制",
+    "download": "下载",
+    "upload": "上传",
+    "search": "搜索",
+    "back": "返回",
+    "next": "下一步",
+    "done": "完成",
+    "edit": "编辑",
+    "create": "创建",
+    "rename": "重命名",
+    "options": "选项",
+    "add": "添加",
+    "dismiss": "忽略",
+    "name": "名称",
+    "version": "版本",
+    "type": "类型",
+    "use": "使用",
+    "current": "当前"
+  },
+  "header": {
+    "connecting": "连接中...",
+    "failed": "连接失败",
+    "offline": "离线"
+  },
+  "tabs": {
+    "chat": "对话",
+    "files": "文件",
+    "terminal": "终端",
+    "settings": "设置"
+  },
+  "session": {
+    "newConversation": "新对话",
+    "noConversations": "暂无对话",
+    "tapToStart": "点击上方按钮开始您的第一个对话",
+    "loadingSessions": "加载会话中...",
+    "conversation": "对话",
+    "status": {
+      "ready": "就绪",
+      "running": "运行中",
+      "pending": "等待中",
+      "stopped": "已停止"
+    },
+    "messages": "{{count}} 条消息",
+    "welcome": {
+      "title": "欢迎使用 Aero Code",
+      "connectMessage": "正在连接 AI 助手...",
+      "checkSettings": "如连接失败请检查设置"
+    },
+    "selectProject": {
+      "title": "选择项目",
+      "message": "点击顶部的打开按钮选择项目文件夹"
+    }
+  },
+  "settings": {
+    "title": "设置",
+    "general": "通用",
+    "agents": "Agent",
+    "models": "模型",
+    "mcp": "MCP",
+    "mcpServers": "MCP 服务器",
+    "plugins": "插件",
+    "permissions": "权限",
+    "language": {
+      "title": "语言",
+      "description": "选择您偏好的语言",
+      "auto": "自动 (跟随系统)"
+    },
+    "theme": {
+      "title": "主题",
+      "description": "选择您偏好的主题",
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统"
+    },
+    "autoConnect": {
+      "title": "自动连接",
+      "description": "启动时自动连接服务器"
+    },
+    "autoCleanEmptySessions": {
+      "title": "自动清理空会话",
+      "description": "自动删除没有 Agent 响应的会话"
+    },
+    "hideHiddenFiles": {
+      "title": "隐藏隐藏文件",
+      "description": "隐藏以点(.)开头的文件和文件夹"
+    }
+  },
+  "agent": {
+    "title": "Agent 连接",
+    "description": "管理与 AI 编程助手的连接",
+    "noAgentConnected": "未连接 Agent",
+    "clickToConnect": "点击连接按钮开始",
+    "details": "Agent 详情",
+    "protocol": "协议",
+    "info": "Agent 作为子进程运行，通过 Agent Client Protocol (ACP) 进行通信。当前使用 claude-code-acp 适配器。"
+  },
+  "model": {
+    "title": "模型配置",
+    "description": "查看和切换当前会话的 AI 模型",
+    "notConnected": "未连接",
+    "connectToView": "连接 Agent 以查看可用模型",
+    "noActiveSession": "无活跃会话",
+    "createSession": "创建或选择一个会话来查看可用模型",
+    "loadingModels": "加载模型中",
+    "fetchingModels": "正在从 Agent 获取可用模型...",
+    "useThisModel": "使用此模型",
+    "switching": "切换中...",
+    "aboutTitle": "关于模型选择",
+    "aboutDescription": "可用模型取决于您的 Agent 配置和 API 密钥。切换仅影响当前会话。"
+  },
+  "mcpSettings": {
+    "title": "MCP 服务器",
+    "description": "在 ~/.claude.json 中配置 Model Context Protocol 服务器",
+    "shortDescription": "配置 MCP 服务器",
+    "connectToManage": "连接 Agent 以管理 MCP 服务器",
+    "noServers": "未配置 MCP 服务器",
+    "noServersDescription": "添加 MCP 服务器以扩展 Agent 的工具和资源功能",
+    "addServer": "添加 MCP 服务器",
+    "addServerShort": "添加服务器",
+    "newServer": "新建 MCP 服务器",
+    "editServer": "编辑",
+    "serverName": "服务器名称",
+    "serverType": "类型",
+    "command": "命令",
+    "arguments": "参数 (空格分隔)",
+    "envVars": "环境变量 (可选)",
+    "envVarsPlaceholder": "KEY=VALUE (每行一个)",
+    "url": "URL",
+    "configFiles": "配置文件",
+    "storedIn": "存储于"
+  },
+  "pluginSettings": {
+    "title": "插件",
+    "description": "管理插件和市场",
+    "loadingPlugins": "加载插件中...",
+    "addMarketplace": "添加市场",
+    "addMarketplaceDescription": "通过提供 Git 仓库 URL 来添加新的插件市场",
+    "gitUrl": "Git URL",
+    "noMarketplaces": "尚未添加任何市场",
+    "addFirstMarketplace": "添加您的第一个市场",
+    "updateMarketplace": "更新市场",
+    "deleteMarketplace": "删除市场",
+    "enableMarketplace": "启用市场",
+    "disableMarketplace": "禁用市场",
+    "marketplaceDisabled": "市场已禁用。启用它以管理插件。",
+    "noPluginsAvailable": "此市场没有可用的插件"
+  },
+  "permissionSettings": {
+    "title": "权限规则",
+    "description": "配置工具调用的自动权限规则",
+    "shortDescription": "自动允许或拒绝工具调用",
+    "connectToManage": "连接 Agent 以管理权限规则",
+    "noRules": "无权限规则",
+    "noRulesDescription": "添加规则以自动允许或拒绝工具调用",
+    "addRule": "添加规则",
+    "newRule": "新建规则",
+    "editRule": "编辑规则",
+    "toolPattern": "工具模式 (正则表达式)",
+    "toolPatternHelp": "使用 | 匹配多个工具：Read|Glob|Grep",
+    "pathPattern": "路径模式 (可选)",
+    "descriptionLabel": "描述 (可选)",
+    "action": "操作",
+    "allow": "允许",
+    "deny": "拒绝",
+    "ask": "询问",
+    "rulePriority": "规则优先级",
+    "rulePriorityDescription": "规则从上到下评估，首个匹配生效。"
+  },
+  "chat": {
+    "startConversation": "开始对话",
+    "typeMessage": "在下方输入消息开始",
+    "placeholder": "输入您的消息...",
+    "send": "发送",
+    "stop": "停止"
+  },
+  "files": {
+    "title": "文件",
+    "noProject": "未选择项目",
+    "selectProject": "选择一个项目来浏览文件",
+    "emptyFolder": "此文件夹为空",
+    "file": "文件",
+    "newFile": "新建文件",
+    "newFolder": "新建文件夹",
+    "uploadFile": "上传文件",
+    "forceEdit": "强制编辑"
+  },
+  "projectSelector": {
+    "title": "打开项目",
+    "recent": "最近",
+    "browse": "浏览",
+    "enterPath": "输入目录路径...",
+    "noRecentProjects": "暂无最近项目",
+    "getStarted": "在上方输入路径开始",
+    "notConnected": "未连接",
+    "connectFirst": "请先连接服务器再浏览",
+    "noSubdirectories": "无子目录",
+    "openThisFolder": "打开此文件夹"
+  },
+  "permission": {
+    "title": "需要权限",
+    "allowOnce": "允许一次",
+    "allowAlways": "始终允许",
+    "deny": "拒绝"
+  },
+  "sidebar": {
+    "sessions": "会话",
+    "recentProjects": "最近项目",
+    "noRecentProjects": "暂无最近项目"
+  },
+  "connection": {
+    "connect": "连接",
+    "disconnect": "断开",
+    "connected": "已连接",
+    "disconnected": "已断开",
+    "connecting": "连接中",
+    "error": "连接错误"
+  },
+  "time": {
+    "justNow": "刚刚",
+    "minutesAgo": "{{count}}分钟前",
+    "hoursAgo": "{{count}}小时前",
+    "yesterday": "昨天",
+    "daysAgo": "{{count}}天前"
+  }
+}

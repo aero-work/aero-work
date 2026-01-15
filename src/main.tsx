@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { registerSW } from "virtual:pwa-register";
 import { enableMapSet } from "immer";
 import App from "./App";
+import "./i18n"; // Initialize i18n
 import "./index.css";
 
 // Enable Immer support for Set and Map (used in fileStore for expandedPaths)
