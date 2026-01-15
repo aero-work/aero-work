@@ -82,13 +82,16 @@ export function SwipeableSessionCard({
   }, [isOpen]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Don't allow swipe for active sessions
+    if (isActive) return;
+
     const touch = e.touches[0];
     startX.current = touch.clientX;
     startY.current = touch.clientY;
     currentX.current = touch.clientX;
     isHorizontalSwipe.current = null;
     setIsDragging(true);
-  }, []);
+  }, [isActive]);
 
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
@@ -183,16 +186,18 @@ export function SwipeableSessionCard({
       ref={containerRef}
       className="relative overflow-hidden"
     >
-      {/* Delete button (behind the card) */}
-      <div
-        className="absolute right-0 top-0 bottom-0 flex items-center justify-center bg-destructive text-destructive-foreground"
-        style={{ width: DELETE_WIDTH }}
-        onClick={handleDelete}
-        role="button"
-        tabIndex={0}
-      >
-        <Trash2 className="w-6 h-6" />
-      </div>
+      {/* Delete button (behind the card) - only for non-active sessions */}
+      {!isActive && (
+        <div
+          className="absolute right-0 top-0 bottom-0 flex items-center justify-center bg-destructive text-destructive-foreground"
+          style={{ width: DELETE_WIDTH }}
+          onClick={handleDelete}
+          role="button"
+          tabIndex={0}
+        >
+          <Trash2 className="w-6 h-6" />
+        </div>
+      )}
 
       {/* Card content (swipeable) */}
       <div
