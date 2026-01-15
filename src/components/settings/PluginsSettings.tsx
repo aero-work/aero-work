@@ -232,23 +232,24 @@ export function PluginsSettings() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
         <div>
           <h3 className="text-lg font-medium">Plugins</h3>
           <p className="text-sm text-muted-foreground">
-            Manage Claude Code plugins and marketplaces
+            Manage plugins and marketplaces
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={fetchPlugins}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
+        <div className="flex gap-2 flex-shrink-0">
+          <Button variant="outline" size="sm" onClick={fetchPlugins} className="text-xs sm:text-sm">
+            <RefreshCw className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
           <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Marketplace
+              <Button size="sm" className="text-xs sm:text-sm">
+                <Plus className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Marketplace</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -394,34 +395,35 @@ function MarketplaceCard({
   return (
     <Card>
       <Collapsible open={isExpanded} onOpenChange={onToggle}>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CollapsibleTrigger className="flex items-center gap-2 hover:text-foreground transition-colors">
+        <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+            <CollapsibleTrigger className="flex items-center gap-2 hover:text-foreground transition-colors min-w-0">
               <ChevronRight
-                className={`w-4 h-4 transition-transform ${
+                className={`w-4 h-4 flex-shrink-0 transition-transform ${
                   isExpanded ? "rotate-90" : ""
                 }`}
               />
-              <CardTitle className="text-base">{marketplace.name}</CardTitle>
-              <span className="text-xs text-muted-foreground">
-                ({marketplace.plugins.length} plugins)
+              <CardTitle className="text-sm sm:text-base truncate">{marketplace.name}</CardTitle>
+              <span className="text-xs text-muted-foreground flex-shrink-0">
+                ({marketplace.plugins.length})
               </span>
             </CollapsibleTrigger>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 self-end sm:self-auto">
               {marketplace.source.repo && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     openExternalUrl(`https://github.com/${marketplace.source.repo}`);
                   }}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground p-1"
                 >
-                  <ExternalLink className="w-4 h-4" />
+                  <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               )}
               <Button
                 variant="ghost"
                 size="icon"
+                className="h-7 w-7 sm:h-8 sm:w-8"
                 onClick={(e) => {
                   e.stopPropagation();
                   onUpdate();
@@ -430,12 +432,13 @@ function MarketplaceCard({
                 title="Update marketplace"
               >
                 <RefreshCw
-                  className={`w-4 h-4 ${isUpdating ? "animate-spin" : ""}`}
+                  className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isUpdating ? "animate-spin" : ""}`}
                 />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
+                className="h-7 w-7 sm:h-8 sm:w-8"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDelete();
@@ -444,9 +447,9 @@ function MarketplaceCard({
                 title="Delete marketplace"
               >
                 {isDeleting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
                 ) : (
-                  <Trash2 className="w-4 h-4 text-destructive" />
+                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />
                 )}
               </Button>
               {/* Marketplace enable/disable toggle */}
@@ -464,7 +467,7 @@ function MarketplaceCard({
             </div>
           </div>
           {marketplace.description && (
-            <CardDescription>{marketplace.description}</CardDescription>
+            <CardDescription className="text-xs sm:text-sm mt-1">{marketplace.description}</CardDescription>
           )}
         </CardHeader>
         <CollapsibleContent>
@@ -528,30 +531,30 @@ function PluginRow({
   disabled = false,
 }: PluginRowProps) {
   return (
-    <div className="flex items-center justify-between py-2 px-3 rounded-md bg-muted/50">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-sm">{plugin.name}</span>
+    <div className="flex items-center justify-between gap-2 py-2 px-2 sm:px-3 rounded-md bg-muted/50">
+      <div className="flex-1 min-w-0 overflow-hidden">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <span className="font-medium text-xs sm:text-sm truncate">{plugin.name}</span>
           {plugin.version && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[10px] sm:text-xs text-muted-foreground flex-shrink-0">
               v{plugin.version}
             </span>
           )}
           {isInstalled && (
-            <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+            <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-green-500 flex-shrink-0" />
           )}
         </div>
         {plugin.description && (
-          <p className="text-xs text-muted-foreground truncate">
+          <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
             {plugin.description}
           </p>
         )}
         {plugin.tags && plugin.tags.length > 0 && (
-          <div className="flex gap-1 mt-1">
+          <div className="flex gap-1 mt-1 flex-wrap">
             {plugin.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground"
+                className="text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground"
               >
                 {tag}
               </span>
@@ -559,13 +562,13 @@ function PluginRow({
           </div>
         )}
       </div>
-      <div className="flex items-center gap-2 ml-4">
+      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
         {plugin.homepage && (
           <button
             onClick={() => openExternalUrl(plugin.homepage!)}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground p-1"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
+            <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </button>
         )}
         {isLoading ? (

@@ -74,7 +74,7 @@ aero-code/
 │   │   │   ├── AgentSettings.tsx     # Agent connection management
 │   │   │   ├── GeneralSettings.tsx   # General app preferences (theme, auto-connect, auto-clean)
 │   │   │   ├── ModelSettings.tsx     # AI model configuration
-│   │   │   ├── MCPSettings.tsx       # MCP server management
+│   │   │   ├── MCPSettings.tsx       # MCP server management (dual-config with enable/disable)
 │   │   │   ├── PluginsSettings.tsx   # Plugin marketplace management
 │   │   │   └── PermissionSettings.tsx # Tool permission rules
 │   │   ├── ui/                   # shadcn/ui components
@@ -87,8 +87,8 @@ aero-code/
 │   │   └── layout/               # Layout components (desktop + mobile)
 │   │       ├── MainLayout.tsx    # Main layout with responsive switching
 │   │       ├── MobileLayout.tsx  # Mobile-specific layout container
-│   │       ├── MobileHeader.tsx  # Mobile top header with hamburger menu
-│   │       ├── MobileNavBar.tsx  # Mobile bottom navigation tabs
+│   │       ├── MobileHeader.tsx  # Mobile top header with back navigation
+│   │       ├── MobileTabBar.tsx  # Mobile bottom navigation tabs
 │   │       ├── MobileSidebar.tsx # Mobile slide-out sidebar panel
 │   │       ├── Header.tsx        # Desktop top header
 │   │       ├── Sidebar.tsx       # Desktop left sidebar
@@ -284,64 +284,99 @@ Agent Process (stdio)
 
 ### Overview
 
-The application supports responsive design with dedicated mobile layouts. On screens narrower than 768px, the UI switches to a mobile-optimized layout with bottom navigation and a slide-out sidebar.
+The application supports responsive design with dedicated mobile layouts. On screens narrower than 768px, the UI switches to a mobile-optimized layout following a **WeChat/WhatsApp-style** navigation pattern with bottom tabs and slide-in conversation views.
 
-### Mobile Navigation Flow
+### Mobile Navigation Flow (WeChat Style)
 
 ```
 ┌─────────────────────────────────────────┐
-│  MobileHeader                           │
-│  [≡] Aero Code              [...]       │
+│  MobileHeader (context-dependent)       │
 ├─────────────────────────────────────────┤
 │                                         │
-│  Current View Content                   │
-│  (Chat | Files | FileViewer | Terminal) │
+│  Content Area (with slide animations)   │
 │                                         │
 ├─────────────────────────────────────────┤
-│  MobileNavBar                           │
+│  MobileTabBar (hidden in conversation)  │
 │  [Chat]  [Files]  [Terminal]  [⚙]      │
 └─────────────────────────────────────────┘
-        │
-        │ Hamburger menu tap
-        ▼
-┌─────────────────────────────────────────┐
-│ MobileSidebar (slide from left)         │
-│  ┌────────────────────────────┐         │
-│  │ Sessions list              │         │
-│  │ Project selector           │         │
-│  │ Agent status               │         │
-│  └────────────────────────────┘         │
-└─────────────────────────────────────────┘
+
+Navigation between views:
+┌───────────────┐         ┌───────────────┐
+│ Session List  │ ──tap──>│ Conversation  │
+│ (Chat Tab)    │         │ (slide-in)    │
+│               │<─back── │ No tab bar    │
+└───────────────┘         └───────────────┘
 ```
 
 ### Mobile Views (mobileNavStore)
 
 ```typescript
-type MobileView = 'chat' | 'files' | 'file-viewer' | 'terminal' | 'settings';
+type MobileView =
+  | 'session-list'      // Chat tab - session list (main)
+  | 'conversation'      // Inside a conversation (no tab bar)
+  | 'files'             // Files tab
+  | 'file-viewer'       // Viewing a file (no tab bar)
+  | 'terminal'          // Terminal tab
+  | 'settings';         // Settings tab
 
 interface MobileNavStore {
   currentView: MobileView;
-  sidebarOpen: boolean;
+  previousView: MobileView | null;
   viewingFilePath: string | null;
+  isSidebarOpen: boolean;
 
+  // Navigation
   setView: (view: MobileView) => void;
+  enterConversation: () => void;
+  exitConversation: () => void;
+  goBack: () => void;
+  openFileViewer: (path: string) => void;
   openSidebar: () => void;
   closeSidebar: () => void;
-  openFileViewer: (path: string) => void;
 }
 ```
+
+### Tab Bar Visibility Rules
+
+| View | Tab Bar | Back Button | Header Content |
+|------|---------|-------------|----------------|
+| session-list | ✅ Show | ❌ Hidden | App title + Connect status |
+| conversation | ❌ Hidden | ✅ Show | Project name + Menu |
+| files | ✅ Show | ❌ Hidden | "Files" + Project selector |
+| file-viewer | ❌ Hidden | ✅ Show | File name |
+| terminal | ✅ Show | ❌ Hidden | "Terminal" + Tab management |
+| settings | ✅ Show | ❌ Hidden | "Settings" |
 
 ### Mobile Components
 
 | Component | Purpose |
 |-----------|---------|
-| `MobileLayout` | Main container, switches between view components |
-| `MobileHeader` | Top bar with hamburger menu and status icons |
-| `MobileNavBar` | Bottom tab navigation between main views |
-| `MobileSidebar` | Slide-out panel for sessions/projects |
-| `MobileFilesView` | File tree with upload button |
+| `MobileLayout` | Main container with view switching and animations |
+| `MobileHeader` | Context-aware header (back button, title, actions) |
+| `MobileTabBar` | Bottom tab navigation (Chat/Files/Terminal/Settings) |
+| `MobileSessionList` | Session list with cards |
+| `SessionCard` | Session preview card (project, last message, time) |
+| `MobileConversation` | Conversation wrapper with input area |
+| `MobileFilesView` | File tree with floating upload button |
 | `MobileFileViewer` | Read-only file preview with syntax highlighting |
 | `MobileTerminalView` | Full-screen terminal with tab management |
+| `MobileSidebar` | Slide-out panel for project selector |
+
+### Keyboard Handling
+
+The mobile layout uses `100dvh` (dynamic viewport height) to handle keyboard appearance:
+
+```css
+.mobile-layout {
+  height: 100dvh; /* Adjusts when keyboard opens */
+}
+
+.chat-input-area {
+  /* Stays above keyboard */
+  position: sticky;
+  bottom: 0;
+}
+```
 
 ### Responsive Detection
 
@@ -367,6 +402,8 @@ export function MainLayout() {
   return isMobile ? <MobileLayout /> : <DesktopLayout />;
 }
 ```
+
+See `.agent/mobile-redesign.md` for the complete design specification.
 
 ## File Type System
 

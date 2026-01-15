@@ -90,46 +90,49 @@ export function ModelSettings() {
               return (
                 <div
                   key={model.modelId}
-                  className={`flex items-center justify-between rounded-lg border p-4 ${
+                  className={`flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between rounded-lg border p-3 sm:p-4 ${
                     isCurrent ? "border-primary bg-primary/5" : ""
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-2 sm:gap-3 min-w-0">
                     {isCurrent && (
-                      <Star className="w-4 h-4 text-primary fill-primary" />
+                      <Star className="w-4 h-4 text-primary fill-primary flex-shrink-0 mt-0.5" />
                     )}
-                    <div>
-                      <Label className="text-base font-medium">{model.name}</Label>
+                    <div className="min-w-0">
+                      <Label className="text-sm sm:text-base font-medium">{model.name}</Label>
                       {model.description && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {model.description}
                         </p>
                       )}
-                      <p className="text-xs text-muted-foreground font-mono">
+                      <p className="text-xs text-muted-foreground font-mono truncate">
                         {model.modelId}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto">
                     {isCurrent ? (
-                      <span className="text-sm text-primary font-medium">Current</span>
+                      <span className="text-xs sm:text-sm text-primary font-medium">Current</span>
                     ) : (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleSwitchModel(model.modelId)}
                         disabled={isSwitching || switchingTo !== null}
+                        className="text-xs sm:text-sm"
                       >
                         {isSwitching ? (
                           <>
-                            <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                            Switching...
+                            <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 animate-spin" />
+                            <span className="hidden sm:inline">Switching...</span>
+                            <span className="sm:hidden">...</span>
                           </>
                         ) : (
                           <>
-                            <Check className="w-4 h-4 mr-1" />
-                            Use This Model
+                            <Check className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Use This Model</span>
+                            <span className="sm:hidden">Use</span>
                           </>
                         )}
                       </Button>
@@ -142,15 +145,14 @@ export function ModelSettings() {
         </>
       )}
 
-      <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-4">
-        <div className="flex gap-3">
-          <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-          <div className="text-sm">
+      <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-3 sm:p-4">
+        <div className="flex gap-2 sm:gap-3">
+          <Info className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+          <div className="text-xs sm:text-sm">
             <p className="font-medium text-blue-500 mb-1">About Model Selection</p>
             <p className="text-muted-foreground">
-              Available models are determined by your agent configuration and API keys.
-              Switching models only affects the current session. New sessions will use
-              the default model configured by the agent.
+              Available models depend on your agent config and API keys.
+              Switching only affects the current session.
             </p>
           </div>
         </div>

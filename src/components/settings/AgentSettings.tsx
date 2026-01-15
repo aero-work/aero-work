@@ -37,11 +37,11 @@ export function AgentSettings() {
       </div>
 
       {/* Connection Status Card */}
-      <div className="rounded-lg border p-4">
-        <div className="flex items-center justify-between">
+      <div className="rounded-lg border p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
           <div className="flex items-center gap-3">
             <div className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center",
+              "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
               isConnected ? "bg-green-500/10" : "bg-muted"
             )}>
               <Bot className={cn(
@@ -49,10 +49,10 @@ export function AgentSettings() {
                 isConnected ? "text-green-500" : "text-muted-foreground"
               )} />
             </div>
-            <div>
+            <div className="min-w-0">
               {agentInfo ? (
                 <>
-                  <div className="font-medium">{agentInfo.title || agentInfo.name}</div>
+                  <div className="font-medium truncate">{agentInfo.title || agentInfo.name}</div>
                   <div className="text-sm text-muted-foreground">
                     v{agentInfo.version}
                   </div>
@@ -68,11 +68,11 @@ export function AgentSettings() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {/* Status indicator */}
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-sm">
+            <div className="flex items-center gap-2 px-2 sm:px-3 py-1 rounded-full bg-muted text-xs sm:text-sm">
               <div className={cn(
-                "w-2 h-2 rounded-full",
+                "w-2 h-2 rounded-full flex-shrink-0",
                 isConnected ? "bg-green-500" :
                 isConnecting ? "bg-yellow-500 animate-pulse" : "bg-muted-foreground"
               )} />
@@ -85,22 +85,24 @@ export function AgentSettings() {
                 variant="outline"
                 size="sm"
                 onClick={handleDisconnect}
+                className="text-xs sm:text-sm"
               >
-                <PowerOff className="w-4 h-4 mr-2" />
-                Disconnect
+                <PowerOff className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Disconnect</span>
               </Button>
             ) : (
               <Button
                 size="sm"
                 onClick={handleConnect}
                 disabled={isConnecting}
+                className="text-xs sm:text-sm"
               >
                 {isConnecting ? (
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  <RefreshCw className="w-4 h-4 sm:mr-2 animate-spin" />
                 ) : (
-                  <Power className="w-4 h-4 mr-2" />
+                  <Power className="w-4 h-4 sm:mr-2" />
                 )}
-                {isConnecting ? "Connecting..." : "Connect"}
+                <span className="hidden sm:inline">{isConnecting ? "Connecting..." : "Connect"}</span>
               </Button>
             )}
           </div>
@@ -109,25 +111,25 @@ export function AgentSettings() {
 
       {/* Agent Details */}
       {agentInfo && (
-        <div className="rounded-lg border p-4 space-y-3">
-          <h4 className="font-medium">Agent Details</h4>
-          <div className="grid gap-2 text-sm">
-            <div className="flex justify-between py-1 border-b border-border/50">
-              <span className="text-muted-foreground">Name</span>
-              <span>{agentInfo.name}</span>
+        <div className="rounded-lg border p-3 sm:p-4 space-y-3">
+          <h4 className="font-medium text-sm sm:text-base">Agent Details</h4>
+          <div className="grid gap-2 text-xs sm:text-sm">
+            <div className="flex justify-between gap-2 py-1 border-b border-border/50">
+              <span className="text-muted-foreground flex-shrink-0">Name</span>
+              <span className="truncate text-right">{agentInfo.name}</span>
             </div>
             {agentInfo.title && (
-              <div className="flex justify-between py-1 border-b border-border/50">
-                <span className="text-muted-foreground">Title</span>
-                <span>{agentInfo.title}</span>
+              <div className="flex justify-between gap-2 py-1 border-b border-border/50">
+                <span className="text-muted-foreground flex-shrink-0">Title</span>
+                <span className="truncate text-right">{agentInfo.title}</span>
               </div>
             )}
-            <div className="flex justify-between py-1 border-b border-border/50">
-              <span className="text-muted-foreground">Version</span>
+            <div className="flex justify-between gap-2 py-1 border-b border-border/50">
+              <span className="text-muted-foreground flex-shrink-0">Version</span>
               <span>{agentInfo.version}</span>
             </div>
-            <div className="flex justify-between py-1">
-              <span className="text-muted-foreground">Protocol</span>
+            <div className="flex justify-between gap-2 py-1">
+              <span className="text-muted-foreground flex-shrink-0">Protocol</span>
               <span>ACP v1</span>
             </div>
           </div>
@@ -135,10 +137,10 @@ export function AgentSettings() {
       )}
 
       {/* Info Box */}
-      <div className="rounded-lg bg-muted/50 p-4">
-        <p className="text-sm text-muted-foreground">
+      <div className="rounded-lg bg-muted/50 p-3 sm:p-4">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           The agent runs as a subprocess and communicates via the Agent Client Protocol (ACP).
-          Currently using <code className="bg-muted px-1 rounded">claude-code-acp</code> adapter.
+          Currently using <code className="bg-muted px-1 rounded text-xs">claude-code-acp</code> adapter.
         </p>
       </div>
     </div>

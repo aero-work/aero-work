@@ -56,29 +56,31 @@ export function PermissionSettings() {
           return (
             <div
               key={rule.id}
-              className={`rounded-lg border p-4 ${
+              className={`rounded-lg border p-3 sm:p-4 ${
                 !rule.enabled ? "opacity-50" : ""
               }`}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:justify-between">
+                <div className="flex items-start gap-2 sm:gap-3 min-w-0">
                   <ActionIcon
-                    className={`w-5 h-5 mt-0.5 ${ACTION_CONFIG[rule.action].className}`}
+                    className={`w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0 ${ACTION_CONFIG[rule.action].className}`}
                   />
-                  <div className="space-y-1">
-                    <div className="font-medium">{rule.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      Tool: <code className="bg-muted px-1 rounded">{rule.toolPattern}</code>
+                  <div className="space-y-1 min-w-0 overflow-hidden">
+                    <div className="font-medium text-sm sm:text-base truncate">{rule.name}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">
+                      <div className="truncate">
+                        Tool: <code className="bg-muted px-1 rounded text-xs">{rule.toolPattern}</code>
+                      </div>
                       {rule.pathPattern && (
-                        <>
-                          {" "}| Path: <code className="bg-muted px-1 rounded">{rule.pathPattern}</code>
-                        </>
+                        <div className="truncate mt-0.5">
+                          Path: <code className="bg-muted px-1 rounded text-xs">{rule.pathPattern}</code>
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 self-end sm:self-auto">
                   <Switch
                     checked={rule.enabled}
                     onCheckedChange={() => togglePermissionRule(rule.id)}
@@ -86,10 +88,10 @@ export function PermissionSettings() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-muted-foreground hover:text-destructive"
+                    className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive"
                     onClick={() => removePermissionRule(rule.id)}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </Button>
                 </div>
               </div>
@@ -99,60 +101,63 @@ export function PermissionSettings() {
       </div>
 
       {isAdding ? (
-        <div className="rounded-lg border p-4 space-y-4">
+        <div className="rounded-lg border p-3 sm:p-4 space-y-4">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-muted-foreground" />
-            <span className="font-medium">New Permission Rule</span>
+            <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+            <span className="font-medium text-sm sm:text-base">New Permission Rule</span>
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid gap-3 sm:gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="rule-name">Rule Name</Label>
+              <Label htmlFor="rule-name" className="text-xs sm:text-sm">Rule Name</Label>
               <Input
                 id="rule-name"
                 placeholder="e.g., Allow file reads"
                 value={newRule.name}
                 onChange={(e) => setNewRule({ ...newRule, name: e.target.value })}
+                className="text-sm"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="tool-pattern">Tool Pattern (regex)</Label>
+              <Label htmlFor="tool-pattern" className="text-xs sm:text-sm">Tool Pattern (regex)</Label>
               <Input
                 id="tool-pattern"
                 placeholder="e.g., Read|Glob"
                 value={newRule.toolPattern}
                 onChange={(e) => setNewRule({ ...newRule, toolPattern: e.target.value })}
+                className="text-sm"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="path-pattern">Path Pattern (optional, regex)</Label>
+              <Label htmlFor="path-pattern" className="text-xs sm:text-sm">Path Pattern (optional)</Label>
               <Input
                 id="path-pattern"
                 placeholder="e.g., /home/user/.*"
                 value={newRule.pathPattern}
                 onChange={(e) => setNewRule({ ...newRule, pathPattern: e.target.value })}
+                className="text-sm"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label>Action</Label>
-              <div className="flex gap-2">
+              <Label className="text-xs sm:text-sm">Action</Label>
+              <div className="flex gap-1 sm:gap-2">
                 {(["allow", "deny", "ask"] as const).map((action) => {
                   const ActionIcon = ACTION_CONFIG[action].icon;
                   return (
                     <button
                       key={action}
                       onClick={() => setNewRule({ ...newRule, action })}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                         newRule.action === action
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted hover:bg-muted/80"
                       }`}
                     >
-                      <ActionIcon className="w-4 h-4" />
-                      {ACTION_CONFIG[action].label}
+                      <ActionIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">{ACTION_CONFIG[action].label}</span>
                     </button>
                   );
                 })}
@@ -161,25 +166,24 @@ export function PermissionSettings() {
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsAdding(false)}>
+            <Button variant="outline" size="sm" onClick={() => setIsAdding(false)}>
               Cancel
             </Button>
-            <Button onClick={handleAddRule} disabled={!newRule.name || !newRule.toolPattern}>
-              Add Rule
+            <Button size="sm" onClick={handleAddRule} disabled={!newRule.name || !newRule.toolPattern}>
+              Add
             </Button>
           </div>
         </div>
       ) : (
-        <Button variant="outline" className="w-full" onClick={() => setIsAdding(true)}>
+        <Button variant="outline" className="w-full text-sm" onClick={() => setIsAdding(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Permission Rule
         </Button>
       )}
 
-      <div className="rounded-lg bg-muted/50 p-4">
-        <p className="text-sm text-muted-foreground">
-          <strong>Note:</strong> Rules are evaluated in order. The first matching rule determines the action.
-          Use regex patterns for tool and path matching.
+      <div className="rounded-lg bg-muted/50 p-3 sm:p-4">
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          <strong>Note:</strong> Rules are evaluated in order. First match wins. Use regex patterns.
         </p>
       </div>
     </div>

@@ -23,62 +23,65 @@ export function GeneralSettings() {
 
       <div className="space-y-4">
         {/* Auto Connect */}
-        <div className="flex items-center justify-between rounded-lg border p-4">
-          <div className="space-y-0.5">
-            <Label htmlFor="auto-connect" className="text-base">
+        <div className="flex items-center justify-between gap-4 rounded-lg border p-3 sm:p-4">
+          <div className="space-y-0.5 min-w-0">
+            <Label htmlFor="auto-connect" className="text-sm sm:text-base">
               Auto Connect
             </Label>
-            <p className="text-sm text-muted-foreground">
-              Automatically connect to the agent when the app starts.
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Auto connect on startup
             </p>
           </div>
           <Switch
             id="auto-connect"
             checked={autoConnect}
             onCheckedChange={setAutoConnect}
+            className="flex-shrink-0"
           />
         </div>
 
         {/* Show Hidden Files */}
-        <div className="flex items-center justify-between rounded-lg border p-4">
-          <div className="space-y-0.5">
-            <Label htmlFor="hidden-files" className="text-base">
+        <div className="flex items-center justify-between gap-4 rounded-lg border p-3 sm:p-4">
+          <div className="space-y-0.5 min-w-0">
+            <Label htmlFor="hidden-files" className="text-sm sm:text-base">
               Show Hidden Files
             </Label>
-            <p className="text-sm text-muted-foreground">
-              Display hidden files and directories in the file tree.
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Display hidden files in file tree
             </p>
           </div>
           <Switch
             id="hidden-files"
             checked={showHiddenFiles}
             onCheckedChange={setShowHiddenFiles}
+            className="flex-shrink-0"
           />
         </div>
 
         {/* Auto Clean Empty Sessions */}
-        <div className="flex items-center justify-between rounded-lg border p-4">
-          <div className="space-y-0.5">
-            <Label htmlFor="auto-clean-sessions" className="text-base">
-              Auto Clean Empty Sessions
+        <div className="flex items-center justify-between gap-4 rounded-lg border p-3 sm:p-4">
+          <div className="space-y-0.5 min-w-0">
+            <Label htmlFor="auto-clean-sessions" className="text-sm sm:text-base">
+              Auto Clean Sessions
             </Label>
-            <p className="text-sm text-muted-foreground">
-              Automatically remove empty sessions when loading session list.
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Remove empty sessions on load
             </p>
           </div>
           <Switch
             id="auto-clean-sessions"
             checked={autoCleanEmptySessions}
             onCheckedChange={setAutoCleanEmptySessions}
+            className="flex-shrink-0"
           />
         </div>
 
         {/* Theme */}
-        <div className="rounded-lg border p-4">
+        <div className="rounded-lg border p-3 sm:p-4">
           <div className="space-y-0.5 mb-3">
-            <Label className="text-base">Theme</Label>
-            <p className="text-sm text-muted-foreground">
-              Choose your preferred color theme.
+            <Label className="text-sm sm:text-base">Theme</Label>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Choose your preferred color theme
             </p>
           </div>
           <div className="flex gap-2">
@@ -86,7 +89,7 @@ export function GeneralSettings() {
               <button
                 key={t}
                 onClick={() => setTheme(t)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                   theme === t
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted hover:bg-muted/80"

@@ -114,44 +114,61 @@ Build a unified interface for AI-powered code development that works seamlessly 
 +-----------------------------------------------------+
 ```
 
-### Mobile Layout
-```
-+---------------------------+
-|  [≡] Aero Code    [⚡...]  |  <- Header with hamburger menu + status
-+---------------------------+
-|                           |
-|   Current View            |
-|   (Chat/Files/Terminal)   |
-|                           |
-|   ┌─────────────────────┐ |
-|   │ View-specific       │ |
-|   │ content here        │ |
-|   └─────────────────────┘ |
-|                           |
-+---------------------------+
-|  [💬] [📁] [>_] [⚙]      |  <- Bottom navigation tabs
-+---------------------------+
+### Mobile Layout (WeChat/WhatsApp Style)
 
-Views:
-- Chat: Messages + Input area at bottom
-- Files: File tree with floating upload button
-- File Viewer: Read-only preview (text/image/PDF/binary)
-- Terminal: xterm.js with tab management
-- Settings: Full settings page
+The mobile UI follows a WeChat/WhatsApp-style navigation pattern with bottom tabs and slide-in conversation views.
 
-Sidebar (slide from left):
-┌────────────────────────────┐
-│ Sessions                   │
-│  > Session 1 (active)      │
-│    Session 2               │
-├────────────────────────────┤
-│ Project: ~/my-project      │
-│ [Select Project]           │
-├────────────────────────────┤
-│ Agent: Claude Code ⚡       │
-│ [Connect] [Disconnect]     │
-└────────────────────────────┘
 ```
+Main Structure:
+┌────────────────────────────────────┐
+│           Header Area              │  <- Context-dependent header
+├────────────────────────────────────┤
+│                                    │
+│         Content Area               │  <- Tab content or conversation
+│                                    │
+├────────────────────────────────────┤
+│  [Chat] [Files] [Terminal] [⚙️]   │  <- Bottom tab bar
+└────────────────────────────────────┘
+
+Chat Tab (Session List):
+┌────────────────────────────────────┐
+│  Aero Code            [Connect] ⚡  │
+├────────────────────────────────────┤
+│  ┌──────────────────────────────┐  │
+│  │  [+] New Conversation        │  │  <- New chat button
+│  └──────────────────────────────┘  │
+│  ┌──────────────────────────────┐  │
+│  │ 📁 ~/project                 │  │  <- Session cards
+│  │ Last message preview...       │  │
+│  │                    10:30 AM   │  │
+│  └──────────────────────────────┘  │
+│  ...more sessions...               │
+├────────────────────────────────────┤
+│  [💬*] [📁]  [>_]  [⚙️]           │
+└────────────────────────────────────┘
+
+Conversation View (slide-in from right, no tab bar):
+┌────────────────────────────────────┐
+│  [←]  ~/project        [···]       │  <- Back + project name + menu
+├────────────────────────────────────┤
+│  ┌────────────────────────────┐    │
+│  │ User message               │    │
+│  └────────────────────────────┘    │
+│       ┌────────────────────────┐   │
+│       │ Agent response         │   │
+│       └────────────────────────┘   │
+├────────────────────────────────────┤
+│  [📎]  Type a message...    [>]   │  <- Input area (keyboard-aware)
+└────────────────────────────────────┘
+```
+
+Navigation Rules:
+- Tab bar visible: Session list, Files, Terminal, Settings
+- Tab bar hidden: Conversation view, File viewer
+- Back navigation: Tap back button or swipe from left edge
+- Keyboard handling: View compresses, input stays above keyboard
+
+See `.agent/mobile-redesign.md` for full design specification.
 
 ### Key UI Components
 
@@ -228,10 +245,11 @@ Sidebar (slide from left):
 - [x] Mobile responsive design (complete mobile UI with navigation)
 - [x] Theme support (light/dark with system detection)
 
-### Phase 6: Advanced Features
+### Phase 6: Advanced Features ✅
 - [ ] Remote agent connections
-- [ ] MCP server integration
-- [ ] Plugin system
+- [x] MCP server integration (dual-config with enable/disable)
+- [x] Plugin system (marketplaces, install/uninstall)
+- [x] Settings page responsive design (360px minimum width)
 
 ## Configuration Examples
 

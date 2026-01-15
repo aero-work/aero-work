@@ -63,7 +63,7 @@ export function MobileSidebar() {
     setActiveSession(sessionId);
     closeSettings();
     closeSidebar();
-    setView("chat");
+    setView("session-list");
   };
 
   const handleResumeSession = async (sessionInfo: SessionInfo) => {
@@ -74,7 +74,7 @@ export function MobileSidebar() {
       await agentAPI.resumeSession(sessionInfo.id, sessionInfo.cwd || currentWorkingDir);
       await agentAPI.listSessions(currentWorkingDir, 20, 0);
       closeSidebar();
-      setView("chat");
+      setView("session-list");
     } catch (error) {
       console.error("Failed to resume session:", error);
     } finally {
@@ -90,7 +90,7 @@ export function MobileSidebar() {
       await agentAPI.forkSession(sessionInfo.id, sessionInfo.cwd || currentWorkingDir);
       await agentAPI.listSessions(currentWorkingDir, 20, 0);
       closeSidebar();
-      setView("chat");
+      setView("session-list");
     } catch (error) {
       console.error("Failed to fork session:", error);
     } finally {
@@ -233,10 +233,10 @@ export function MobileSidebar() {
                       History
                     </div>
                     {historicalSessions.map((sessionInfo) => (
-                      <button
+                      <div
                         key={sessionInfo.id}
                         className={cn(
-                          "w-full flex items-center justify-between px-3 py-2 rounded-md text-left hover:bg-accent/50",
+                          "w-full flex items-center justify-between px-3 py-2 rounded-md text-left hover:bg-accent/50 cursor-pointer",
                           resumingSessionId === sessionInfo.id && "opacity-50"
                         )}
                         onClick={() => handleResumeSession(sessionInfo)}
@@ -266,7 +266,7 @@ export function MobileSidebar() {
                             <GitFork className="w-3.5 h-3.5" />
                           </Button>
                         )}
-                      </button>
+                      </div>
                     ))}
                   </>
                 )}

@@ -84,8 +84,9 @@
 ### Frontend Patterns
 
 - **State Management**: Zustand stores with immer for immutable updates
+  - **Important**: `enableMapSet()` from immer must be called in `main.tsx` for Set/Map support
 - **Component Structure**: Functional components with hooks
-- **Styling**: Tailwind CSS with shadcn/ui components
+- **Styling**: Tailwind CSS with shadcn/ui components (responsive design supports 360px minimum width)
 - **Transport Abstraction**: Factory pattern for Tauri IPC / WebSocket switching
 
 ## Backend Stack (Tauri/Rust)
@@ -291,6 +292,43 @@ interface SettingsStore {
 - Buffer terminal output and batch updates
 - Use canvas-based rendering (xterm.js default)
 - Limit scrollback buffer size
+
+## MCP Configuration Architecture
+
+The MCP server configuration uses a dual-config approach:
+
+### Config Files
+- **Aerowork Config** (`~/.config/aerowork/mcp.json`): Stores all MCP servers with enable/disable state
+- **Claude Config** (`~/.claude.json`): Contains only enabled servers (synced from Aerowork config)
+
+### Aerowork Config Format
+```json
+{
+  "mcpServers": {
+    "web-search": {
+      "enabled": true,
+      "config": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@anthropic-ai/mcp-server-tavily"],
+        "env": { "TAVILY_API_KEY": "..." }
+      }
+    }
+  }
+}
+```
+
+### Bootstrap Behavior
+- On first load, if `~/.config/aerowork/mcp.json` doesn't exist:
+  1. Read `~/.claude.json` to import existing servers
+  2. Convert all servers to Aerowork format with `enabled: true`
+  3. Save new Aerowork config
+- If both files don't exist, create empty Aerowork config
+
+### Sync Behavior
+- When a server is toggled enabled/disabled, both configs are updated
+- Only enabled servers are written to `~/.claude.json`
+- Disabled servers are preserved in Aerowork config but removed from Claude config
 
 ## Error Handling
 
