@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import type { ToolCall, ToolCallStatus, ToolKind } from "@/types/acp";
+import type { ToolCall, ToolCallStatus, ToolKind, AskUserQuestionInput } from "@/types/acp";
+import { AskUserQuestionCard } from "./AskUserQuestionCard";
 import {
   FileText,
   Pencil,
@@ -19,10 +20,13 @@ import {
   Clock,
   ChevronDown,
   ChevronRight,
+  MessageCircleQuestion,
 } from "lucide-react";
 
 interface ToolCallCardProps {
   toolCall: ToolCall;
+  onAskUserQuestionSubmit?: (toolCallId: string, answers: Record<string, string | string[]>) => void;
+  isAskUserQuestionSubmitting?: boolean;
 }
 
 const kindIcons: Record<ToolKind, React.ComponentType<{ className?: string }>> = {
@@ -48,13 +52,50 @@ const statusConfig: Record<
   failed: { icon: XCircle, className: "text-destructive", label: "Failed" },
 };
 
-export function ToolCallCard({ toolCall }: ToolCallCardProps) {
+// Helper to check if this is an AskUserQuestion tool call
+function isAskUserQuestionToolCall(toolCall: ToolCall): AskUserQuestionInput | null {
+  if (!toolCall.title?.includes("AskUserQuestion") && !toolCall.rawInput) {
+    return null;
+  }
+
+  const input = toolCall.rawInput as AskUserQuestionInput | undefined;
+  if (input?.questions && Array.isArray(input.questions)) {
+    return input;
+  }
+
+  return null;
+}
+
+export function ToolCallCard({
+  toolCall,
+  onAskUserQuestionSubmit,
+  isAskUserQuestionSubmitting,
+}: ToolCallCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const kind = toolCall.kind || "other";
   const status = toolCall.status || "pending";
 
-  const KindIcon = kindIcons[kind];
+  // Check if this is an AskUserQuestion tool call
+  const askUserQuestionInput = useMemo(() => isAskUserQuestionToolCall(toolCall), [toolCall]);
+  const isAskUserQuestion = askUserQuestionInput !== null;
+
+  // For AskUserQuestion, render the interactive card
+  if (isAskUserQuestion && askUserQuestionInput && onAskUserQuestionSubmit) {
+    const isAnswered = status === "completed";
+    return (
+      <AskUserQuestionCard
+        toolCallId={toolCall.toolCallId}
+        input={askUserQuestionInput}
+        onSubmit={onAskUserQuestionSubmit}
+        isSubmitting={isAskUserQuestionSubmitting}
+        isAnswered={isAnswered}
+      />
+    );
+  }
+
+  // Use special icon for AskUserQuestion even if no handler
+  const KindIcon = isAskUserQuestion ? MessageCircleQuestion : kindIcons[kind];
   const { icon: StatusIcon, className: statusClassName } = statusConfig[status];
 
   const hasContent =

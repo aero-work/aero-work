@@ -190,6 +190,23 @@ export type StopReason =
   | "refusal"
   | "cancelled";
 
+// AskUserQuestion tool types
+export interface AskUserQuestionOption {
+  label: string;
+  description: string;
+}
+
+export interface AskUserQuestion {
+  question: string;
+  header: string;
+  options: AskUserQuestionOption[];
+  multiSelect: boolean;
+}
+
+export interface AskUserQuestionInput {
+  questions: AskUserQuestion[];
+}
+
 export type SessionUpdate =
   | { sessionUpdate: "user_message_chunk"; content: TextContent | ImageContent }
   | {

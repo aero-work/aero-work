@@ -13,9 +13,16 @@ import { useIsDarkMode } from "@/hooks/useIsDarkMode";
 interface MessageListProps {
   chatItems: ChatItem[];
   isLoading: boolean;
+  onAskUserQuestionSubmit?: (toolCallId: string, answers: Record<string, string | string[]>) => void;
+  askUserQuestionSubmitting?: string | null; // toolCallId that is submitting
 }
 
-export function MessageList({ chatItems, isLoading }: MessageListProps) {
+export function MessageList({
+  chatItems,
+  isLoading,
+  onAskUserQuestionSubmit,
+  askUserQuestionSubmitting,
+}: MessageListProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -93,10 +100,10 @@ export function MessageList({ chatItems, isLoading }: MessageListProps) {
     lastItem?.type === "message" && lastItem.message.role === "assistant";
 
   return (
-    <div className="flex-1 relative overflow-hidden">
+    <div className="h-full relative overflow-hidden">
       <div
         ref={scrollContainerRef}
-        className="h-full overflow-y-auto p-4"
+        className="absolute inset-0 overflow-y-auto p-4"
         onScroll={handleScroll}
       >
         <div className="space-y-4 max-w-4xl mx-auto">
@@ -113,7 +120,12 @@ export function MessageList({ chatItems, isLoading }: MessageListProps) {
               return <MessageBubble key={item.message.id} message={item.message} />;
             } else {
               return (
-                <ToolCallCard key={item.toolCall.toolCallId} toolCall={item.toolCall} />
+                <ToolCallCard
+                  key={item.toolCall.toolCallId}
+                  toolCall={item.toolCall}
+                  onAskUserQuestionSubmit={onAskUserQuestionSubmit}
+                  isAskUserQuestionSubmitting={askUserQuestionSubmitting === item.toolCall.toolCallId}
+                />
               );
             }
           })}
