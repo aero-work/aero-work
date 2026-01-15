@@ -1,7 +1,7 @@
 import type { Transport, TransportConfig } from "./types";
 import { WebSocketTransport } from "./websocket";
 
-export type { Transport, TransportConfig, InitializeResponse } from "./types";
+export type { Transport, TransportConfig, InitializeResponse, ServerInfo } from "./types";
 export { WebSocketTransport } from "./websocket";
 export { TransportProvider, useTransport, useRequiredTransport } from "./context";
 

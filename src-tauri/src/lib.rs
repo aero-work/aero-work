@@ -71,15 +71,21 @@ pub fn run() {
             #[cfg(feature = "websocket")]
             {
                 let ws_state = app.state::<Arc<AppState>>().inner().clone();
-                let port = std::env::var("AERO_WS_PORT")
+                let preferred_port = std::env::var("AERO_WS_PORT")
                     .ok()
                     .and_then(|p| p.parse().ok())
                     .unwrap_or(8765);
 
                 tauri::async_runtime::spawn(async move {
-                    let server = server::WebSocketServer::new(ws_state);
-                    if let Err(e) = server.start(port).await {
-                        tracing::error!("WebSocket server error: {}", e);
+                    let server = server::WebSocketServer::new(ws_state.clone());
+                    match server.start(preferred_port).await {
+                        Ok(actual_port) => {
+                            ws_state.set_ws_port(actual_port);
+                            tracing::info!("WebSocket server started on port {}", actual_port);
+                        }
+                        Err(e) => {
+                            tracing::error!("WebSocket server error: {}", e);
+                        }
                     }
                 });
             }

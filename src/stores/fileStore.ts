@@ -46,6 +46,7 @@ interface FileState {
   recentProjects: RecentProject[];
   // File tree state
   fileTree: FileTreeNode[];
+  fileTreeLoaded: boolean; // true after first load completes (even if empty)
   expandedPaths: Set<string>;
   selectedPath: string | null;
   // Open files (tabs)
@@ -55,6 +56,9 @@ interface FileState {
   mainViewMode: MainViewMode;
   // Refresh trigger (increment to trigger reload)
   refreshTrigger: number;
+  // Server paths (from backend)
+  serverCwd: string | null;
+  serverHome: string | null;
 }
 
 interface FileActions {
@@ -63,6 +67,8 @@ interface FileActions {
   addRecentProject: (path: string, name?: string) => void;
   removeRecentProject: (path: string) => void;
   clearRecentProjects: () => void;
+  // Server paths
+  setServerPaths: (cwd: string, home: string) => void;
   // File tree
   setFileTree: (entries: FileEntry[]) => void;
   updateDirectoryChildren: (dirPath: string, children: FileEntry[]) => void;
@@ -92,18 +98,22 @@ export const useFileStore = create<FileState & FileActions>()(
       currentWorkingDir: null,
       recentProjects: [],
       fileTree: [],
+      fileTreeLoaded: false,
       expandedPaths: new Set<string>(),
       selectedPath: null,
       openFiles: [],
       activeFilePath: null,
       mainViewMode: "chat",
       refreshTrigger: 0,
+      serverCwd: null,
+      serverHome: null,
 
       setWorkingDir: (path) => {
         set((state) => {
           state.currentWorkingDir = path;
           // Reset file tree when changing directory
           state.fileTree = [];
+          state.fileTreeLoaded = false;
           state.expandedPaths = new Set();
           state.selectedPath = null;
           // Close files that don't belong to the new project
@@ -136,6 +146,7 @@ export const useFileStore = create<FileState & FileActions>()(
           if (state.currentWorkingDir !== path) {
             state.currentWorkingDir = path;
             state.fileTree = [];
+            state.fileTreeLoaded = false;
             state.expandedPaths = new Set();
             state.selectedPath = null;
             // Close files that don't belong to the new project
@@ -159,6 +170,17 @@ export const useFileStore = create<FileState & FileActions>()(
       clearRecentProjects: () => {
         set((state) => {
           state.recentProjects = [];
+        });
+      },
+
+      setServerPaths: (cwd, home) => {
+        set((state) => {
+          state.serverCwd = cwd;
+          state.serverHome = home;
+          // If no working directory is set, use server cwd as default
+          if (!state.currentWorkingDir) {
+            state.currentWorkingDir = cwd;
+          }
         });
       },
 
@@ -187,6 +209,7 @@ export const useFileStore = create<FileState & FileActions>()(
           // Try to update in tree, or add to root if it's the root dir
           if (dirPath === state.currentWorkingDir) {
             state.fileTree = children.map((c) => ({ ...c }));
+            state.fileTreeLoaded = true; // Mark as loaded even if empty
           } else {
             updateNode(state.fileTree);
           }

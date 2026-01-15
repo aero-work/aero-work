@@ -195,7 +195,7 @@ export class WebSocketTransport implements Transport {
               requestId: request.requestId,
               outcome,
             }).catch(console.error);
-          });
+          }).catch(console.error);
         }
         break;
       }

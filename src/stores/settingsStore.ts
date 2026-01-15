@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { persist } from "zustand/middleware";
+import { generateUUID } from "@/lib/utils";
 
 /**
  * MCP Server configuration
@@ -120,6 +121,13 @@ const initialState: SettingsState = {
 
   permissionRules: [
     {
+      id: "default-askuser",
+      name: "Allow interactive prompts",
+      toolPattern: "AskUserQuestion",
+      action: "allow",
+      enabled: true,
+    },
+    {
       id: "default-read",
       name: "Allow file reads",
       toolPattern: "Read",
@@ -178,7 +186,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
         set((state) => {
           state.mcpServers.push({
             ...server,
-            id: crypto.randomUUID(),
+            id: generateUUID(),
           });
         });
       },
@@ -212,7 +220,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
         set((state) => {
           state.models.push({
             ...model,
-            id: crypto.randomUUID(),
+            id: generateUUID(),
           });
         });
       },
@@ -249,7 +257,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
         set((state) => {
           state.permissionRules.push({
             ...rule,
-            id: crypto.randomUUID(),
+            id: generateUUID(),
           });
         });
       },

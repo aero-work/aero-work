@@ -58,3 +58,45 @@ const handleCompositionEnd = useCallback(() => {
 2. Check `e.key === "Process"` which some browsers use for IME
 3. Investigate Tauri-specific WebView event handling
 4. Consider using `keyup` instead of `keydown` for Enter detection
+
+---
+
+## Android PWA: HTTP Standalone Mode Limitation
+
+**Status**: Known Limitation (Browser Security Policy)
+**Platform**: Android Chrome
+**Component**: `src/components/common/InstallPrompt.tsx`
+
+### Description
+
+When accessing the web app via HTTP (not HTTPS) on Android Chrome, the PWA cannot be installed in true standalone mode. Adding to home screen creates a browser shortcut that opens with the navigation bar visible, not as a fullscreen app.
+
+### Root Cause
+
+Chrome requires HTTPS for full PWA functionality due to security policies. The `beforeinstallprompt` event only fires on secure origins (HTTPS or localhost).
+
+### Current Behavior
+
+- **HTTPS**: Native install prompt, opens as standalone app (no browser UI)
+- **HTTP**: Manual "Add to Home screen" instructions shown, opens in browser with address bar
+
+### Workaround
+
+Users can enable Chrome flags to treat specific HTTP origins as secure:
+
+1. Open Chrome on Android, navigate to:
+   ```
+   chrome://flags/#unsafely-treat-insecure-origin-as-secure
+   ```
+
+2. Add the server address (e.g., `http://192.168.1.100:1420`)
+
+3. Set to `Enabled` and relaunch Chrome
+
+4. Reinstall the PWA - it will now work in standalone mode
+
+### Alternative Solutions
+
+1. **Self-signed HTTPS certificate**: Configure the server with HTTPS using mkcert or similar
+2. **Use localhost**: Access via `localhost` which is treated as secure
+3. **Reverse proxy with HTTPS**: Use nginx/caddy with Let's Encrypt for public access

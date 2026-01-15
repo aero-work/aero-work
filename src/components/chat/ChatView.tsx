@@ -1,12 +1,29 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { MessageList } from "./MessageList";
 import { ChatInput } from "./ChatInput";
+import { TodoPanel } from "./TodoPanel";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useAgentStore } from "@/stores/agentStore";
 import { useFileStore } from "@/stores/fileStore";
 import { useSessionData } from "@/hooks/useSessionData";
 import { agentAPI } from "@/services/api";
 import { Bot, FolderOpen, MessageSquare, Loader2 } from "lucide-react";
+import type { ChatItem, TodoWriteInput, TodoItem } from "@/types/acp";
+
+// Extract the latest TodoWrite todos from chat items
+function extractLatestTodos(chatItems: ChatItem[]): TodoItem[] {
+  // Find the last TodoWrite tool call
+  for (let i = chatItems.length - 1; i >= 0; i--) {
+    const item = chatItems[i];
+    if (item.type === "tool_call" && item.toolCall.title?.includes("TodoWrite")) {
+      const input = item.toolCall.rawInput as TodoWriteInput | undefined;
+      if (input?.todos && Array.isArray(input.todos)) {
+        return input.todos;
+      }
+    }
+  }
+  return [];
+}
 
 export function ChatView() {
   // UI state from stores
@@ -87,6 +104,13 @@ export function ChatView() {
     [activeSessionId, addOptimisticMessage]
   );
 
+  // Extract todos from chat items (must be before any conditional returns)
+  const todos = useMemo(
+    () => extractLatestTodos(sessionState?.chatItems || []),
+    [sessionState?.chatItems]
+  );
+  const hasActiveTodos = todos.length > 0 && todos.some((t) => t.status !== "completed");
+
   // Empty state when no session
   if (!hasSession) {
     return (
@@ -164,6 +188,8 @@ export function ChatView() {
         onAskUserQuestionSubmit={handleAskUserQuestionSubmit}
         askUserQuestionSubmitting={askUserQuestionSubmitting}
       />
+      {/* Todo panel - sticky above input */}
+      {hasActiveTodos && <TodoPanel todos={todos} />}
       <ChatInput
         onSend={handleSend}
         onCancel={handleCancel}

@@ -1,11 +1,27 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { MessageList } from "@/components/chat/MessageList";
 import { ChatInput } from "@/components/chat/ChatInput";
+import { TodoPanel } from "@/components/chat/TodoPanel";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useAgentStore } from "@/stores/agentStore";
 import { useSessionData } from "@/hooks/useSessionData";
 import { agentAPI } from "@/services/api";
 import { Loader2, MessageSquare } from "lucide-react";
+import type { ChatItem, TodoWriteInput, TodoItem } from "@/types/acp";
+
+// Extract the latest TodoWrite todos from chat items
+function extractLatestTodos(chatItems: ChatItem[]): TodoItem[] {
+  for (let i = chatItems.length - 1; i >= 0; i--) {
+    const item = chatItems[i];
+    if (item.type === "tool_call" && item.toolCall.title?.includes("TodoWrite")) {
+      const input = item.toolCall.rawInput as TodoWriteInput | undefined;
+      if (input?.todos && Array.isArray(input.todos)) {
+        return input.todos;
+      }
+    }
+  }
+  return [];
+}
 
 /**
  * MobileConversation
@@ -91,6 +107,13 @@ export function MobileConversation() {
     [activeSessionId, addOptimisticMessage]
   );
 
+  // Extract todos from chat items (must be before any conditional returns)
+  const todos = useMemo(
+    () => extractLatestTodos(sessionState?.chatItems || []),
+    [sessionState?.chatItems]
+  );
+  const hasActiveTodos = todos.length > 0 && todos.some((t) => t.status !== "completed");
+
   // No session selected (shouldn't happen in normal flow)
   if (!hasSession) {
     return (
@@ -131,6 +154,9 @@ export function MobileConversation() {
           askUserQuestionSubmitting={askUserQuestionSubmitting}
         />
       </div>
+
+      {/* Todo panel - sticky above input */}
+      {hasActiveTodos && <TodoPanel todos={todos} />}
 
       {/* Input area - fixed at bottom */}
       <div className="flex-shrink-0 border-t border-border bg-background">

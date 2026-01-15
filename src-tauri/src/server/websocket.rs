@@ -80,7 +80,9 @@ impl WebSocketServer {
         Self { state, event_tx }
     }
 
-    pub async fn start(self, port: u16) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    /// Start the WebSocket server, automatically finding an available port if the preferred port is occupied.
+    /// Returns the actual port that was bound.
+    pub async fn start(self, preferred_port: u16) -> Result<u16, Box<dyn std::error::Error + Send + Sync>> {
         let server_state = Arc::new(ServerState {
             app_state: self.state.clone(),
             event_tx: self.event_tx.clone(),
@@ -94,14 +96,48 @@ impl WebSocketServer {
             .route("/health", get(health_handler))
             .with_state(server_state);
 
-        let addr = format!("0.0.0.0:{}", port);
-        let listener = tokio::net::TcpListener::bind(&addr).await?;
+        // Try to bind to the preferred port first, then try alternative ports if occupied
+        let (listener, actual_port) = Self::find_available_port(preferred_port).await?;
 
-        info!("WebSocket server listening on {}", addr);
+        info!("WebSocket server listening on 0.0.0.0:{}", actual_port);
 
         axum::serve(listener, app).await?;
 
-        Ok(())
+        Ok(actual_port)
+    }
+
+    /// Find an available port, starting with the preferred port and trying alternatives if occupied
+    async fn find_available_port(preferred_port: u16) -> Result<(tokio::net::TcpListener, u16), Box<dyn std::error::Error + Send + Sync>> {
+        // Try the preferred port first
+        let addr = format!("0.0.0.0:{}", preferred_port);
+        match tokio::net::TcpListener::bind(&addr).await {
+            Ok(listener) => {
+                return Ok((listener, preferred_port));
+            }
+            Err(e) => {
+                warn!("Port {} is occupied: {}, trying alternative ports...", preferred_port, e);
+            }
+        }
+
+        // Try a range of alternative ports
+        let port_range = preferred_port.saturating_add(1)..=preferred_port.saturating_add(100);
+        for port in port_range {
+            let addr = format!("0.0.0.0:{}", port);
+            match tokio::net::TcpListener::bind(&addr).await {
+                Ok(listener) => {
+                    info!("Found available port: {}", port);
+                    return Ok((listener, port));
+                }
+                Err(_) => continue,
+            }
+        }
+
+        // If no port found in the range, let the OS choose one
+        let addr = "0.0.0.0:0";
+        let listener = tokio::net::TcpListener::bind(addr).await?;
+        let actual_port = listener.local_addr()?.port();
+        info!("OS assigned port: {}", actual_port);
+        Ok((listener, actual_port))
     }
 
     async fn start_event_forwarding(state: Arc<AppState>, event_tx: broadcast::Sender<String>) {
@@ -251,14 +287,19 @@ async fn handle_socket(socket: WebSocket, state: Arc<ServerState>) {
         }
     });
 
-    // Handle incoming messages
+    // Handle incoming messages concurrently to avoid deadlocks
+    // (e.g., send_prompt waiting for respond_permission)
     while let Some(result) = receiver.next().await {
         match result {
             Ok(Message::Text(text)) => {
-                let response = handle_message(&text, &state, &client_state).await;
-                if ws_tx.send(response).await.is_err() {
-                    break;
-                }
+                // Spawn a task for each message to allow concurrent processing
+                let state_clone = state.clone();
+                let client_state_clone = client_state.clone();
+                let ws_tx_clone = ws_tx.clone();
+                tokio::spawn(async move {
+                    let response = handle_message(&text, &state_clone, &client_state_clone).await;
+                    let _ = ws_tx_clone.send(response).await;
+                });
             }
             Ok(Message::Close(_)) => break,
             Ok(_) => {} // Ignore other message types
@@ -631,6 +672,22 @@ async fn dispatch_method(
                 .ok_or("Missing enabled parameter")?;
             let response = toggle_marketplace_handler(name, enabled)?;
             serde_json::to_value(response).map_err(|e| e.to_string())
+        }
+
+        // Server info commands
+        "get_server_info" => {
+            let port = state.get_ws_port();
+            let cwd = std::env::current_dir()
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or_else(|_| "/".to_string());
+            let home = dirs::home_dir()
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or_else(|| "/".to_string());
+            Ok(serde_json::json!({
+                "port": port,
+                "cwd": cwd,
+                "home": home
+            }))
         }
 
         _ => Err(format!("Unknown method: {}", method)),

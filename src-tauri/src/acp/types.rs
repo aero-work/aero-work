@@ -252,11 +252,20 @@ pub struct ToolCallLocation {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[serde(tag = "type", rename_all = "camelCase")]
 pub enum ToolCallContent {
     Content { content: ContentBlock },
-    Diff { path: String, old_text: Option<String>, new_text: String },
-    Terminal { terminal_id: String },
+    Diff {
+        path: String,
+        #[serde(rename = "oldText")]
+        old_text: Option<String>,
+        #[serde(rename = "newText")]
+        new_text: String,
+    },
+    Terminal {
+        #[serde(rename = "terminalId")]
+        terminal_id: String,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

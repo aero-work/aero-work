@@ -21,6 +21,7 @@ import type {
 } from "@/types/acp";
 import { getTransport } from "@/services/transport";
 import type { WebSocketTransport } from "@/services/transport/websocket";
+import { generateUUID } from "@/lib/utils";
 
 interface UseSessionDataResult {
   /** Current session state */
@@ -184,7 +185,7 @@ export function useSessionData(sessionId: SessionId | null): UseSessionDataResul
 
           // Create new message (last item is not a message with same role)
           const newMessage: Message = {
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             role,
             content: text,
             timestamp: Date.now(),
@@ -289,7 +290,7 @@ export function useSessionData(sessionId: SessionId | null): UseSessionDataResul
    * Returns the message ID for potential rollback
    */
   const addOptimisticMessage = useCallback((content: string): string => {
-    const messageId = crypto.randomUUID();
+    const messageId = generateUUID();
     setState((prev) => {
       if (!prev) return prev;
       const newMessage: Message = {

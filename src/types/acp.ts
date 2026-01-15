@@ -207,6 +207,19 @@ export interface AskUserQuestionInput {
   questions: AskUserQuestion[];
 }
 
+// TodoWrite tool types
+export type TodoStatus = "pending" | "in_progress" | "completed";
+
+export interface TodoItem {
+  content: string;
+  activeForm: string;
+  status: TodoStatus;
+}
+
+export interface TodoWriteInput {
+  todos: TodoItem[];
+}
+
 export type SessionUpdate =
   | { sessionUpdate: "user_message_chunk"; content: TextContent | ImageContent }
   | {

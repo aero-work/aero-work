@@ -2,18 +2,30 @@ import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useMobileNavStore, type MobileView } from "@/stores/mobileNavStore";
 import { useAgentStore, type ConnectionStatus } from "@/stores/agentStore";
-import { useSettingsStore } from "@/stores/settingsStore";
+import { useSessionStore } from "@/stores/sessionStore";
 import { useFileStore } from "@/stores/fileStore";
 import { agentAPI } from "@/services/api";
 import * as fileService from "@/services/fileService";
-import { Menu, ArrowLeft, Plug, PlugZap, Loader2, AlertCircle, Save, Download } from "lucide-react";
+import {
+  Menu,
+  ArrowLeft,
+  Plug,
+  PlugZap,
+  Loader2,
+  AlertCircle,
+  Save,
+  Download,
+  MoreVertical,
+} from "lucide-react";
 
+// View-specific titles
 const VIEW_TITLES: Record<MobileView, string> = {
-  chat: "Aero Code",
+  "session-list": "Aero Code",
+  conversation: "", // Dynamic - will use project name
   files: "Files",
+  "file-viewer": "", // Dynamic - will use file name
   terminal: "Terminal",
   settings: "Settings",
-  "file-viewer": "File",
 };
 
 const statusConfig: Record<
@@ -26,37 +38,56 @@ const statusConfig: Record<
   error: { icon: AlertCircle, className: "text-destructive" },
 };
 
+function getProjectName(cwd: string | null): string {
+  if (!cwd) return "Conversation";
+  const parts = cwd.split("/").filter(Boolean);
+  return parts[parts.length - 1] || "Conversation";
+}
+
 export function MobileHeader() {
   const currentView = useMobileNavStore((state) => state.currentView);
   const goBack = useMobileNavStore((state) => state.goBack);
+  const showBackButton = useMobileNavStore((state) => state.showBackButton);
   const openSidebar = useMobileNavStore((state) => state.openSidebar);
   const viewingFilePath = useMobileNavStore((state) => state.viewingFilePath);
-  const connectionStatus = useAgentStore((state) => state.connectionStatus);
-  const closeSettings = useSettingsStore((state) => state.closeSettings);
 
+  const connectionStatus = useAgentStore((state) => state.connectionStatus);
+  const currentWorkingDir = useFileStore((state) => state.currentWorkingDir);
   const openFiles = useFileStore((state) => state.openFiles);
   const markFileSaved = useFileStore((state) => state.markFileSaved);
 
+  // Get active session info for conversation header
+  const activeSessionId = useSessionStore((state) => state.activeSessionId);
+  const availableSessions = useSessionStore((state) => state.availableSessions);
+  const activeSession = availableSessions.find((s) => s.id === activeSessionId);
+
   const { icon: StatusIcon, className: statusClassName } = statusConfig[connectionStatus];
   const isConnected = connectionStatus === "connected";
-  const showBackButton = currentView === "settings" || currentView === "file-viewer";
 
   // Get current file being viewed
   const currentFile = openFiles.find((f) => f.path === viewingFilePath);
 
   const handleGoBack = () => {
-    if (currentView === "settings") {
-      closeSettings();
-    }
     goBack();
   };
 
-  // Get title - for file-viewer, show filename
-  const getTitle = () => {
-    if (currentView === "file-viewer" && viewingFilePath) {
-      return viewingFilePath.split("/").pop() || "File";
+  // Get title based on current view
+  const getTitle = (): string => {
+    switch (currentView) {
+      case "conversation":
+        // Show project name from active session
+        return getProjectName(activeSession?.cwd || currentWorkingDir);
+
+      case "file-viewer":
+        // Show file name
+        if (viewingFilePath) {
+          return viewingFilePath.split("/").pop() || "File";
+        }
+        return "File";
+
+      default:
+        return VIEW_TITLES[currentView];
     }
-    return VIEW_TITLES[currentView];
   };
 
   const handleConnect = async () => {
@@ -98,64 +129,106 @@ export function MobileHeader() {
     URL.revokeObjectURL(url);
   }, [currentFile]);
 
-  return (
-    <header className="h-12 border-b border-border bg-card flex items-center justify-between px-2 flex-shrink-0">
-      <div className="flex items-center gap-1">
-        {showBackButton ? (
-          <Button variant="ghost" size="icon" onClick={handleGoBack} className="h-9 w-9">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-        ) : (
-          <Button variant="ghost" size="icon" onClick={openSidebar} className="h-9 w-9">
-            <Menu className="w-5 h-5" />
-          </Button>
-        )}
-        <h1
-          className="font-semibold text-base truncate max-w-[140px]"
-          style={currentView === "chat" ? { fontFamily: "Quantico, sans-serif", fontStyle: "italic" } : undefined}
-        >
-          {getTitle()}
-        </h1>
-      </div>
-
-      <div className="flex items-center gap-1">
-        {/* File action buttons - only show in file-viewer */}
-        {currentView === "file-viewer" && currentFile && (
+  // Determine which right-side actions to show
+  const renderRightActions = () => {
+    switch (currentView) {
+      case "file-viewer":
+        // File actions: Save + Download
+        return (
           <>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSave}
-              disabled={!currentFile.isDirty}
-              className="h-9 w-9"
-              title="Save"
-            >
-              <Save className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleDownload}
-              className="h-9 w-9"
-              title="Download"
-            >
-              <Download className="w-5 h-5" />
-            </Button>
+            {currentFile && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleSave}
+                  disabled={!currentFile.isDirty}
+                  className="h-9 w-9"
+                  title="Save"
+                >
+                  <Save className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleDownload}
+                  className="h-9 w-9"
+                  title="Download"
+                >
+                  <Download className="w-5 h-5" />
+                </Button>
+              </>
+            )}
           </>
-        )}
+        );
 
-        {/* Connection status button - hide in file-viewer */}
-        {currentView !== "file-viewer" && (
+      case "conversation":
+        // Conversation: More menu (for future: mode switch, fork, etc.)
+        return (
+          <Button variant="ghost" size="icon" className="h-9 w-9" title="Options">
+            <MoreVertical className="w-5 h-5" />
+          </Button>
+        );
+
+      case "session-list":
+      case "files":
+      case "terminal":
+        // Connection status button
+        return (
           <Button
             variant="ghost"
             size="icon"
             onClick={handleConnect}
             disabled={connectionStatus === "connecting"}
             className="h-9 w-9"
+            title={isConnected ? "Disconnect" : "Connect"}
           >
             <StatusIcon className={statusClassName} />
           </Button>
+        );
+
+      case "settings":
+        // No right actions for settings
+        return null;
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <header className="border-b border-border bg-card flex-shrink-0">
+      {/* iOS safe area spacer for status bar */}
+      <div className="safe-area-top" />
+      {/* Header content */}
+      <div className="h-12 flex items-center justify-between px-2">
+        {/* Left side: Back button or Hamburger menu */}
+        <div className="flex items-center gap-1 min-w-0">
+        {showBackButton() ? (
+          <Button variant="ghost" size="icon" onClick={handleGoBack} className="h-9 w-9 flex-shrink-0">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+        ) : (
+          <Button variant="ghost" size="icon" onClick={openSidebar} className="h-9 w-9 flex-shrink-0">
+            <Menu className="w-5 h-5" />
+          </Button>
         )}
+
+        {/* Title */}
+        <h1
+          className="font-semibold text-base truncate"
+          style={
+            currentView === "session-list"
+              ? { fontFamily: "Quantico, sans-serif", fontStyle: "italic" }
+              : undefined
+          }
+        >
+          {getTitle()}
+        </h1>
+      </div>
+
+        {/* Right side: Context-specific actions */}
+        <div className="flex items-center gap-1 flex-shrink-0">{renderRightActions()}</div>
       </div>
     </header>
   );

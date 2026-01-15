@@ -4,6 +4,20 @@ use std::fs;
 use std::path::PathBuf;
 use tauri::command;
 
+/// Expand ~ to home directory
+fn expand_tilde(path: &str) -> PathBuf {
+    if path.starts_with("~/") {
+        if let Some(home) = dirs::home_dir() {
+            return home.join(&path[2..]);
+        }
+    } else if path == "~" {
+        if let Some(home) = dirs::home_dir() {
+            return home;
+        }
+    }
+    PathBuf::from(path)
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileEntry {
@@ -338,7 +352,7 @@ pub async fn list_directory_impl(path: &str) -> Result<Vec<FileEntry>, String> {
 }
 
 pub async fn read_file_impl(path: &str) -> Result<String, String> {
-    let file_path = PathBuf::from(path);
+    let file_path = expand_tilde(path);
 
     if !file_path.exists() {
         return Err(format!("File does not exist: {}", path));
@@ -358,7 +372,7 @@ pub async fn read_file_impl(path: &str) -> Result<String, String> {
 }
 
 pub async fn write_file_impl(path: &str, content: &str) -> Result<(), String> {
-    let file_path = PathBuf::from(path);
+    let file_path = expand_tilde(path);
 
     // Ensure parent directory exists
     if let Some(parent) = file_path.parent() {

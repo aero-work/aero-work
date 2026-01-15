@@ -28,7 +28,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .or_else(|| std::env::var("AERO_WS_PORT").ok().and_then(|p| p.parse().ok()))
         .unwrap_or(8765);
 
-    tracing::info!("Starting standalone WebSocket server on port {}", port);
+    tracing::info!("Starting standalone WebSocket server on preferred port {}", port);
 
     // Create app state
     let state = Arc::new(AppState::new());
@@ -64,7 +64,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // Start WebSocket server
     let server = WebSocketServer::new(state);
-    server.start(port).await?;
+    let actual_port = server.start(port).await?;
+
+    tracing::info!("WebSocket server is running on port {}", actual_port);
 
     Ok(())
 }

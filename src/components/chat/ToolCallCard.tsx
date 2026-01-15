@@ -1,26 +1,15 @@
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import type { ToolCall, ToolCallStatus, ToolKind, AskUserQuestionInput } from "@/types/acp";
+import type { ToolCall, ToolCallStatus, AskUserQuestionInput, TodoWriteInput } from "@/types/acp";
 import { AskUserQuestionCard } from "./AskUserQuestionCard";
 import {
-  FileText,
-  Pencil,
-  Trash2,
-  Move,
-  Search,
-  Terminal,
-  Brain,
-  Globe,
-  ToggleLeft,
-  Circle,
   CheckCircle,
   XCircle,
   Loader2,
   Clock,
   ChevronDown,
   ChevronRight,
-  MessageCircleQuestion,
 } from "lucide-react";
 
 interface ToolCallCardProps {
@@ -28,19 +17,6 @@ interface ToolCallCardProps {
   onAskUserQuestionSubmit?: (toolCallId: string, answers: Record<string, string | string[]>) => void;
   isAskUserQuestionSubmitting?: boolean;
 }
-
-const kindIcons: Record<ToolKind, React.ComponentType<{ className?: string }>> = {
-  read: FileText,
-  edit: Pencil,
-  delete: Trash2,
-  move: Move,
-  search: Search,
-  execute: Terminal,
-  think: Brain,
-  fetch: Globe,
-  switch_mode: ToggleLeft,
-  other: Circle,
-};
 
 const statusConfig: Record<
   ToolCallStatus,
@@ -66,19 +42,41 @@ function isAskUserQuestionToolCall(toolCall: ToolCall): AskUserQuestionInput | n
   return null;
 }
 
+// Helper to check if this is a TodoWrite tool call
+function isTodoWriteToolCall(toolCall: ToolCall): TodoWriteInput | null {
+  if (!toolCall.title?.includes("TodoWrite")) {
+    return null;
+  }
+
+  const input = toolCall.rawInput as TodoWriteInput | undefined;
+  if (input?.todos && Array.isArray(input.todos)) {
+    return input;
+  }
+
+  return null;
+}
+
 export function ToolCallCard({
   toolCall,
   onAskUserQuestionSubmit,
   isAskUserQuestionSubmitting,
 }: ToolCallCardProps) {
+  // All hooks must be called before any conditional returns
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const kind = toolCall.kind || "other";
   const status = toolCall.status || "pending";
+  const { icon: StatusIcon, className: statusClassName } = statusConfig[status];
 
   // Check if this is an AskUserQuestion tool call
   const askUserQuestionInput = useMemo(() => isAskUserQuestionToolCall(toolCall), [toolCall]);
   const isAskUserQuestion = askUserQuestionInput !== null;
+
+  // Check if this is a TodoWrite tool call (don't show in message list, shown in TodoPanel)
+  const isTodoWrite = useMemo(() => isTodoWriteToolCall(toolCall) !== null, [toolCall]);
+
+  const hasContent =
+    toolCall.rawInput != null ||
+    (toolCall.content && toolCall.content.length > 0);
 
   // For AskUserQuestion, render the interactive card
   if (isAskUserQuestion && askUserQuestionInput && onAskUserQuestionSubmit) {
@@ -94,13 +92,10 @@ export function ToolCallCard({
     );
   }
 
-  // Use special icon for AskUserQuestion even if no handler
-  const KindIcon = isAskUserQuestion ? MessageCircleQuestion : kindIcons[kind];
-  const { icon: StatusIcon, className: statusClassName } = statusConfig[status];
-
-  const hasContent =
-    toolCall.rawInput != null ||
-    (toolCall.content && toolCall.content.length > 0);
+  // TodoWrite is displayed in TodoPanel, hide from message list
+  if (isTodoWrite) {
+    return null;
+  }
 
   return (
     <div className="border rounded-lg bg-muted/30 overflow-hidden">
@@ -121,8 +116,6 @@ export function ToolCallCard({
             )}
           </Button>
         )}
-
-        <KindIcon className="w-4 h-4 text-muted-foreground" />
 
         <span className="flex-1 text-sm font-medium truncate">
           {toolCall.title}

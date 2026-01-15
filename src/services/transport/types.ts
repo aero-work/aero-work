@@ -62,3 +62,9 @@ export interface Transport {
 export interface TransportConfig {
   websocketUrl?: string;
 }
+
+export interface ServerInfo {
+  port: number;
+  cwd: string;
+  home: string;
+}

@@ -55,6 +55,7 @@ export function ProjectSelector({ onSelect, trigger }: ProjectSelectorProps) {
     recentProjects,
     addRecentProject,
     removeRecentProject,
+    serverHome,
   } = useFileStore();
 
   const connectionStatus = useAgentStore((state) => state.connectionStatus);
@@ -96,10 +97,9 @@ export function ProjectSelector({ onSelect, trigger }: ProjectSelectorProps) {
     return path;
   };
 
-  // Get home directory path (platform-specific approximation)
+  // Get home directory path from server or fallback
   const getHomePath = () => {
-    // This will be overridden by actual home when we load
-    return "/Users";
+    return serverHome || "/";
   };
 
   // Load directory contents for browsing
@@ -287,9 +287,9 @@ export function ProjectSelector({ onSelect, trigger }: ProjectSelectorProps) {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => loadDirectory("/")}
+                    onClick={() => loadDirectory(getHomePath())}
                     disabled={browseLoading}
-                    title="Go to root"
+                    title="Go to home directory"
                   >
                     <Home className="w-4 h-4" />
                   </Button>

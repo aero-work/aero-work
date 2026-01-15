@@ -29,6 +29,8 @@ pub struct AppState {
     /// Channel for session activation notifications
     pub session_activated_tx: mpsc::Sender<SessionActivated>,
     pub session_activated_rx: Arc<parking_lot::RwLock<Option<mpsc::Receiver<SessionActivated>>>>,
+    /// Actual WebSocket server port (may differ from configured port if it was occupied)
+    pub ws_port: Arc<std::sync::atomic::AtomicU16>,
 }
 
 impl AppState {
@@ -51,7 +53,18 @@ impl AppState {
             current_session_id: Arc::new(parking_lot::RwLock::new(None)),
             session_activated_tx,
             session_activated_rx: Arc::new(parking_lot::RwLock::new(Some(session_activated_rx))),
+            ws_port: Arc::new(std::sync::atomic::AtomicU16::new(0)),
         }
+    }
+
+    /// Set the WebSocket server port
+    pub fn set_ws_port(&self, port: u16) {
+        self.ws_port.store(port, std::sync::atomic::Ordering::SeqCst);
+    }
+
+    /// Get the WebSocket server port
+    pub fn get_ws_port(&self) -> u16 {
+        self.ws_port.load(std::sync::atomic::Ordering::SeqCst)
     }
 
     /// Set the current active session and broadcast to all clients

@@ -13,10 +13,12 @@
  */
 
 import { getTransport } from "./transport";
+import type { ServerInfo } from "./transport";
 import { WebSocketTransport } from "./transport/websocket";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useAgentStore } from "@/stores/agentStore";
-import { useSettingsStore } from "@/stores/settingsStore";
+import { useSettingsStore, type PermissionRule } from "@/stores/settingsStore";
+import { useFileStore } from "@/stores/fileStore";
 import type {
   SessionId,
   SessionInfo,
@@ -26,6 +28,62 @@ import type {
   SessionUpdate,
   MCPServer,
 } from "@/types/acp";
+
+/**
+ * Check if a tool name matches a permission rule pattern
+ */
+function matchesRule(toolName: string, rule: PermissionRule): boolean {
+  if (!rule.enabled) return false;
+
+  try {
+    const regex = new RegExp(`^(${rule.toolPattern})$`, "i");
+    return regex.test(toolName);
+  } catch {
+    // Invalid regex, try exact match
+    return toolName.toLowerCase() === rule.toolPattern.toLowerCase();
+  }
+}
+
+/**
+ * Check permission rules from settings store (synchronous, no WebSocket calls)
+ */
+function checkPermissionRules(request: PermissionRequest): PermissionOutcome | null {
+  const rules = useSettingsStore.getState().permissionRules;
+
+  if (!rules || rules.length === 0) {
+    return null; // No rules, show dialog
+  }
+
+  // Extract tool name from title (e.g., "Read /path/to/file" -> "Read")
+  const toolName = request.toolCall.title?.split(" ")[0] || "";
+
+  // Check rules in order (first match wins)
+  for (const rule of rules) {
+    if (matchesRule(toolName, rule)) {
+      if (rule.action === "allow") {
+        // Find the allow option
+        const allowOption = request.options.find(
+          (opt) => opt.kind === "allow_once" || opt.kind === "allow_always"
+        );
+        if (allowOption) {
+          return { outcome: "selected", optionId: allowOption.optionId };
+        }
+      } else if (rule.action === "deny") {
+        // Find the reject option
+        const rejectOption = request.options.find(
+          (opt) => opt.kind === "reject_once" || opt.kind === "reject_always"
+        );
+        if (rejectOption) {
+          return { outcome: "selected", optionId: rejectOption.optionId };
+        }
+      }
+      // action === "ask" means show dialog
+      return null;
+    }
+  }
+
+  return null; // No matching rule, show dialog
+}
 
 class AgentAPI {
   private permissionResolver: ((outcome: PermissionOutcome) => void) | null = null;
@@ -67,6 +125,16 @@ class AgentAPI {
       if (currentSessionId) {
         console.log("Syncing current session from backend:", currentSessionId);
         sessionStore.setActiveSession(currentSessionId);
+      }
+
+      // Get server info (cwd, home path) and set defaults
+      try {
+        const serverInfo = await transport.request<ServerInfo>("get_server_info");
+        console.log("Server info:", serverInfo);
+        const fileStore = useFileStore.getState();
+        fileStore.setServerPaths(serverInfo.cwd, serverInfo.home);
+      } catch (e) {
+        console.warn("Failed to get server info:", e);
       }
 
       agentStore.setConnectionStatus("connected");
@@ -123,7 +191,9 @@ class AgentAPI {
    */
   async createSession(cwd?: string): Promise<SessionId> {
     const transport = getTransport();
-    const workingDir = cwd || "/";
+    const fileStore = useFileStore.getState();
+    // Use provided cwd, or current working dir, or server cwd, or fallback to "/"
+    const workingDir = cwd || fileStore.currentWorkingDir || fileStore.serverCwd || "/";
     const mcpServers = this.getMcpServers();
     const response = await transport.createSession(workingDir, mcpServers);
     // activeSessionId is set via backend broadcast (session/activated)
@@ -203,9 +273,16 @@ class AgentAPI {
         // This callback is kept for permission handling during prompt
       };
 
-      const handlePermissionRequest = async (
+      const handlePermissionRequest = (
         request: PermissionRequest
       ): Promise<PermissionOutcome> => {
+        // Check permission rules first (synchronous, uses settings store)
+        const autoOutcome = checkPermissionRules(request);
+        if (autoOutcome) {
+          return Promise.resolve(autoOutcome);
+        }
+
+        // No matching rule or rule says "ask", show dialog
         agentStore.setPendingPermission(request);
 
         return new Promise((resolve) => {

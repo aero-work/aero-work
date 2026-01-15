@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MobileHeader } from "./MobileHeader";
-import { MobileNavBar } from "./MobileNavBar";
+import { MobileTabBar } from "./MobileTabBar";
 import { MobileSidebar } from "./MobileSidebar";
-import { ChatView } from "@/components/chat";
+import { MobileSessionList } from "./MobileSessionList";
+import { MobileConversation } from "./MobileConversation";
 import { SettingsPage } from "@/components/settings";
 import { XTerminal } from "@/components/terminal/XTerminal";
 import { FileTree } from "@/components/editor/FileTree";
@@ -13,11 +14,23 @@ import { useTerminalStore } from "@/stores/terminalStore";
 import { useIsDarkMode } from "@/hooks/useIsDarkMode";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { FolderOpen, Plus, X, Terminal as TerminalIcon, Upload, FileQuestion, FileCode } from "lucide-react";
+import {
+  FolderOpen,
+  Plus,
+  X,
+  Terminal as TerminalIcon,
+  Upload,
+  FileQuestion,
+  FileCode,
+} from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import * as fileService from "@/services/fileService";
 import { getLanguageFromPath, formatFileSize, formatModifiedDate } from "@/lib/fileTypes";
+
+// ============================================================================
+// File Views
+// ============================================================================
 
 function MobileFilesView() {
   const currentWorkingDir = useFileStore((state) => state.currentWorkingDir);
@@ -36,7 +49,6 @@ function MobileFilesView() {
       const reader = new FileReader();
       reader.onload = async (event) => {
         const arrayBuffer = event.target?.result as ArrayBuffer;
-        // Convert ArrayBuffer to base64
         const bytes = new Uint8Array(arrayBuffer);
         let binary = "";
         for (let i = 0; i < bytes.byteLength; i++) {
@@ -44,19 +56,15 @@ function MobileFilesView() {
         }
         const base64Content = btoa(binary);
 
-        // Save file to current working directory
         const filePath = `${currentWorkingDir}/${file.name}`;
         try {
           await fileService.writeFileBinary(filePath, base64Content);
-          // Refresh file tree to show the new file
           triggerRefresh();
         } catch (error) {
           console.error("Failed to upload file:", error);
         }
       };
       reader.readAsArrayBuffer(file);
-
-      // Reset input so same file can be uploaded again
       e.target.value = "";
     },
     [currentWorkingDir, triggerRefresh]
@@ -79,7 +87,6 @@ function MobileFilesView() {
       <div className="flex-1 overflow-y-auto">
         <FileTree />
       </div>
-      {/* Floating upload button */}
       <Button
         variant="default"
         size="icon"
@@ -100,12 +107,12 @@ function MobileFilesView() {
   );
 }
 
-// Text file viewer component
+// ============================================================================
+// File Viewer Components
+// ============================================================================
+
 function TextFileViewer({ file, isDark }: { file: OpenFile; isDark: boolean }) {
-  const language = useMemo(
-    () => getLanguageFromPath(file.path),
-    [file.path]
-  );
+  const language = useMemo(() => getLanguageFromPath(file.path), [file.path]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -137,7 +144,6 @@ function TextFileViewer({ file, isDark }: { file: OpenFile; isDark: boolean }) {
   );
 }
 
-// Image file viewer component
 function ImageFileViewer({ file }: { file: OpenFile }) {
   const dataUrl = useMemo(() => {
     if (!file.content) return null;
@@ -164,7 +170,6 @@ function ImageFileViewer({ file }: { file: OpenFile }) {
   );
 }
 
-// PDF file viewer component
 function PdfFileViewer({ file }: { file: OpenFile }) {
   const dataUrl = useMemo(() => {
     if (!file.content) return null;
@@ -181,17 +186,18 @@ function PdfFileViewer({ file }: { file: OpenFile }) {
 
   return (
     <div className="h-full flex flex-col">
-      <iframe
-        src={dataUrl}
-        className="flex-1 w-full border-0"
-        title={file.name}
-      />
+      <iframe src={dataUrl} className="flex-1 w-full border-0" title={file.name} />
     </div>
   );
 }
 
-// Binary file info viewer component
-function BinaryFileViewer({ file, onForceEdit }: { file: OpenFile; onForceEdit: () => void }) {
+function BinaryFileViewer({
+  file,
+  onForceEdit,
+}: {
+  file: OpenFile;
+  onForceEdit: () => void;
+}) {
   return (
     <div className="h-full flex flex-col items-center justify-center p-6 text-center">
       <FileQuestion className="w-16 h-16 text-muted-foreground/50 mb-4" />
@@ -232,7 +238,6 @@ function MobileFileViewer() {
 
   const file = openFiles.find((f) => f.path === viewingFilePath);
 
-  // Reset force edit state when file changes
   useEffect(() => {
     setForceTextEdit(null);
   }, [viewingFilePath]);
@@ -246,7 +251,6 @@ function MobileFileViewer() {
   }
 
   const handleForceEdit = async () => {
-    // Read file as text for force edit
     try {
       const result = await fileService.readFile(file.path);
       updateFileContent(file.path, result.content);
@@ -256,7 +260,6 @@ function MobileFileViewer() {
     }
   };
 
-  // Determine which viewer to use
   const fileType = file.fileType || "text";
   const isForceEditing = forceTextEdit === file.path;
 
@@ -272,9 +275,12 @@ function MobileFileViewer() {
     return <PdfFileViewer file={file} />;
   }
 
-  // Binary/unknown files
   return <BinaryFileViewer file={file} onForceEdit={handleForceEdit} />;
 }
+
+// ============================================================================
+// Terminal View
+// ============================================================================
 
 function MobileTerminalView() {
   const terminals = useTerminalStore((state) => state.terminals);
@@ -297,7 +303,6 @@ function MobileTerminalView() {
     [killTerminal]
   );
 
-  // Auto-create terminal if none exists when view is opened
   useEffect(() => {
     if (terminals.length === 0 && currentWorkingDir) {
       handleCreateTerminal();
@@ -306,7 +311,6 @@ function MobileTerminalView() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Terminal tabs header */}
       <div className="flex items-center gap-1 px-2 py-1 border-b bg-muted/50 flex-shrink-0">
         <div className="flex items-center gap-1 flex-1 overflow-x-auto">
           {terminals.map((terminal) => (
@@ -345,7 +349,6 @@ function MobileTerminalView() {
         </Button>
       </div>
 
-      {/* Terminal content */}
       <div className="flex-1 min-h-0">
         {terminals.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
@@ -373,8 +376,13 @@ function MobileTerminalView() {
   );
 }
 
+// ============================================================================
+// Main Mobile Layout
+// ============================================================================
+
 const VIEW_COMPONENTS: Record<MobileView, React.ComponentType> = {
-  chat: ChatView,
+  "session-list": MobileSessionList,
+  conversation: MobileConversation,
   files: MobileFilesView,
   "file-viewer": MobileFileViewer,
   terminal: MobileTerminalView,
@@ -386,14 +394,14 @@ export function MobileLayout() {
   const ViewComponent = VIEW_COMPONENTS[currentView];
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-[100dvh] flex flex-col bg-background">
       <MobileHeader />
 
       <main className="flex-1 min-h-0 overflow-hidden">
         <ViewComponent />
       </main>
 
-      <MobileNavBar />
+      <MobileTabBar />
       <MobileSidebar />
       <PermissionDialog />
     </div>

@@ -66,7 +66,8 @@ function FileTreeItem({
 }: FileTreeItemProps) {
   const [newName, setNewName] = useState(node.name);
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     onSelect(node);
     if (node.isDir) {
       onToggle(node.path);
@@ -92,61 +93,70 @@ function FileTreeItem({
     }
   };
 
+  const itemContent = (
+    <div
+      className={cn(
+        "flex items-center gap-1 px-2 cursor-pointer hover:bg-accent/50 rounded-sm",
+        isMobile ? "py-2.5 text-base gap-2" : "py-0.5 text-sm gap-1",
+        isSelected && "bg-accent text-accent-foreground"
+      )}
+      style={{ paddingLeft: `${depth * (isMobile ? 16 : 12) + 8}px` }}
+      onClick={handleClick}
+    >
+      {/* Expand/collapse chevron for directories */}
+      {node.isDir ? (
+        <span className={cn("flex items-center justify-center flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")}>
+          {node.isLoading ? (
+            <Loader2 className={cn("animate-spin", isMobile ? "w-4 h-4" : "w-3 h-3")} />
+          ) : isExpanded ? (
+            <ChevronDown className={isMobile ? "w-4 h-4" : "w-3 h-3"} />
+          ) : (
+            <ChevronRight className={isMobile ? "w-4 h-4" : "w-3 h-3"} />
+          )}
+        </span>
+      ) : (
+        <span className={cn("flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")} />
+      )}
+
+      {/* Icon */}
+      {node.isDir ? (
+        isExpanded ? (
+          <FolderOpen className={cn("text-yellow-500 flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")} />
+        ) : (
+          <Folder className={cn("text-yellow-500 flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")} />
+        )
+      ) : (
+        <File className={cn("text-muted-foreground flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")} />
+      )}
+
+      {/* Name or rename input */}
+      {isRenaming ? (
+        <Input
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          onBlur={handleRenameSubmit}
+          onKeyDown={handleRenameKeyDown}
+          className="h-5 py-0 px-1 text-sm flex-1 min-w-0"
+          autoFocus
+          onClick={(e) => e.stopPropagation()}
+        />
+      ) : (
+        <span className={cn("truncate min-w-0", node.isHidden && "opacity-60")}>
+          {node.name}
+        </span>
+      )}
+    </div>
+  );
+
+  // On mobile, don't wrap with ContextMenu (use native touch interactions instead)
+  if (isMobile) {
+    return itemContent;
+  }
+
   return (
     <ContextMenu>
       <ContextMenuTrigger>
-        <div
-          className={cn(
-            "flex items-center gap-1 px-2 cursor-pointer hover:bg-accent/50 rounded-sm",
-            isMobile ? "py-2.5 text-base gap-2" : "py-0.5 text-sm gap-1",
-            isSelected && "bg-accent text-accent-foreground"
-          )}
-          style={{ paddingLeft: `${depth * (isMobile ? 16 : 12) + 8}px` }}
-          onClick={handleClick}
-        >
-          {/* Expand/collapse chevron for directories */}
-          {node.isDir ? (
-            <span className={cn("flex items-center justify-center flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")}>
-              {node.isLoading ? (
-                <Loader2 className={cn("animate-spin", isMobile ? "w-4 h-4" : "w-3 h-3")} />
-              ) : isExpanded ? (
-                <ChevronDown className={isMobile ? "w-4 h-4" : "w-3 h-3"} />
-              ) : (
-                <ChevronRight className={isMobile ? "w-4 h-4" : "w-3 h-3"} />
-              )}
-            </span>
-          ) : (
-            <span className={cn("flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")} />
-          )}
-
-          {/* Icon */}
-          {node.isDir ? (
-            isExpanded ? (
-              <FolderOpen className={cn("text-yellow-500 flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")} />
-            ) : (
-              <Folder className={cn("text-yellow-500 flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")} />
-            )
-          ) : (
-            <File className={cn("text-muted-foreground flex-shrink-0", isMobile ? "w-5 h-5" : "w-4 h-4")} />
-          )}
-
-          {/* Name or rename input */}
-          {isRenaming ? (
-            <Input
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onBlur={handleRenameSubmit}
-              onKeyDown={handleRenameKeyDown}
-              className="h-5 py-0 px-1 text-sm flex-1 min-w-0"
-              autoFocus
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <span className={cn("truncate min-w-0", node.isHidden && "opacity-60")}>
-              {node.name}
-            </span>
-          )}
-        </div>
+        {itemContent}
       </ContextMenuTrigger>
       <ContextMenuContent>
         {node.isDir && (
@@ -317,6 +327,7 @@ function NewItemInput({ type, depth, onSubmit, onCancel }: NewItemInputProps) {
 export function FileTree() {
   const currentWorkingDir = useFileStore((state) => state.currentWorkingDir);
   const fileTree = useFileStore((state) => state.fileTree);
+  const fileTreeLoaded = useFileStore((state) => state.fileTreeLoaded);
   const expandedPaths = useFileStore((state) => state.expandedPaths);
   const selectedPath = useFileStore((state) => state.selectedPath);
   const showHiddenFiles = useSettingsStore((state) => state.showHiddenFiles);
@@ -631,18 +642,28 @@ export function FileTree() {
     );
   }
 
-  if (fileTree.length === 0) {
-    if (!isConnected) {
-      return (
-        <div className="p-4 text-sm text-muted-foreground text-center">
-          Connect to browse files
-        </div>
-      );
-    }
+  if (!isConnected) {
+    return (
+      <div className="p-4 text-sm text-muted-foreground text-center">
+        Connect to browse files
+      </div>
+    );
+  }
+
+  if (!fileTreeLoaded) {
     return (
       <div className="p-4 text-sm text-muted-foreground text-center">
         <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2" />
         Loading...
+      </div>
+    );
+  }
+
+  if (fileTree.length === 0) {
+    return (
+      <div className="p-4 text-sm text-muted-foreground text-center">
+        <Folder className="w-8 h-8 mx-auto mb-2 opacity-50" />
+        Empty folder
       </div>
     );
   }
