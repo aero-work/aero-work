@@ -118,7 +118,7 @@ export function MobileSessionList() {
       <div className="flex flex-col h-full items-center justify-center text-muted-foreground px-6">
         <Bot className="w-16 h-16 opacity-20 mb-4" />
         <h2 className="text-xl font-semibold text-foreground mb-2">
-          Welcome to Aero Work
+          Welcome to <span style={{ fontFamily: 'Quantico, sans-serif', fontStyle: 'italic' }}>Aero Work</span>
         </h2>
         <p className="text-sm text-center mb-4">
           Connecting to the AI agent...

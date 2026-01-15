@@ -121,7 +121,7 @@ export function ChatView() {
               <Bot className="w-16 h-16 opacity-20" />
               <div>
                 <h2 className="text-xl font-semibold text-foreground mb-2">
-                  Welcome to Aero Work
+                  Welcome to <span style={{ fontFamily: 'Quantico, sans-serif', fontStyle: 'italic' }}>Aero Work</span>
                 </h2>
                 <p className="text-sm">
                   Click <strong>Connect</strong> to start the AI agent.
