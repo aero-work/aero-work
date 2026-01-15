@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Aero Code** is a cross-platform AI code agent application built with Tauri (Rust backend) + React (TypeScript frontend). It provides a visual interface for interacting with AI coding agents like Claude Code via the Agent Client Protocol (ACP).
+**Aero Work** is a cross-platform AI code agent application built with Tauri (Rust backend) + React (TypeScript frontend). It provides a visual interface for interacting with AI coding agents like Claude Code via the Agent Client Protocol (ACP).
 
 ### Current Status
 
@@ -48,7 +48,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Structure
 
 ```
-aero-code/
+aero-work/
 ├── .agent/              # Project documentation - READ THESE FIRST
 │   ├── product.md       # Product requirements, UI/UX design
 │   ├── structure.md     # Directory structure, code patterns

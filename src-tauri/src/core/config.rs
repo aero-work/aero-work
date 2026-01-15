@@ -1,10 +1,10 @@
 //! Configuration Module
 //!
-//! Manages persistent configuration for Aero Code.
+//! Manages persistent configuration for Aero Work.
 //! Follows XDG Base Directory Specification:
-//! - Config: ~/.config/aero-code/ (or $XDG_CONFIG_HOME/aero-code/)
-//! - Data: ~/.local/share/aero-code/ (or $XDG_DATA_HOME/aero-code/)
-//! - Cache: ~/.cache/aero-code/ (or $XDG_CACHE_HOME/aero-code/)
+//! - Config: ~/.config/aero-work/ (or $XDG_CONFIG_HOME/aero-work/)
+//! - Data: ~/.local/share/aero-work/ (or $XDG_DATA_HOME/aero-work/)
+//! - Cache: ~/.cache/aero-work/ (or $XDG_CACHE_HOME/aero-work/)
 
 use std::path::PathBuf;
 
@@ -12,13 +12,13 @@ use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
 
 /// Application name for directory paths
-const APP_NAME: &str = "aero-code";
+const APP_NAME: &str = "aero-work";
 
 /// Main configuration file name
 const CONFIG_FILE: &str = "config.json";
 
 /// Get the configuration directory path
-/// Returns ~/.config/aero-code/ or $XDG_CONFIG_HOME/aero-code/
+/// Returns ~/.config/aero-work/ or $XDG_CONFIG_HOME/aero-work/
 pub fn config_dir() -> PathBuf {
     dirs::config_dir()
         .unwrap_or_else(|| dirs::home_dir().unwrap_or_else(|| PathBuf::from(".")).join(".config"))
@@ -26,7 +26,7 @@ pub fn config_dir() -> PathBuf {
 }
 
 /// Get the data directory path
-/// Returns ~/.local/share/aero-code/ or $XDG_DATA_HOME/aero-code/
+/// Returns ~/.local/share/aero-work/ or $XDG_DATA_HOME/aero-work/
 pub fn data_dir() -> PathBuf {
     dirs::data_dir()
         .unwrap_or_else(|| {
@@ -38,7 +38,7 @@ pub fn data_dir() -> PathBuf {
 }
 
 /// Get the cache directory path
-/// Returns ~/.cache/aero-code/ or $XDG_CACHE_HOME/aero-code/
+/// Returns ~/.cache/aero-work/ or $XDG_CACHE_HOME/aero-work/
 pub fn cache_dir() -> PathBuf {
     dirs::cache_dir()
         .unwrap_or_else(|| {
@@ -49,7 +49,7 @@ pub fn cache_dir() -> PathBuf {
         .join(APP_NAME)
 }
 
-/// Aero Code configuration
+/// Aero Work configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {

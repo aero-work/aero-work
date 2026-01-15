@@ -1,8 +1,8 @@
-# Aero Code - User Manual
+# Aero Work - User Manual
 
 ## Overview
 
-Aero Code is a cross-platform AI code agent application that provides a visual interface for interacting with AI coding agents like Claude Code via the Agent Client Protocol (ACP).
+Aero Work is a cross-platform AI code agent application that provides a visual interface for interacting with AI coding agents like Claude Code via the Agent Client Protocol (ACP).
 
 ## Getting Started
 
@@ -262,7 +262,7 @@ On screens < 768px, the interface switches to a mobile-optimized layout:
 ## Configuration Files
 
 Settings are persisted to browser localStorage:
-- `aero-code-settings`: App settings, MCP servers, permission rules
-- `aero-code-files`: Recent projects, working directory
+- `aero-work-settings`: App settings, MCP servers, permission rules
+- `aero-work-files`: Recent projects, working directory
 
 For desktop Tauri builds, data is stored in platform-specific locations.

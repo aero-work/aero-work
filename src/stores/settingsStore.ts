@@ -329,7 +329,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
       },
     })),
     {
-      name: "aero-code-settings",
+      name: "aero-work-settings",
       partialize: (state) => ({
         mcpServers: state.mcpServers,
         models: state.models,

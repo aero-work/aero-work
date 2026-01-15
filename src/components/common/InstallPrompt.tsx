@@ -145,7 +145,7 @@ export function InstallPrompt() {
 
         <div className="flex-1 min-w-0 pr-6">
           <h3 className="font-semibold text-sm text-foreground">
-            Install Aero Code
+            Install Aero Work
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             {promptType === "native"

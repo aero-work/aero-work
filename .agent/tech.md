@@ -1,10 +1,10 @@
-# Aero Code - Technology Stack
+# Aero Work - Technology Stack
 
 ## Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         Aero Code                               │
+│                         Aero Work                               │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌──────────────────────────────────────────────────────────┐  │
@@ -138,7 +138,7 @@ bun run tauri build
 
 ## Protocol: Agent Client Protocol (ACP)
 
-Communication between Aero Code and AI agents uses the **Agent Client Protocol**:
+Communication between Aero Work and AI agents uses the **Agent Client Protocol**:
 
 - **Transport**: JSON-RPC 2.0 over stdio (agent subprocess)
 - **Protocol Version**: 1

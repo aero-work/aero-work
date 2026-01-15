@@ -1,13 +1,13 @@
 [package]
-name = "aero-code"
+name = "aero-work"
 version = "0.1.0"
 description = "AI Code Agent Application"
-authors = ["Aero Code Team"]
+authors = ["Aero Work Team"]
 edition = "2021"
-default-run = "aero-code"
+default-run = "aero-work"
 
 [lib]
-name = "aero_code_lib"
+name = "aero_work_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

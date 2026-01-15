@@ -114,7 +114,7 @@ export function MobileSessionList() {
       <div className="flex flex-col h-full items-center justify-center text-muted-foreground px-6">
         <Bot className="w-16 h-16 opacity-20 mb-4" />
         <h2 className="text-lg font-medium text-foreground mb-2">
-          Welcome to Aero Code
+          Welcome to Aero Work
         </h2>
         <p className="text-sm text-center mb-4">
           Connecting to the AI agent...

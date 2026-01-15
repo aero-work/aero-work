@@ -21,8 +21,8 @@ export default defineConfig(async () => ({
         "apple-touch-icon.png",
       ],
       manifest: {
-        name: "Aero Code",
-        short_name: "Aero Code",
+        name: "Aero Work",
+        short_name: "Aero Work",
         description: "AI Code Agent Application",
         theme_color: "#0a0a0a",
         background_color: "#0a0a0a",

@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 const ZOOM_STEP = 0.1;
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2.0;
-const STORAGE_KEY = "aero-code-zoom";
+const STORAGE_KEY = "aero-work-zoom";
 
 // Detect if running in Tauri desktop app
 function isTauriApp(): boolean {

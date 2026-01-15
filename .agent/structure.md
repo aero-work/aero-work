@@ -1,9 +1,9 @@
-# Aero Code - Project Structure
+# Aero Work - Project Structure
 
 ## Directory Layout
 
 ```
-aero-code/
+aero-work/
 ├── .agent/                       # AI assistant documentation
 │   ├── AGENT.md                  # Main Claude Code instructions (READ FIRST)
 │   ├── product.md                # Product overview and features

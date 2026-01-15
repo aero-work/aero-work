@@ -55,7 +55,7 @@
     },
     "messages": "{{count}} msgs",
     "welcome": {
-      "title": "Welcome to Aero Code",
+      "title": "Welcome to Aero Work",
       "connectMessage": "Connecting to the AI agent...",
       "checkSettings": "Check Settings if connection fails."
     },

@@ -342,7 +342,7 @@ export const useFileStore = create<FileState & FileActions>()(
       },
     })),
     {
-      name: "aero-code-files",
+      name: "aero-work-files",
       partialize: (state) => ({
         recentProjects: state.recentProjects,
         currentWorkingDir: state.currentWorkingDir,

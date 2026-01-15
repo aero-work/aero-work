@@ -41,7 +41,7 @@ Redesign the mobile UI to adopt a WeChat/WhatsApp-style chat interface with:
 
 ```
 ┌────────────────────────────────────┐
-│  Aero Code            [Connect] ⚡  │  <- Header with status
+│  Aero Work            [Connect] ⚡  │  <- Header with status
 ├────────────────────────────────────┤
 │  ┌──────────────────────────────┐  │
 │  │  [+] New Conversation        │  │  <- Prominent new chat button

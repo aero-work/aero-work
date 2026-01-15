@@ -49,7 +49,7 @@ Implemented MCP (Model Context Protocol) tools configuration:
 - Added MCP server types to ACP types
 - Updated createSession to pass enabled MCP servers to backend
 - Enhanced MCPSettings UI with environment variables support
-- Settings persist via localStorage (aero-code-settings)
+- Settings persist via localStorage (aero-work-settings)
 
 **Files modified:**
 - `src/types/acp.ts` - Added MCPServerStdio, MCPServerHttp, NewSessionParams types
@@ -105,7 +105,7 @@ All requested tasks have been completed:
 
 ## Next Steps (Future Enhancements)
 
-- Persist MCP settings to `.config/aero-code/` on disk (currently localStorage only)
+- Persist MCP settings to `.config/aero-work/` on disk (currently localStorage only)
 - Add HTTP/SSE MCP server types in UI
 - Add model preference persistence
 - Add more permission rule configuration options

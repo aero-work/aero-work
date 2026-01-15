@@ -55,7 +55,7 @@
     },
     "messages": "{{count}} 条消息",
     "welcome": {
-      "title": "欢迎使用 Aero Code",
+      "title": "欢迎使用 Aero Work",
       "connectMessage": "正在连接 AI 助手...",
       "checkSettings": "如连接失败请检查设置"
     },

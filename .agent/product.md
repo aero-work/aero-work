@@ -1,4 +1,4 @@
-# Aero Code - Product Overview
+# Aero Work - Product Overview
 
 ## Vision
 
@@ -132,7 +132,7 @@ Main Structure:
 
 Chat Tab (Session List):
 ┌────────────────────────────────────┐
-│  Aero Code            [Connect] ⚡  │
+│  Aero Work            [Connect] ⚡  │
 ├────────────────────────────────────┤
 │  ┌──────────────────────────────┐  │
 │  │  [+] New Conversation        │  │  <- New chat button

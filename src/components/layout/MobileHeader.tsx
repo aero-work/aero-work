@@ -45,7 +45,7 @@ function getConnectionText(status: ConnectionStatus): string | null {
   }
 }
 
-// Primary views show "Aero Code", secondary views show dynamic titles
+// Primary views show "Aero Work", secondary views show dynamic titles
 const PRIMARY_VIEWS: MobileView[] = ["session-list", "files", "terminal", "settings"];
 
 export function MobileHeader() {
@@ -76,11 +76,11 @@ export function MobileHeader() {
   };
 
   // Get title based on current view
-  // Primary views (tab bar pages) show "Aero Code"
+  // Primary views (tab bar pages) show "Aero Work"
   // Secondary views show dynamic titles
   const getTitle = (): string => {
     if (PRIMARY_VIEWS.includes(currentView)) {
-      return "Aero Code";
+      return "Aero Work";
     }
 
     switch (currentView) {
@@ -104,7 +104,7 @@ export function MobileHeader() {
         return "File";
 
       default:
-        return "Aero Code";
+        return "Aero Work";
     }
   };
 

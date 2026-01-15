@@ -5,8 +5,8 @@
 
 use std::sync::Arc;
 
-use aero_code_lib::core::AppState;
-use aero_code_lib::server::WebSocketServer;
+use aero_work_lib::core::AppState;
+use aero_work_lib::server::WebSocketServer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -15,7 +15,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "aero_code=debug,tower_http=debug".into()),
+                .unwrap_or_else(|_| "aero_work=debug,tower_http=debug".into()),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();

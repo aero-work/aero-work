@@ -121,7 +121,7 @@ export function ChatView() {
               <Bot className="w-16 h-16 opacity-20" />
               <div>
                 <h2 className="text-lg font-medium text-foreground mb-2">
-                  Welcome to Aero Code
+                  Welcome to Aero Work
                 </h2>
                 <p className="text-sm">
                   Click <strong>Connect</strong> to start the AI agent.

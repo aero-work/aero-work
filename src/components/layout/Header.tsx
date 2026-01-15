@@ -30,7 +30,7 @@ export function Header() {
   return (
     <header className="h-12 border-b border-border bg-card flex items-center justify-between px-4">
       <h1 className="font-semibold text-lg" style={{ fontFamily: 'Quantico, sans-serif', fontStyle: 'italic' }}>
-        Aero Code
+        Aero Work
       </h1>
 
       <div className="flex items-center gap-2">

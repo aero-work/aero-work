@@ -44,7 +44,7 @@ export function detectLanguage(): string {
  */
 function getInitialLanguage(): string {
   try {
-    const stored = localStorage.getItem("aero-code-settings");
+    const stored = localStorage.getItem("aero-work-settings");
     if (stored) {
       const settings = JSON.parse(stored);
       if (settings.state?.language && supportedLanguages.includes(settings.state.language)) {

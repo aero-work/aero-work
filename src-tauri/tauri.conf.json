@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Aero Code",
+  "productName": "Aero Work",
   "version": "0.1.0",
-  "identifier": "com.aerocode.dev",
+  "identifier": "com.aerowork.dev",
   "build": {
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Aero Code",
+        "title": "Aero Work",
         "width": 1200,
         "height": 800,
         "minWidth": 800,

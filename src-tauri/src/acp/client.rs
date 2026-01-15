@@ -311,8 +311,8 @@ impl AcpClient {
         let params = InitializeRequest {
             protocol_version: 1,
             client_info: Some(Implementation {
-                name: "aero-code".to_string(),
-                title: Some("Aero Code".to_string()),
+                name: "aero-work".to_string(),
+                title: Some("Aero Work".to_string()),
                 version: env!("CARGO_PKG_VERSION").to_string(),
             }),
             client_capabilities: Some(ClientCapabilities {

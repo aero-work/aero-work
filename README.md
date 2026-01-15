@@ -1,4 +1,4 @@
-# Aero Code
+# Aero Work
 
 A cross-platform AI code agent application built with Tauri + React that provides a visual interface for interacting with AI coding agents via the Agent Client Protocol (ACP).
 
@@ -46,7 +46,7 @@ bun run tauri build
 ## Project Structure
 
 ```
-aero-code/
+aero-work/
 ├── src/                    # React frontend
 │   ├── components/
 │   │   ├── ui/            # shadcn/ui components
