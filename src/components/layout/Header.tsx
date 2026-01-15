@@ -1,8 +1,6 @@
-import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useAgentStore, type ConnectionStatus } from "@/stores/agentStore";
 import { useFileStore } from "@/stores/fileStore";
-import { agentAPI } from "@/services/api";
 import { ProjectSelector } from "@/components/common/ProjectSelector";
 import {
   Plug,
@@ -14,12 +12,12 @@ import {
 
 const statusConfig: Record<
   ConnectionStatus,
-  { icon: React.ComponentType<{ className?: string }>; label: string; className: string }
+  { icon: React.ComponentType<{ className?: string }>; className: string }
 > = {
-  disconnected: { icon: Plug, label: "Connect", className: "text-muted-foreground" },
-  connecting: { icon: Loader2, label: "Connecting...", className: "text-blue-500 animate-spin" },
-  connected: { icon: PlugZap, label: "Disconnect", className: "text-green-500" },
-  error: { icon: AlertCircle, label: "Reconnect", className: "text-destructive" },
+  disconnected: { icon: Plug, className: "text-muted-foreground" },
+  connecting: { icon: Loader2, className: "text-blue-500 animate-spin" },
+  connected: { icon: PlugZap, className: "text-green-500" },
+  error: { icon: AlertCircle, className: "text-destructive" },
 };
 
 export function Header() {
@@ -27,22 +25,7 @@ export function Header() {
   const currentWorkingDir = useFileStore((state) => state.currentWorkingDir);
   const addRecentProject = useFileStore((state) => state.addRecentProject);
 
-  const { icon: StatusIcon, label, className } = statusConfig[connectionStatus];
-  const isConnected = connectionStatus === "connected";
-
-  const handleConnect = useCallback(async () => {
-    if (connectionStatus === "connecting") return;
-
-    if (isConnected) {
-      await agentAPI.disconnect();
-    } else {
-      try {
-        await agentAPI.connect();
-      } catch (error) {
-        console.error("Failed to connect:", error);
-      }
-    }
-  }, [connectionStatus, isConnected]);
+  const { icon: StatusIcon, className } = statusConfig[connectionStatus];
 
   return (
     <header className="h-12 border-b border-border bg-card flex items-center justify-between px-4">
@@ -68,17 +51,10 @@ export function Header() {
           }
         />
 
-        {/* Connect Button */}
-        <Button
-          variant={isConnected ? "outline" : "default"}
-          size="sm"
-          onClick={handleConnect}
-          disabled={connectionStatus === "connecting"}
-          className="flex items-center gap-2"
-        >
+        {/* Connection Status Indicator */}
+        <div className="flex items-center gap-1 px-2" title={`Status: ${connectionStatus}`}>
           <StatusIcon className={className} />
-          {label}
-        </Button>
+        </div>
       </div>
     </header>
   );

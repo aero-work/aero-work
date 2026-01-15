@@ -296,6 +296,8 @@ export interface SessionInfo {
   project?: string;
   lastUserMessage?: string;
   lastAssistantMessage?: string;
+  /** Whether the session has any agent response (text or tool call) */
+  hasAgentResponse: boolean;
 }
 
 export interface ListSessionsResponse {

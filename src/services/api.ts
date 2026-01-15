@@ -270,9 +270,10 @@ class AgentAPI {
       const response = await transport.listSessions(cwd, limit, offset);
 
       // Filter out empty sessions if auto-clean is enabled
+      // Empty = no messages, or has user message but no agent response
       let sessions = response.sessions;
       if (settingsStore.autoCleanEmptySessions) {
-        sessions = sessions.filter(s => s.messageCount > 0 || s.active);
+        sessions = sessions.filter(s => s.active || s.hasAgentResponse);
       }
 
       sessionStore.setAvailableSessions(sessions);
@@ -288,6 +289,27 @@ class AgentAPI {
   async getSessionInfo(sessionId: string): Promise<SessionInfo> {
     const transport = getTransport();
     return transport.getSessionInfo(sessionId);
+  }
+
+  /**
+   * Delete a session and its file
+   */
+  async deleteSession(sessionId: string): Promise<boolean> {
+    const transport = getTransport() as WebSocketTransport;
+    const sessionStore = useSessionStore.getState();
+
+    const result = await transport.deleteSession(sessionId);
+
+    // If deleted session was active, clear it
+    if (sessionStore.activeSessionId === sessionId) {
+      sessionStore.setActiveSession(null);
+    }
+
+    // Remove from available sessions list
+    const currentSessions = sessionStore.availableSessions;
+    sessionStore.setAvailableSessions(currentSessions.filter(s => s.id !== sessionId));
+
+    return result.deleted;
   }
 
   /**

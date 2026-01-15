@@ -41,6 +41,8 @@ pub struct SessionInfo {
     /// Preview of the last assistant message
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_assistant_message: Option<String>,
+    /// Whether there's any agent response (text or tool call)
+    pub has_agent_response: bool,
 }
 
 /// Active session state in memory
@@ -181,6 +183,7 @@ impl SessionRegistry {
                         project: Some(cwd_to_path_key(&session.cwd)),
                         last_user_message: None,
                         last_assistant_message: None,
+                        has_agent_response: true, // Active sessions always have potential response
                     },
                 );
             }
@@ -312,6 +315,33 @@ impl SessionRegistry {
         }
     }
 
+    /// Delete a session file from disk
+    /// Returns true if the file was deleted, false if it didn't exist
+    pub fn delete_session(&self, session_id: &str) -> Result<bool, String> {
+        // Remove from active sessions if present
+        {
+            let mut active = self.active_sessions.write();
+            active.remove(session_id);
+        }
+
+        // Find and delete the session file
+        if let Some(file_path) = self.find_session_file(session_id) {
+            match std::fs::remove_file(&file_path) {
+                Ok(_) => {
+                    info!("Deleted session file: {:?}", file_path);
+                    Ok(true)
+                }
+                Err(e) => {
+                    warn!("Failed to delete session file {:?}: {}", file_path, e);
+                    Err(format!("Failed to delete session file: {}", e))
+                }
+            }
+        } else {
+            debug!("Session file not found for deletion: {}", session_id);
+            Ok(false)
+        }
+    }
+
     /// Get session info by ID (active or from disk)
     pub fn get_session_info(&self, session_id: &str) -> Option<SessionInfo> {
         // Check active sessions first
@@ -328,6 +358,7 @@ impl SessionRegistry {
                     project: Some(cwd_to_path_key(&session.cwd)),
                     last_user_message: None,
                     last_assistant_message: None,
+                    has_agent_response: true, // Active sessions always have potential response
                 });
             }
         }
@@ -722,6 +753,7 @@ fn parse_session_file(path: &PathBuf) -> Option<SessionInfo> {
     let mut cwd = String::new();
     let mut last_user_message: Option<String> = None;
     let mut last_assistant_message: Option<String> = None;
+    let mut has_agent_response = false;
     let mut pending_summaries: HashMap<String, String> = HashMap::new();
 
     for line in content.lines() {
@@ -777,6 +809,22 @@ fn parse_session_file(path: &PathBuf) -> Option<SessionInfo> {
             let role = msg.get("role").and_then(|v| v.as_str());
             let content = extract_text_content(msg.get("content"));
 
+            // Check for tool_use in assistant message (agent response)
+            if role == Some("assistant") {
+                // Check if there's any content (text or tool_use)
+                if let Some(content_arr) = msg.get("content").and_then(|v| v.as_array()) {
+                    for content_item in content_arr {
+                        let content_type = content_item.get("type").and_then(|v| v.as_str());
+                        if content_type == Some("tool_use") || content_type == Some("text") {
+                            // Skip API error messages
+                            if entry.get("isApiErrorMessage").and_then(|v| v.as_bool()) != Some(true) {
+                                has_agent_response = true;
+                            }
+                        }
+                    }
+                }
+            }
+
             if let Some(text) = content {
                 if !is_system_message(&text) {
                     match role {
@@ -788,6 +836,7 @@ fn parse_session_file(path: &PathBuf) -> Option<SessionInfo> {
                             if entry.get("isApiErrorMessage").and_then(|v| v.as_bool()) != Some(true)
                             {
                                 last_assistant_message = Some(text);
+                                has_agent_response = true;
                             }
                         }
                         _ => {}
@@ -839,6 +888,7 @@ fn parse_session_file(path: &PathBuf) -> Option<SessionInfo> {
         project: None,
         last_user_message,
         last_assistant_message,
+        has_agent_response,
     })
 }
 

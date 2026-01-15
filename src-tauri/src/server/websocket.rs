@@ -516,6 +516,13 @@ async fn dispatch_method(
             let response = get_session_info_handler(state, session_id).await?;
             serde_json::to_value(response).map_err(|e| e.to_string())
         }
+        "delete_session" => {
+            let session_id = params.get("sessionId")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing sessionId parameter")?;
+            let deleted = delete_session_handler(state, session_id)?;
+            Ok(serde_json::json!({ "deleted": deleted }))
+        }
         "get_current_session" => {
             let session_id = state.get_current_session();
             Ok(serde_json::json!({ "sessionId": session_id }))
@@ -533,7 +540,10 @@ async fn dispatch_method(
             let path = params.get("path")
                 .and_then(|v| v.as_str())
                 .ok_or("Missing path parameter")?;
-            let entries = list_directory_handler(path).await?;
+            let show_hidden = params.get("showHidden")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            let entries = list_directory_handler(path, show_hidden).await?;
             serde_json::to_value(entries).map_err(|e| e.to_string())
         }
         "read_file" => {
@@ -1331,11 +1341,18 @@ async fn get_session_info_handler(state: &Arc<AppState>, session_id: &str) -> Re
         .ok_or_else(|| format!("Session not found: {}", session_id))
 }
 
+fn delete_session_handler(state: &Arc<AppState>, session_id: &str) -> Result<bool, String> {
+    info!("WebSocket: Deleting session: {}", session_id);
+    // Also remove from session state manager if present
+    state.session_state_manager.remove_session(&session_id.to_string());
+    state.session_registry.delete_session(session_id)
+}
+
 // File handlers
 use crate::commands::file::{DirEntry, FileInfo, BinaryFileContent};
 
-async fn list_directory_handler(path: &str) -> Result<Vec<DirEntry>, String> {
-    crate::commands::file::list_directory_impl(path).await
+async fn list_directory_handler(path: &str, show_hidden: bool) -> Result<Vec<DirEntry>, String> {
+    crate::commands::file::list_directory_impl(path, show_hidden).await
 }
 
 async fn read_file_handler(path: &str) -> Result<String, String> {

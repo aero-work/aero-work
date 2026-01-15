@@ -285,7 +285,7 @@ pub async fn rename_path(old_path: String, new_path: String) -> Result<(), Strin
 
 // Implementation functions for reuse by WebSocket server
 
-pub async fn list_directory_impl(path: &str) -> Result<Vec<FileEntry>, String> {
+pub async fn list_directory_impl(path: &str, show_hidden: bool) -> Result<Vec<FileEntry>, String> {
     let dir_path = PathBuf::from(path);
 
     if !dir_path.exists() {
@@ -313,8 +313,11 @@ pub async fn list_directory_impl(path: &str) -> Result<Vec<FileEntry>, String> {
             continue;
         }
 
-        // Skip hidden files by default in impl
+        // Skip hidden files unless show_hidden is true
         let hidden = is_hidden(&name);
+        if hidden && !show_hidden {
+            continue;
+        }
 
         let metadata = match entry.metadata() {
             Ok(m) => m,

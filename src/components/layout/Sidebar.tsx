@@ -143,11 +143,15 @@ export function Sidebar() {
 
   const handleDeleteSession = async (
     e: React.MouseEvent,
-    _sessionId: string
+    sessionId: string
   ) => {
     e.stopPropagation();
-    // TODO: Implement backend session deletion
-    console.warn("Session deletion not yet implemented on backend");
+    if (!confirm("Delete this session? This cannot be undone.")) return;
+    try {
+      await agentAPI.deleteSession(sessionId);
+    } catch (error) {
+      console.error("Failed to delete session:", error);
+    }
   };
 
   const handleResumeSession = async (sessionInfo: SessionInfo) => {
@@ -323,6 +327,15 @@ export function Sidebar() {
                                 title="Fork session"
                               >
                                 <GitFork className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={(e) => handleDeleteSession(e, sessionInfo.id)}
+                                title="Delete session"
+                              >
+                                <Trash2 className="w-3 h-3" />
                               </Button>
                             </>
                           )}

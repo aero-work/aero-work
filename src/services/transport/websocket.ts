@@ -329,6 +329,10 @@ export class WebSocketTransport implements Transport {
     return this.send<SessionInfo>("get_session_info", { sessionId });
   }
 
+  async deleteSession(sessionId: string): Promise<{ deleted: boolean }> {
+    return this.send<{ deleted: boolean }>("delete_session", { sessionId });
+  }
+
   async prompt(
     sessionId: SessionId,
     content: string,
