@@ -318,6 +318,8 @@ export interface SessionState {
   modes?: SessionModeState;
   models?: SessionModelState;
   availableCommands?: AvailableCommand[];
+  /** Pending permission request waiting for user response */
+  pendingPermission?: PermissionRequest | null;
   createdAt: number;
   updatedAt: number;
 }

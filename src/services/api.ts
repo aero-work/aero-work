@@ -90,6 +90,28 @@ class AgentAPI {
   private sessionActivatedUnsubscribe: (() => void) | null = null;
 
   /**
+   * Global permission handler - handles all permission requests from any session
+   */
+  private handleGlobalPermissionRequest = (
+    request: PermissionRequest
+  ): Promise<PermissionOutcome> => {
+    const agentStore = useAgentStore.getState();
+
+    // Check permission rules first (synchronous, uses settings store)
+    const autoOutcome = checkPermissionRules(request);
+    if (autoOutcome) {
+      return Promise.resolve(autoOutcome);
+    }
+
+    // No matching rule or rule says "ask", show dialog
+    agentStore.setPendingPermission(request);
+
+    return new Promise((resolve) => {
+      this.permissionResolver = resolve;
+    });
+  };
+
+  /**
    * Connect to agent and initialize
    */
   async connect(): Promise<void> {
@@ -101,6 +123,22 @@ class AgentAPI {
 
     try {
       await transport.connect();
+
+      // Set up global permission handler for all permission requests
+      transport.setGlobalPermissionHandler(this.handleGlobalPermissionRequest);
+
+      // Set up handler for when permission is resolved by another client
+      transport.onPermissionResolved((requestId, sessionId) => {
+        console.log("Permission resolved by another client:", requestId, sessionId);
+        const agentStore = useAgentStore.getState();
+        // Clear pending permission dialog if it matches
+        const pending = agentStore.pendingPermission;
+        if (pending && JSON.stringify(pending.requestId) === JSON.stringify(requestId)) {
+          agentStore.setPendingPermission(null);
+          // Clear the resolver since permission was handled elsewhere
+          this.permissionResolver = null;
+        }
+      });
 
       // Subscribe to session activation events from backend
       this.sessionActivatedUnsubscribe = transport.onSessionActivated((sessionId) => {
@@ -255,7 +293,9 @@ class AgentAPI {
   /**
    * Send a prompt to a session
    * Note: User message is added optimistically by the UI hook,
-   * and confirmed by server via session/update notification
+   * and confirmed by server via session/update notification.
+   * Permission handling is done via global handler (set on connect)
+   * which broadcasts to all clients like messages.
    * @param sessionId - Session ID to send to
    * @param content - Message content
    * @param messageId - Optional message ID from optimistic update (for deduplication)
@@ -270,27 +310,14 @@ class AgentAPI {
     try {
       const handleUpdate = (_update: SessionUpdate) => {
         // Updates are handled by useSessionData hook via event listeners
-        // This callback is kept for permission handling during prompt
+        // This callback is kept for API compatibility
       };
 
-      const handlePermissionRequest = (
-        request: PermissionRequest
-      ): Promise<PermissionOutcome> => {
-        // Check permission rules first (synchronous, uses settings store)
-        const autoOutcome = checkPermissionRules(request);
-        if (autoOutcome) {
-          return Promise.resolve(autoOutcome);
-        }
+      // Permission handling is done via global handler (set on connect)
+      // which broadcasts to all clients like messages
+      const noopPermissionHandler = () => Promise.reject(new Error("Use global handler"));
 
-        // No matching rule or rule says "ask", show dialog
-        agentStore.setPendingPermission(request);
-
-        return new Promise((resolve) => {
-          this.permissionResolver = resolve;
-        });
-      };
-
-      await transport.prompt(sessionId, content, handleUpdate, handlePermissionRequest, messageId);
+      await transport.prompt(sessionId, content, handleUpdate, noopPermissionHandler, messageId);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to send message";
       sessionStore.setError(message);

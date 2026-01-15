@@ -10,7 +10,7 @@ use parking_lot::RwLock;
 use tokio::sync::broadcast;
 use tracing::{debug, info};
 
-use crate::acp::{SessionId, SessionModeState, SessionModelState, SessionUpdate};
+use crate::acp::{PermissionRequest, SessionId, SessionModeState, SessionModelState, SessionUpdate};
 
 use super::session_state::{SessionState, SessionStateUpdate};
 
@@ -245,6 +245,45 @@ impl SessionStateManager {
         subs.get(session_id)
             .map(|s| s.subscribers.len())
             .unwrap_or(0)
+    }
+
+    /// Set pending permission request for a session
+    pub fn set_pending_permission(&self, session_id: &SessionId, request: Option<PermissionRequest>) {
+        let mut states = self.states.write();
+        if let Some(state) = states.get_mut(session_id) {
+            state.set_pending_permission(request.clone());
+            if request.is_some() {
+                info!("Set pending permission for session {}", session_id);
+            } else {
+                info!("Cleared pending permission for session {}", session_id);
+            }
+        }
+    }
+
+    /// Get pending permission request for a session
+    pub fn get_pending_permission(&self, session_id: &SessionId) -> Option<PermissionRequest> {
+        let states = self.states.read();
+        states.get(session_id)
+            .and_then(|s| s.get_pending_permission().cloned())
+    }
+
+    /// Check if a session has a pending permission request
+    pub fn has_pending_permission(&self, session_id: &SessionId) -> bool {
+        let states = self.states.read();
+        states.get(session_id)
+            .map(|s| s.has_pending_permission())
+            .unwrap_or(false)
+    }
+
+    /// Find session with pending permission (used for global permission routing)
+    pub fn find_session_with_pending_permission(&self) -> Option<(SessionId, PermissionRequest)> {
+        let states = self.states.read();
+        for (id, state) in states.iter() {
+            if let Some(perm) = state.get_pending_permission() {
+                return Some((id.clone(), perm.clone()));
+            }
+        }
+        None
     }
 
     /// Broadcast an update to all subscribers of a session

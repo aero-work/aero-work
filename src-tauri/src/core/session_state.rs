@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::acp::{
-    AvailableCommand, ContentBlock, Plan, SessionId, SessionModeId, SessionModeState,
-    SessionModelState, SessionUpdate, ToolCall, ToolCallId, ToolCallUpdate,
+    AvailableCommand, ContentBlock, PermissionRequest, Plan, SessionId, SessionModeId,
+    SessionModeState, SessionModelState, SessionUpdate, ToolCall, ToolCallId, ToolCallUpdate,
 };
 
 /// Message role
@@ -54,6 +54,8 @@ pub struct SessionState {
     pub modes: Option<SessionModeState>,
     pub models: Option<SessionModelState>,
     pub available_commands: Option<Vec<AvailableCommand>>,
+    /// Pending permission request waiting for user response
+    pub pending_permission: Option<PermissionRequest>,
     pub created_at: i64,
     pub updated_at: i64,
 }
@@ -70,9 +72,26 @@ impl SessionState {
             modes: None,
             models: None,
             available_commands: None,
+            pending_permission: None,
             created_at: now,
             updated_at: now,
         }
+    }
+
+    /// Set pending permission request for this session
+    pub fn set_pending_permission(&mut self, request: Option<PermissionRequest>) {
+        self.pending_permission = request;
+        self.updated_at = Utc::now().timestamp_millis();
+    }
+
+    /// Get pending permission request
+    pub fn get_pending_permission(&self) -> Option<&PermissionRequest> {
+        self.pending_permission.as_ref()
+    }
+
+    /// Check if there's a pending permission request
+    pub fn has_pending_permission(&self) -> bool {
+        self.pending_permission.is_some()
     }
 
     /// Set modes

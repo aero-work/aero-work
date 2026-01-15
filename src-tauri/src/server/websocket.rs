@@ -170,12 +170,21 @@ impl WebSocketServer {
             });
         }
 
-        // Forward permission requests
+        // Forward permission requests and save to session state
         let permission_rx = state.permission_rx.write().take();
         if let Some(mut rx) = permission_rx {
             let tx = event_tx.clone();
+            let state_clone = state.clone();
             tokio::spawn(async move {
                 while let Some(request) = rx.recv().await {
+                    // Save the pending permission request to session state
+                    state_clone.session_state_manager.set_pending_permission(
+                        &request.session_id,
+                        Some(request.clone()),
+                    );
+                    // Also keep in global state for backward compatibility
+                    state_clone.set_pending_permission(Some(request.clone()));
+
                     let msg = JsonRpcNotification {
                         jsonrpc: "2.0".to_string(),
                         method: "permission/request".to_string(),
@@ -267,6 +276,9 @@ async fn handle_socket(socket: WebSocket, state: Arc<ServerState>) {
 
     // Channel for sending messages to WebSocket
     let (ws_tx, mut ws_rx) = mpsc::channel::<String>(100);
+
+    // NOTE: Don't push pending permission here - client will discover it
+    // from SessionState.pendingPermission when it fetches session state
 
     // Task to forward broadcast events to this WebSocket
     let ws_tx_clone = ws_tx.clone();
@@ -402,10 +414,33 @@ async fn dispatch_method(
         }
         "respond_permission" => {
             let request_id = params.get("requestId").cloned().unwrap_or_default();
+            let session_id = params.get("sessionId")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
             let outcome: PermissionOutcome = serde_json::from_value(
                 params.get("outcome").cloned().unwrap_or_default()
             ).map_err(|e| e.to_string())?;
-            respond_permission_handler(state, request_id, outcome).await?;
+            // Clear pending permission from session state
+            if let Some(ref sid) = session_id {
+                state.session_state_manager.set_pending_permission(sid, None);
+            }
+            // Also clear global state for backward compatibility
+            state.set_pending_permission(None);
+            respond_permission_handler(state, request_id.clone(), outcome).await?;
+
+            // Broadcast permission resolved to all clients so they can close their dialogs
+            let msg = JsonRpcNotification {
+                jsonrpc: "2.0".to_string(),
+                method: "permission/resolved".to_string(),
+                params: serde_json::json!({
+                    "requestId": request_id,
+                    "sessionId": session_id,
+                }),
+            };
+            if let Ok(json) = serde_json::to_string(&msg) {
+                let _ = event_tx.send(json);
+            }
+
             Ok(serde_json::Value::Null)
         }
 
@@ -727,6 +762,9 @@ async fn subscribe_session_handler(
             client_state.client_id, session_id
         );
 
+        // NOTE: Don't push pending permission here - client will discover it
+        // from SessionState.pendingPermission in the returned state
+
         return Ok(session_state);
     }
 
@@ -742,6 +780,9 @@ async fn subscribe_session_handler(
         .ok_or_else(|| format!("Session not found on disk: {}", session_id))?;
 
     let cwd = session_info.cwd.clone();
+
+    // Ensure ACP agent is running before resuming session
+    ensure_agent_connected(state).await?;
 
     // Resume the session via ACP agent
     let manager = AgentManager::new(state.client.clone());
@@ -881,6 +922,9 @@ async fn get_session_state_handler(
 
     let cwd = session_info.cwd.clone();
 
+    // Ensure ACP agent is running before resuming session
+    ensure_agent_connected(state).await?;
+
     // Resume the session via ACP agent
     let manager = AgentManager::new(state.client.clone());
     let response = manager.resume_session(session_id, &cwd).await
@@ -917,8 +961,48 @@ async fn get_session_state_handler(
         .ok_or_else(|| format!("Failed to get state for resumed session: {}", response.session_id))
 }
 
+/// Ensure ACP agent is running, start if not connected
+/// This is called lazily when creating/resuming/forking sessions
+async fn ensure_agent_connected(state: &Arc<AppState>) -> Result<(), String> {
+    use crate::acp::AcpClient;
+
+    // Check if already connected
+    {
+        let guard = state.client.read().await;
+        if let Some(ref client) = *guard {
+            if client.is_connected() {
+                return Ok(());
+            }
+        }
+    }
+
+    // Not connected, create new connection
+    info!("Starting ACP agent (lazy initialization)...");
+    let notification_tx = state.notification_tx.clone();
+    let permission_tx = state.permission_tx.clone();
+
+    let mut client = AcpClient::new(notification_tx, permission_tx);
+    client
+        .connect("npx", &["@zed-industries/claude-code-acp"])
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // Initialize the agent
+    let init_response = client.initialize().await.map_err(|e| e.to_string())?;
+    info!("ACP agent initialized: {:?}", init_response.agent_info);
+
+    {
+        let mut guard = state.client.write().await;
+        *guard = Some(client);
+    }
+
+    info!("ACP agent started and ready");
+    Ok(())
+}
+
 async fn connect_handler(state: &Arc<AppState>) -> Result<(), String> {
-    info!("WebSocket: Connecting to ACP agent...");
+    // connect is now a no-op, ACP agent is started lazily when needed
+    info!("WebSocket: Client connected (ACP agent will start when session is created/resumed)");
     let manager = AgentManager::new(state.client.clone());
     let notification_tx = state.notification_tx.clone();
     let permission_tx = state.permission_tx.clone();
@@ -928,7 +1012,6 @@ async fn connect_handler(state: &Arc<AppState>) -> Result<(), String> {
         .await
         .map_err(|e: AcpError| e.to_string())?;
 
-    info!("WebSocket: Connected to ACP agent");
     Ok(())
 }
 
@@ -941,11 +1024,29 @@ async fn disconnect_handler(state: &Arc<AppState>) -> Result<(), String> {
 }
 
 async fn initialize_handler(state: &Arc<AppState>) -> Result<InitializeResponse, String> {
-    info!("WebSocket: Initializing ACP agent...");
-    let manager = AgentManager::new(state.client.clone());
-    let response = manager.initialize().await.map_err(|e: AcpError| e.to_string())?;
-    info!("WebSocket: Initialized ACP agent: {:?}", response.agent_info);
-    Ok(response)
+    // Initialize is now a no-op since we return cached info
+    // Real initialization happens lazily in ensure_agent_connected
+    info!("WebSocket: Initialize called (agent will start when session is created/resumed)");
+
+    // Check if agent is already connected and return its info
+    {
+        let guard = state.client.read().await;
+        if let Some(ref client) = *guard {
+            if client.is_connected() {
+                // Agent already running, get its info
+                return client.initialize().await.map_err(|e: AcpError| e.to_string());
+            }
+        }
+    }
+
+    // Agent not running yet, return empty response
+    // Real initialization will happen when session is created/resumed
+    Ok(InitializeResponse {
+        protocol_version: 1,
+        agent_info: None,
+        agent_capabilities: None,
+        auth_methods: None,
+    })
 }
 
 async fn respond_permission_handler(
@@ -960,6 +1061,10 @@ async fn respond_permission_handler(
 
 async fn create_session_handler(state: &Arc<AppState>, cwd: &str) -> Result<NewSessionResponse, String> {
     info!("WebSocket: Creating new session in {}", cwd);
+
+    // Ensure ACP agent is running before creating session
+    ensure_agent_connected(state).await?;
+
     let manager = AgentManager::new(state.client.clone());
     let response = manager.create_session(cwd).await.map_err(|e: AcpError| e.to_string())?;
 
@@ -1045,6 +1150,9 @@ async fn send_prompt_handler(state: &Arc<AppState>, session_id: &str, content: &
                     .ok_or_else(|| format!("Session {} not found in registry", session_id))?;
 
                 let cwd = session_info.cwd;
+
+                // Ensure ACP agent is running before resuming
+                ensure_agent_connected(state).await?;
 
                 // Resume the session
                 let resume_response = manager.resume_session(session_id, &cwd).await
@@ -1145,6 +1253,10 @@ async fn list_sessions_handler(
 
 async fn resume_session_handler(state: &Arc<AppState>, session_id: &str, cwd: &str) -> Result<NewSessionResponse, String> {
     info!("WebSocket: Resuming session {} in {}", session_id, cwd);
+
+    // Ensure ACP agent is running before resuming session
+    ensure_agent_connected(state).await?;
+
     let manager = AgentManager::new(state.client.clone());
     let response = manager.resume_session(session_id, cwd).await.map_err(|e: AcpError| e.to_string())?;
 
@@ -1178,6 +1290,10 @@ async fn resume_session_handler(state: &Arc<AppState>, session_id: &str, cwd: &s
 
 async fn fork_session_handler(state: &Arc<AppState>, session_id: &str, cwd: &str) -> Result<NewSessionResponse, String> {
     info!("WebSocket: Forking session {} in {}", session_id, cwd);
+
+    // Ensure ACP agent is running before forking session
+    ensure_agent_connected(state).await?;
+
     let manager = AgentManager::new(state.client.clone());
     let response = manager.fork_session(session_id, cwd).await.map_err(|e: AcpError| e.to_string())?;
 

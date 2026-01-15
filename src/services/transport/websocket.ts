@@ -54,10 +54,12 @@ export class WebSocketTransport implements Transport {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
-  private permissionHandler:
+  // Global permission handler - set once on connect, handles all permission requests
+  private globalPermissionHandler:
     | ((request: PermissionRequest) => Promise<PermissionOutcome>)
     | null = null;
   private sessionActivatedHandler: ((sessionId: string | null) => void) | null = null;
+  private permissionResolvedHandler: ((requestId: unknown, sessionId: string | null) => void) | null = null;
   private reconnectHandlers = new Set<() => void>();
 
   constructor(url: string) {
@@ -146,6 +148,7 @@ export class WebSocketTransport implements Transport {
   private handleMessage(data: string) {
     try {
       const message = JSON.parse(data);
+      console.debug("[WS] <<<", message.method || `response:${message.id}`, message);
 
       // Check if it's a response (has id)
       if ("id" in message && message.id !== null) {
@@ -189,13 +192,16 @@ export class WebSocketTransport implements Transport {
       }
       case "permission/request": {
         const request = params as PermissionRequest;
-        if (this.permissionHandler) {
-          this.permissionHandler(request).then((outcome) => {
+        if (this.globalPermissionHandler) {
+          this.globalPermissionHandler(request).then((outcome) => {
             this.send("respond_permission", {
               requestId: request.requestId,
+              sessionId: request.sessionId,
               outcome,
             }).catch(console.error);
           }).catch(console.error);
+        } else {
+          console.warn("No global permission handler registered, permission request ignored");
         }
         break;
       }
@@ -212,6 +218,13 @@ export class WebSocketTransport implements Transport {
         const { sessionId } = params as { sessionId: string | null };
         if (this.sessionActivatedHandler) {
           this.sessionActivatedHandler(sessionId);
+        }
+        break;
+      }
+      case "permission/resolved": {
+        const { requestId, sessionId } = params as { requestId: unknown; sessionId: string | null };
+        if (this.permissionResolvedHandler) {
+          this.permissionResolvedHandler(requestId, sessionId);
         }
         break;
       }
@@ -253,6 +266,8 @@ export class WebSocketTransport implements Transport {
       params,
       id,
     };
+
+    console.debug("[WS] >>>", method, request);
 
     return new Promise((resolve, reject) => {
       this.pendingRequests.set(id, {
@@ -318,7 +333,7 @@ export class WebSocketTransport implements Transport {
     sessionId: SessionId,
     content: string,
     onUpdate: (update: SessionUpdate) => void,
-    onPermissionRequest: (request: PermissionRequest) => Promise<PermissionOutcome>,
+    _onPermissionRequest: (request: PermissionRequest) => Promise<PermissionOutcome>,
     messageId?: string
   ): Promise<PromptResponse> {
     // Set up event handler for session updates
@@ -330,8 +345,8 @@ export class WebSocketTransport implements Transport {
     const wrappedHandler = (data: unknown) => onUpdate(data as SessionUpdate);
     this.eventHandlers.get(eventKey)!.add(wrappedHandler);
 
-    // Set up permission handler
-    this.permissionHandler = onPermissionRequest;
+    // Note: Permission handling is now done via globalPermissionHandler
+    // which is set once on connect and handles all permission requests
 
     try {
       const response = await this.send<PromptResponse>("send_prompt", {
@@ -346,7 +361,6 @@ export class WebSocketTransport implements Transport {
       if (this.eventHandlers.get(eventKey)?.size === 0) {
         this.eventHandlers.delete(eventKey);
       }
-      this.permissionHandler = null;
     }
   }
 
@@ -377,6 +391,24 @@ export class WebSocketTransport implements Transport {
     return () => {
       this.sessionActivatedHandler = null;
     };
+  }
+
+  /**
+   * Set global permission handler - called for all permission requests from any session
+   * This should be set once on connect and handles permissions for all clients
+   */
+  setGlobalPermissionHandler(
+    handler: ((request: PermissionRequest) => Promise<PermissionOutcome>) | null
+  ): void {
+    this.globalPermissionHandler = handler;
+  }
+
+  /**
+   * Set handler for permission resolved notifications
+   * Called when another client responds to a permission request
+   */
+  onPermissionResolved(handler: ((requestId: unknown, sessionId: string | null) => void) | null): void {
+    this.permissionResolvedHandler = handler;
   }
 
   // Get current active session from backend

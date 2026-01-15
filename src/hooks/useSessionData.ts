@@ -22,6 +22,7 @@ import type {
 import { getTransport } from "@/services/transport";
 import type { WebSocketTransport } from "@/services/transport/websocket";
 import { generateUUID } from "@/lib/utils";
+import { useAgentStore } from "@/stores/agentStore";
 
 interface UseSessionDataResult {
   /** Current session state */
@@ -204,9 +205,37 @@ export function useSessionData(sessionId: SessionId | null): UseSessionDataResul
             kind: update.kind,
             status: update.status,
             rawInput: update.rawInput,
+            rawOutput: update.rawOutput,
             content: update.content,
             locations: update.locations,
           };
+
+          // Check if tool call already exists (avoid duplicates)
+          const existingIndex = prev.chatItems.findIndex(
+            (item) => item.type === "tool_call" && item.toolCall.toolCallId === update.toolCallId
+          );
+
+          if (existingIndex >= 0) {
+            // Update existing tool call (merge fields)
+            const newChatItems = [...prev.chatItems];
+            const existing = newChatItems[existingIndex] as { type: "tool_call"; toolCall: ToolCall };
+            newChatItems[existingIndex] = {
+              type: "tool_call",
+              toolCall: {
+                ...existing.toolCall,
+                title: update.title ?? existing.toolCall.title,
+                kind: update.kind ?? existing.toolCall.kind,
+                status: update.status ?? existing.toolCall.status,
+                rawInput: update.rawInput ?? existing.toolCall.rawInput,
+                rawOutput: update.rawOutput ?? existing.toolCall.rawOutput,
+                content: update.content ?? existing.toolCall.content,
+                locations: update.locations ?? existing.toolCall.locations,
+              },
+            };
+            return { ...prev, chatItems: newChatItems, updatedAt: Date.now() };
+          }
+
+          // Add new tool call
           return {
             ...prev,
             chatItems: [...prev.chatItems, { type: "tool_call", toolCall }],
@@ -328,6 +357,14 @@ export function useSessionData(sessionId: SessionId | null): UseSessionDataResul
         const newState = await fetchSessionState(sessionId);
         if (currentSessionRef.current === sessionId) {
           setState(newState);
+
+          // Check if there's a pending permission request for this session
+          // If so, show the permission dialog
+          if (newState.pendingPermission) {
+            console.log("Session has pending permission request, showing dialog", newState.pendingPermission);
+            const agentStore = useAgentStore.getState();
+            agentStore.setPendingPermission(newState.pendingPermission);
+          }
         }
       } catch (err) {
         if (currentSessionRef.current === sessionId) {

@@ -31,6 +31,8 @@ pub struct AppState {
     pub session_activated_rx: Arc<parking_lot::RwLock<Option<mpsc::Receiver<SessionActivated>>>>,
     /// Actual WebSocket server port (may differ from configured port if it was occupied)
     pub ws_port: Arc<std::sync::atomic::AtomicU16>,
+    /// Current pending permission request (for resending on client reconnect)
+    pub pending_permission: Arc<parking_lot::RwLock<Option<PermissionRequest>>>,
 }
 
 impl AppState {
@@ -54,7 +56,19 @@ impl AppState {
             session_activated_tx,
             session_activated_rx: Arc::new(parking_lot::RwLock::new(Some(session_activated_rx))),
             ws_port: Arc::new(std::sync::atomic::AtomicU16::new(0)),
+            pending_permission: Arc::new(parking_lot::RwLock::new(None)),
         }
+    }
+
+    /// Set the pending permission request
+    pub fn set_pending_permission(&self, request: Option<PermissionRequest>) {
+        let mut pending = self.pending_permission.write();
+        *pending = request;
+    }
+
+    /// Get the pending permission request (clone)
+    pub fn get_pending_permission(&self) -> Option<PermissionRequest> {
+        self.pending_permission.read().clone()
     }
 
     /// Set the WebSocket server port

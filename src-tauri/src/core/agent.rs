@@ -16,23 +16,14 @@ impl AgentManager {
         Self { client }
     }
 
+    /// Connect is now a no-op - ACP agent is started lazily when creating/resuming sessions
     pub async fn connect(
         &self,
-        notification_tx: mpsc::Sender<SessionNotification>,
-        permission_tx: mpsc::Sender<PermissionRequest>,
+        _notification_tx: mpsc::Sender<SessionNotification>,
+        _permission_tx: mpsc::Sender<PermissionRequest>,
     ) -> Result<(), AcpError> {
-        let mut client = AcpClient::new(notification_tx, permission_tx);
-
-        client
-            .connect("npx", &["@zed-industries/claude-code-acp"])
-            .await?;
-
-        {
-            let mut guard = self.client.write().await;
-            *guard = Some(client);
-        }
-
-        info!("Connected to ACP agent");
+        // ACP agent is started lazily when needed (create_session/resume_session)
+        // See ensure_agent_connected() in websocket.rs
         Ok(())
     }
 
