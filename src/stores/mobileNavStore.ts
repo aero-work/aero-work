@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 /**
  * Mobile Navigation Views
@@ -42,80 +43,91 @@ interface MobileNavState {
   closeFileViewer: () => void;
 }
 
-export const useMobileNavStore = create<MobileNavState>((set, get) => ({
-  currentView: "session-list",
-  previousView: null,
-  viewingFilePath: null,
-
-  // Check if tab bar should be shown
-  showTabBar: () => {
-    const { currentView } = get();
-    return !VIEWS_WITHOUT_TAB_BAR.includes(currentView);
-  },
-
-  // Check if back button should be shown
-  showBackButton: () => {
-    const { currentView } = get();
-    return VIEWS_WITH_BACK_BUTTON.includes(currentView);
-  },
-
-  // Set view directly (for tab navigation)
-  setView: (view) =>
-    set((state) => ({
-      previousView: state.currentView,
-      currentView: view,
-      // Clear file viewer path if leaving file-viewer
-      viewingFilePath: view === "file-viewer" ? state.viewingFilePath : null,
-    })),
-
-  // Enter conversation view from session list
-  enterConversation: () =>
-    set((state) => ({
-      previousView: state.currentView,
-      currentView: "conversation",
-    })),
-
-  // Exit conversation view back to session list
-  exitConversation: () =>
-    set({
-      previousView: "conversation",
+export const useMobileNavStore = create<MobileNavState>()(
+  persist(
+    (set, get) => ({
       currentView: "session-list",
-    }),
-
-  // Generic back navigation
-  goBack: () =>
-    set((state) => {
-      // Determine where to go back to
-      let targetView: MobileView = "session-list";
-
-      if (state.currentView === "conversation") {
-        targetView = "session-list";
-      } else if (state.currentView === "file-viewer") {
-        targetView = "files";
-      } else if (state.previousView) {
-        targetView = state.previousView;
-      }
-
-      return {
-        currentView: targetView,
-        previousView: state.currentView,
-        viewingFilePath: state.currentView === "file-viewer" ? null : state.viewingFilePath,
-      };
-    }),
-
-  // Open file viewer from files tab
-  openFileViewer: (filePath) =>
-    set((state) => ({
-      previousView: state.currentView,
-      currentView: "file-viewer",
-      viewingFilePath: filePath,
-    })),
-
-  // Close file viewer
-  closeFileViewer: () =>
-    set((state) => ({
-      previousView: state.currentView,
-      currentView: "files",
+      previousView: null,
       viewingFilePath: null,
-    })),
-}));
+
+      // Check if tab bar should be shown
+      showTabBar: () => {
+        const { currentView } = get();
+        return !VIEWS_WITHOUT_TAB_BAR.includes(currentView);
+      },
+
+      // Check if back button should be shown
+      showBackButton: () => {
+        const { currentView } = get();
+        return VIEWS_WITH_BACK_BUTTON.includes(currentView);
+      },
+
+      // Set view directly (for tab navigation)
+      setView: (view) =>
+        set((state) => ({
+          previousView: state.currentView,
+          currentView: view,
+          // Clear file viewer path if leaving file-viewer
+          viewingFilePath: view === "file-viewer" ? state.viewingFilePath : null,
+        })),
+
+      // Enter conversation view from session list
+      enterConversation: () =>
+        set((state) => ({
+          previousView: state.currentView,
+          currentView: "conversation",
+        })),
+
+      // Exit conversation view back to session list
+      exitConversation: () =>
+        set({
+          previousView: "conversation",
+          currentView: "session-list",
+        }),
+
+      // Generic back navigation
+      goBack: () =>
+        set((state) => {
+          // Determine where to go back to
+          let targetView: MobileView = "session-list";
+
+          if (state.currentView === "conversation") {
+            targetView = "session-list";
+          } else if (state.currentView === "file-viewer") {
+            targetView = "files";
+          } else if (state.previousView) {
+            targetView = state.previousView;
+          }
+
+          return {
+            currentView: targetView,
+            previousView: state.currentView,
+            viewingFilePath: state.currentView === "file-viewer" ? null : state.viewingFilePath,
+          };
+        }),
+
+      // Open file viewer from files tab
+      openFileViewer: (filePath) =>
+        set((state) => ({
+          previousView: state.currentView,
+          currentView: "file-viewer",
+          viewingFilePath: filePath,
+        })),
+
+      // Close file viewer
+      closeFileViewer: () =>
+        set((state) => ({
+          previousView: state.currentView,
+          currentView: "files",
+          viewingFilePath: null,
+        })),
+    }),
+    {
+      name: "aero-work-mobile-nav",
+      // Only persist currentView, not transient state
+      partialize: (state) => ({
+        currentView: state.currentView,
+      }),
+    }
+  )
+);

@@ -13,6 +13,7 @@
  */
 
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import type { SessionId, SessionInfo } from "@/types/acp";
 
@@ -43,43 +44,52 @@ const initialState: SessionState = {
 };
 
 export const useSessionStore = create<SessionState & SessionActions>()(
-  immer((set) => ({
-    ...initialState,
+  persist(
+    immer((set) => ({
+      ...initialState,
 
-    setActiveSession: (sessionId) => {
-      set((state) => {
-        state.activeSessionId = sessionId;
-      });
-    },
+      setActiveSession: (sessionId) => {
+        set((state) => {
+          state.activeSessionId = sessionId;
+        });
+      },
 
-    setLoading: (loading) => {
-      set((state) => {
-        state.isLoading = loading;
-      });
-    },
+      setLoading: (loading) => {
+        set((state) => {
+          state.isLoading = loading;
+        });
+      },
 
-    setError: (error) => {
-      set((state) => {
-        state.error = error;
-      });
-    },
+      setError: (error) => {
+        set((state) => {
+          state.error = error;
+        });
+      },
 
-    setAvailableSessions: (sessions) => {
-      set((state) => {
-        state.availableSessions = sessions;
-      });
-    },
+      setAvailableSessions: (sessions) => {
+        set((state) => {
+          state.availableSessions = sessions;
+        });
+      },
 
-    setAvailableSessionsLoading: (loading) => {
-      set((state) => {
-        state.availableSessionsLoading = loading;
-      });
-    },
+      setAvailableSessionsLoading: (loading) => {
+        set((state) => {
+          state.availableSessionsLoading = loading;
+        });
+      },
 
-    reset: () => {
-      set(() => initialState);
-    },
-  }))
+      reset: () => {
+        set(() => initialState);
+      },
+    })),
+    {
+      name: "aero-work-session",
+      // Only persist activeSessionId, not transient state
+      partialize: (state) => ({
+        activeSessionId: state.activeSessionId,
+      }),
+    }
+  )
 );
 
 /**
