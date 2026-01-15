@@ -106,7 +106,7 @@ export function MessageList({
         className="absolute inset-0 overflow-y-auto p-4"
         onScroll={handleScroll}
       >
-        <div className="space-y-4 max-w-4xl mx-auto">
+        <div className="space-y-2 max-w-4xl mx-auto">
           {chatItems.length === 0 && !isLoading && (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
               <Bot className="w-12 h-12 mb-4 opacity-50" />
@@ -206,7 +206,7 @@ function MessageBubble({ message }: { message: Message }) {
       </div>
       <div
         className={cn(
-          "relative flex-1 max-w-[80%] rounded-xl p-4 group shadow-sm",
+          "relative flex-1 max-w-[80%] rounded-xl px-3 py-2 group shadow-sm",
           isUser
             ? "bg-blue-500 dark:bg-blue-600/80 text-white"
             : "bg-card text-card-foreground border border-border"
