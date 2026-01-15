@@ -5,8 +5,11 @@ import { TodoPanel } from "@/components/chat/TodoPanel";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useAgentStore } from "@/stores/agentStore";
 import { useSessionData } from "@/hooks/useSessionData";
+import { useMobileNavStore } from "@/stores/mobileNavStore";
+import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { agentAPI } from "@/services/api";
-import { Loader2, MessageSquare } from "lucide-react";
+import { Loader2, MessageSquare, ChevronLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { ChatItem, TodoWriteInput, TodoItem } from "@/types/acp";
 
 // Extract the latest TodoWrite todos from chat items
@@ -35,6 +38,15 @@ export function MobileConversation() {
   const activeSessionId = useSessionStore((state) => state.activeSessionId);
   const isPromptLoading = useSessionStore((state) => state.isLoading);
   const connectionStatus = useAgentStore((state) => state.connectionStatus);
+  const goBack = useMobileNavStore((state) => state.goBack);
+
+  // Swipe back gesture
+  const { handlers: swipeHandlers, swipeOffset, isSwiping } = useSwipeBack({
+    onSwipeBack: goBack,
+    enabled: true,
+    threshold: 100,
+    edgeWidth: 30,
+  });
 
   // Session data from server (single source of truth)
   const {
@@ -144,7 +156,36 @@ export function MobileConversation() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div
+      className={cn(
+        "flex flex-col h-full overflow-hidden relative",
+        !isSwiping && "transition-transform duration-200 ease-out"
+      )}
+      style={{
+        transform: swipeOffset > 0 ? `translateX(${swipeOffset}px)` : undefined,
+      }}
+      {...swipeHandlers}
+    >
+      {/* Swipe back indicator */}
+      {swipeOffset > 0 && (
+        <div
+          className="absolute left-0 top-0 bottom-0 flex items-center justify-center z-50 pointer-events-none"
+          style={{
+            width: Math.min(swipeOffset, 60),
+            opacity: Math.min(swipeOffset / 100, 1),
+          }}
+        >
+          <div
+            className={cn(
+              "w-8 h-8 rounded-full bg-muted flex items-center justify-center",
+              swipeOffset > 100 && "bg-primary text-primary-foreground"
+            )}
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </div>
+        </div>
+      )}
+
       {/* Messages area - takes remaining space, must have explicit height for scrolling */}
       <div className="flex-1 min-h-0">
         <MessageList

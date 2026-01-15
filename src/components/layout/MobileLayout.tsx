@@ -12,6 +12,7 @@ import { useMobileNavStore, type MobileView } from "@/stores/mobileNavStore";
 import { useFileStore, type OpenFile } from "@/stores/fileStore";
 import { useTerminalStore } from "@/stores/terminalStore";
 import { useIsDarkMode } from "@/hooks/useIsDarkMode";
+import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -22,6 +23,7 @@ import {
   Upload,
   FileQuestion,
   FileCode,
+  ChevronLeft,
 } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -231,10 +233,19 @@ function BinaryFileViewer({
 
 function MobileFileViewer() {
   const viewingFilePath = useMobileNavStore((state) => state.viewingFilePath);
+  const goBack = useMobileNavStore((state) => state.goBack);
   const openFiles = useFileStore((state) => state.openFiles);
   const updateFileContent = useFileStore((state) => state.updateFileContent);
   const isDark = useIsDarkMode();
   const [forceTextEdit, setForceTextEdit] = useState<string | null>(null);
+
+  // Swipe back gesture
+  const { handlers: swipeHandlers, swipeOffset, isSwiping } = useSwipeBack({
+    onSwipeBack: goBack,
+    enabled: true,
+    threshold: 100,
+    edgeWidth: 30,
+  });
 
   const file = openFiles.find((f) => f.path === viewingFilePath);
 
@@ -263,19 +274,54 @@ function MobileFileViewer() {
   const fileType = file.fileType || "text";
   const isForceEditing = forceTextEdit === file.path;
 
+  // Wrap content with swipe gesture
+  const wrapWithSwipe = (content: React.ReactNode) => (
+    <div
+      className={cn(
+        "h-full relative",
+        !isSwiping && "transition-transform duration-200 ease-out"
+      )}
+      style={{
+        transform: swipeOffset > 0 ? `translateX(${swipeOffset}px)` : undefined,
+      }}
+      {...swipeHandlers}
+    >
+      {/* Swipe back indicator */}
+      {swipeOffset > 0 && (
+        <div
+          className="absolute left-0 top-0 bottom-0 flex items-center justify-center z-50 pointer-events-none"
+          style={{
+            width: Math.min(swipeOffset, 60),
+            opacity: Math.min(swipeOffset / 100, 1),
+          }}
+        >
+          <div
+            className={cn(
+              "w-8 h-8 rounded-full bg-muted flex items-center justify-center",
+              swipeOffset > 100 && "bg-primary text-primary-foreground"
+            )}
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </div>
+        </div>
+      )}
+      {content}
+    </div>
+  );
+
   if (isForceEditing || fileType === "text") {
-    return <TextFileViewer file={file} isDark={isDark} />;
+    return wrapWithSwipe(<TextFileViewer file={file} isDark={isDark} />);
   }
 
   if (fileType === "image") {
-    return <ImageFileViewer file={file} />;
+    return wrapWithSwipe(<ImageFileViewer file={file} />);
   }
 
   if (fileType === "pdf") {
-    return <PdfFileViewer file={file} />;
+    return wrapWithSwipe(<PdfFileViewer file={file} />);
   }
 
-  return <BinaryFileViewer file={file} onForceEdit={handleForceEdit} />;
+  return wrapWithSwipe(<BinaryFileViewer file={file} onForceEdit={handleForceEdit} />);
 }
 
 // ============================================================================

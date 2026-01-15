@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { SessionCard } from "@/components/chat/SessionCard";
+import { SwipeableSessionCard } from "@/components/chat/SwipeableSessionCard";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSessionStore } from "@/stores/sessionStore";
@@ -71,34 +71,6 @@ export function MobileSessionList() {
     [setActiveSession, enterConversation]
   );
 
-  // Resume session
-  const handleResumeSession = useCallback(
-    async (sessionId: string, cwd: string) => {
-      try {
-        const newSessionId = await agentAPI.resumeSession(sessionId, cwd);
-        setActiveSession(newSessionId);
-        enterConversation();
-      } catch (error) {
-        console.error("Failed to resume session:", error);
-      }
-    },
-    [setActiveSession, enterConversation]
-  );
-
-  // Fork session
-  const handleForkSession = useCallback(
-    async (sessionId: string, cwd: string) => {
-      try {
-        const newSessionId = await agentAPI.forkSession(sessionId, cwd);
-        setActiveSession(newSessionId);
-        enterConversation();
-      } catch (error) {
-        console.error("Failed to fork session:", error);
-      }
-    },
-    [setActiveSession, enterConversation]
-  );
-
   // Refresh sessions list
   const handleRefresh = useCallback(async () => {
     if (!isConnected) return;
@@ -108,6 +80,15 @@ export function MobileSessionList() {
       console.error("Failed to refresh sessions:", error);
     }
   }, [isConnected, currentWorkingDir]);
+
+  // Delete session
+  const handleDeleteSession = useCallback(async (sessionId: string) => {
+    try {
+      await agentAPI.deleteSession(sessionId);
+    } catch (error) {
+      console.error("Failed to delete session:", error);
+    }
+  }, []);
 
   // Not connected state
   if (!isConnected) {
@@ -174,19 +155,14 @@ export function MobileSessionList() {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-border">
+          <div>
             {sortedSessions.map((session) => (
-              <SessionCard
+              <SwipeableSessionCard
                 key={session.id}
                 session={session}
                 isActive={session.id === activeSessionId}
                 onClick={() => handleOpenSession(session.id)}
-                onResume={
-                  !session.active
-                    ? () => handleResumeSession(session.id, session.cwd)
-                    : undefined
-                }
-                onFork={() => handleForkSession(session.id, session.cwd)}
+                onDelete={() => handleDeleteSession(session.id)}
               />
             ))}
           </div>
