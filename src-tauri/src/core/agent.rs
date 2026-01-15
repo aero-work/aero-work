@@ -24,7 +24,7 @@ impl AgentManager {
         let mut client = AcpClient::new(notification_tx, permission_tx);
 
         client
-            .connect("claude-code-acp", &[])
+            .connect("npx", &["@zed-industries/claude-code-acp"])
             .await?;
 
         {
