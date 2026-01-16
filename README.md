@@ -1,12 +1,12 @@
-# Aero Code
+# Aero Work
 
-A cross-platform GUI for AI coding agents.
+A cross-platform AI assistant for everyone.
 
 ![Screenshot](aerowork.png)
 
 ## About
 
-Inspired by Anthropic's [Cowork](https://claude.com/blog/cowork-research-preview), Aero Code aims to bring AI agent capabilities to everyone - not just developers. While Cowork is macOS-only and requires Claude Max, Aero Code is open-source, cross-platform, and works with any Anthropic-compatible API.
+Inspired by Anthropic's [Cowork](https://claude.com/blog/cowork-research-preview), Aero Work aims to bring AI agent capabilities to everyone - not just developers. While Cowork is macOS-only and requires Claude Max, Aero Work is open-source, cross-platform, and works with any Anthropic-compatible API.
 
 ### Design Principles
 

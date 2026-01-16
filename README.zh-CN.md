@@ -1,12 +1,12 @@
-# Aero Code
+# Aero Work
 
-AI 编程助手的跨平台图形界面。
+让每个人都能用上的跨平台 AI 助手。
 
 ![截图](aerowork.png)
 
 ## 关于
 
-灵感来源于 Anthropic 发布的 [Cowork](https://claude.com/blog/cowork-research-preview)，Aero Code 致力于让每个人都能使用 AI Agent 能力，而不仅仅是开发者。Cowork 仅支持 macOS 且需要 Claude Max 订阅，而 Aero Code 是开源的、跨平台的，支持任何 Anthropic 兼容 API。
+灵感来源于 Anthropic 发布的 [Cowork](https://claude.com/blog/cowork-research-preview)，Aero Work 致力于让每个人都能使用 AI Agent 能力，而不仅仅是开发者。Cowork 仅支持 macOS 且需要 Claude Max 订阅，而 Aero Work 是开源的、跨平台的，支持任何 Anthropic 兼容 API。
 
 ### 设计原则
 
