@@ -246,6 +246,54 @@ impl ModelConfig {
         dirs::home_dir().map(|home| home.join(".claude").join("settings.json"))
     }
 
+    /// Get the default model name for Claude settings.json "model" field
+    /// This maps to Claude Code's model selection (opus, sonnet, haiku)
+    pub fn get_claude_model(&self) -> Option<String> {
+        match self.active_provider.as_str() {
+            "default" => None, // Use Claude Code's default
+            "anthropic" => {
+                let p = &self.providers.anthropic;
+                // Map model to short name for settings.json
+                if p.model.contains("opus") {
+                    Some("opus".to_string())
+                } else if p.model.contains("haiku") {
+                    Some("haiku".to_string())
+                } else {
+                    Some("sonnet".to_string())
+                }
+            }
+            "bedrock" => {
+                let p = &self.providers.bedrock;
+                // Map bedrock model to short name
+                if p.model.contains("opus") {
+                    Some("opus".to_string())
+                } else if p.model.contains("haiku") {
+                    Some("haiku".to_string())
+                } else {
+                    Some("sonnet".to_string())
+                }
+            }
+            "bigmodel" | "minimax" | "moonshot" => {
+                // These providers use their own model, set to sonnet as placeholder
+                Some("sonnet".to_string())
+            }
+            custom_id => {
+                // Custom provider - try to map
+                if let Some(p) = self.custom_providers.iter().find(|p| p.id == custom_id) {
+                    if p.model.contains("opus") {
+                        Some("opus".to_string())
+                    } else if p.model.contains("haiku") {
+                        Some("haiku".to_string())
+                    } else {
+                        Some("sonnet".to_string())
+                    }
+                } else {
+                    None
+                }
+            }
+        }
+    }
+
     /// Sync environment variables to ~/.claude/settings.json
     /// This writes the env vars to Claude's settings file so Claude Code picks them up
     pub fn sync_to_claude_settings(&self) -> Result<(), String> {
@@ -276,9 +324,15 @@ impl ModelConfig {
             .collect::<serde_json::Map<String, serde_json::Value>>()
             .into();
 
-        // Update the env field
+        // Update settings
         if let Some(obj) = settings.as_object_mut() {
+            // Set env field
             obj.insert("env".to_string(), env_object);
+
+            // Set model field based on active provider's default model
+            if let Some(model) = self.get_claude_model() {
+                obj.insert("model".to_string(), serde_json::Value::String(model));
+            }
         }
 
         // Write back
@@ -345,18 +399,32 @@ impl ModelConfig {
                     env.insert("AWS_DEFAULT_REGION".to_string(), p.region.clone());
                     env.insert("AWS_REGION".to_string(), p.region.clone());
                 }
-                if !p.model.is_empty() {
-                    env.insert("ANTHROPIC_MODEL".to_string(), p.model.clone());
-                }
-                if !p.opus_model.is_empty() {
-                    env.insert("ANTHROPIC_DEFAULT_OPUS_MODEL".to_string(), p.opus_model.clone());
-                }
-                if !p.sonnet_model.is_empty() {
-                    env.insert("ANTHROPIC_DEFAULT_SONNET_MODEL".to_string(), p.sonnet_model.clone());
-                }
-                if !p.haiku_model.is_empty() {
-                    env.insert("ANTHROPIC_DEFAULT_HAIKU_MODEL".to_string(), p.haiku_model.clone());
-                }
+                // For Bedrock, always set model defaults (use configured or fallback to defaults)
+                let model = if p.model.is_empty() {
+                    "global.anthropic.claude-sonnet-4-5-20250929-v1:0".to_string()
+                } else {
+                    p.model.clone()
+                };
+                let opus_model = if p.opus_model.is_empty() {
+                    "global.anthropic.claude-opus-4-5-20251101-v1:0".to_string()
+                } else {
+                    p.opus_model.clone()
+                };
+                let sonnet_model = if p.sonnet_model.is_empty() {
+                    "global.anthropic.claude-sonnet-4-5-20250929-v1:0".to_string()
+                } else {
+                    p.sonnet_model.clone()
+                };
+                let haiku_model = if p.haiku_model.is_empty() {
+                    "global.anthropic.claude-haiku-4-5-20251001-v1:0".to_string()
+                } else {
+                    p.haiku_model.clone()
+                };
+                env.insert("ANTHROPIC_MODEL".to_string(), model);
+                env.insert("ANTHROPIC_DEFAULT_OPUS_MODEL".to_string(), opus_model.clone());
+                env.insert("ANTHROPIC_DEFAULT_SONNET_MODEL".to_string(), sonnet_model.clone());
+                env.insert("ANTHROPIC_DEFAULT_HAIKU_MODEL".to_string(), haiku_model);
+                env.insert("CLAUDE_CODE_SUBAGENT_MODEL".to_string(), sonnet_model);
             }
             "bigmodel" => {
                 let p = &self.providers.bigmodel;
