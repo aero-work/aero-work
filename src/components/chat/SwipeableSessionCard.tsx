@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { SessionInfo, SessionStatus } from "@/types/acp";
-import { MessageSquare, Clock, Trash2, Square } from "lucide-react";
+import { MessageSquare, Clock, Trash2, Square, Loader2, Check } from "lucide-react";
 
 /** Get status badge styles based on session status */
 function getStatusBadgeStyles(status: SessionStatus): string {
@@ -37,8 +37,8 @@ interface SwipeableSessionCardProps {
   session: SessionInfo;
   isActive?: boolean;
   onClick: () => void;
-  onDelete?: () => void;
-  onStop?: () => void;
+  onDelete?: () => Promise<void> | void;
+  onStop?: () => Promise<void> | void;
 }
 
 function formatRelativeTime(timestamp: string | number): string {
@@ -82,6 +82,7 @@ export function SwipeableSessionCard({
   const [translateX, setTranslateX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [actionState, setActionState] = useState<"idle" | "loading" | "success">("idle");
 
   // Touch tracking
   const startX = useRef(0);
@@ -142,9 +143,6 @@ export function SwipeableSessionCard({
         return;
       }
 
-      // Prevent vertical scrolling while swiping horizontally
-      e.preventDefault();
-
       currentX.current = touch.clientX;
 
       // Calculate new position
@@ -198,29 +196,53 @@ export function SwipeableSessionCard({
   );
 
   const handleDelete = useCallback(
-    (e: React.MouseEvent | React.TouchEvent) => {
+    async (e: React.MouseEvent | React.TouchEvent) => {
       e.stopPropagation();
       e.preventDefault();
-      if (onDelete) {
-        onDelete();
+      if (onDelete && actionState === "idle") {
+        setActionState("loading");
+        try {
+          await onDelete();
+          setActionState("success");
+          // Show success briefly then close
+          setTimeout(() => {
+            setTranslateX(0);
+            setIsOpen(false);
+            setActionState("idle");
+          }, 300);
+        } catch {
+          setActionState("idle");
+          setTranslateX(0);
+          setIsOpen(false);
+        }
       }
-      setTranslateX(0);
-      setIsOpen(false);
     },
-    [onDelete]
+    [onDelete, actionState]
   );
 
   const handleStop = useCallback(
-    (e: React.MouseEvent | React.TouchEvent) => {
+    async (e: React.MouseEvent | React.TouchEvent) => {
       e.stopPropagation();
       e.preventDefault();
-      if (onStop) {
-        onStop();
+      if (onStop && actionState === "idle") {
+        setActionState("loading");
+        try {
+          await onStop();
+          setActionState("success");
+          // Show success briefly then close
+          setTimeout(() => {
+            setTranslateX(0);
+            setIsOpen(false);
+            setActionState("idle");
+          }, 300);
+        } catch {
+          setActionState("idle");
+          setTranslateX(0);
+          setIsOpen(false);
+        }
       }
-      setTranslateX(0);
-      setIsOpen(false);
     },
-    [onStop]
+    [onStop, actionState]
   );
 
   return (
@@ -233,24 +255,44 @@ export function SwipeableSessionCard({
       {session.active ? (
         /* Stop button for active sessions (unload from memory) */
         <div
-          className="absolute right-0 top-0 bottom-0 flex items-center justify-center bg-orange-500 text-white"
+          className={cn(
+            "absolute right-0 top-0 bottom-0 flex items-center justify-center text-white transition-colors",
+            actionState === "success" ? "bg-green-500" : "bg-orange-500"
+          )}
           style={{ width: DELETE_WIDTH }}
           onClick={handleStop}
           role="button"
           tabIndex={0}
         >
-          <Square className="w-6 h-6 fill-current" />
+          {actionState === "loading" ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : actionState === "success" ? (
+            <Check className="w-6 h-6" />
+          ) : (
+            <Square className="w-6 h-6 fill-current" />
+          )}
         </div>
       ) : (
         /* Delete button for stopped/inactive sessions */
         <div
-          className="absolute right-0 top-0 bottom-0 flex items-center justify-center bg-destructive text-destructive-foreground"
+          className={cn(
+            "absolute right-0 top-0 bottom-0 flex items-center justify-center transition-colors",
+            actionState === "success"
+              ? "bg-green-500 text-white"
+              : "bg-destructive text-destructive-foreground"
+          )}
           style={{ width: DELETE_WIDTH }}
           onClick={handleDelete}
           role="button"
           tabIndex={0}
         >
-          <Trash2 className="w-6 h-6" />
+          {actionState === "loading" ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : actionState === "success" ? (
+            <Check className="w-6 h-6" />
+          ) : (
+            <Trash2 className="w-6 h-6" />
+          )}
         </div>
       )}
 
@@ -271,6 +313,7 @@ export function SwipeableSessionCard({
         )}
         style={{
           transform: `translateX(${translateX}px)`,
+          touchAction: "pan-y", // Allow vertical scroll, prevent horizontal default behavior
         }}
       >
         <div className="flex items-start gap-3">
