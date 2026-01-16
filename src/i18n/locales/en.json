@@ -47,9 +47,10 @@
     "tapToStart": "Tap the button above to start your first conversation.",
     "loadingSessions": "Loading sessions...",
     "conversation": "Conversation",
-    "yoloMode": "Enable Yolo",
+    "yoloMode": "Yolo",
     "yoloModeDescription": "Auto-approve all tool calls (use with caution)",
-    "yoloModeEnabled": "Yolo ON",
+    "yoloModeEnabled": "Yolo enabled",
+    "yoloModeDisabled": "Yolo disabled",
     "status": {
       "ready": "Ready",
       "running": "Running",

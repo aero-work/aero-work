@@ -209,8 +209,11 @@ export function ChatView() {
         )}
       >
         <AlertTriangle className="w-4 h-4" />
-        <span style={{ fontFamily: "Quantico, sans-serif", fontStyle: "italic" }}>
-          {isYoloMode ? t("session.yoloModeEnabled") : t("session.yoloMode")}
+        <span
+          style={{ fontFamily: "Quantico, sans-serif", fontStyle: "italic" }}
+          className={cn(!isYoloMode && "line-through")}
+        >
+          {isYoloMode ? t("session.yoloModeEnabled") : t("session.yoloModeDisabled")}
         </span>
       </Button>
 
