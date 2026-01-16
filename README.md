@@ -16,6 +16,8 @@ Inspired by Anthropic's [Cowork](https://claude.com/blog/cowork-research-preview
 
 **Collaboration** - Work from anywhere. Start on desktop, monitor and control from your phone via PWA. Combine with [Tailscale](https://tailscale.com/) for secure remote access - approve permissions, check task status, and manage your agent from anywhere.
 
+<video src="./assets/desktop-and-mobile-work-together.mp4" autoplay loop muted playsinline width="100%"></video>
+
 **Standardization** - Uses [Agent Client Protocol (ACP)](https://github.com/anthropics/agent-client-protocol) for Claude Code integration. Future plans include support for OpenCode, Gemini CLI, and other ACP-compatible agents.
 
 ## Highlights
