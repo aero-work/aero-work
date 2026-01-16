@@ -64,12 +64,14 @@ export function useVisibilityRefresh(options: UseVisibilityRefreshOptions = {}) 
     }
 
     // Refresh current session state if subscribed
+    // Use autoResume=false to avoid resuming stopped sessions
     if (activeSessionId) {
       try {
         const transport = getTransport() as WebSocketTransport;
         if (transport.isConnected()) {
           // Re-fetch session state to ensure it's current
-          await transport.getSessionState(activeSessionId);
+          // Don't auto-resume stopped sessions - just get the current state
+          await transport.getSessionState(activeSessionId, false);
         }
       } catch (error) {
         console.error("Failed to refresh session state:", error);

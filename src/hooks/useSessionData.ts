@@ -50,14 +50,15 @@ export function useSessionData(sessionId: SessionId | null): UseSessionDataResul
 
   /**
    * Fetch full session state from server
+   * @param autoResume - If true, automatically resume stopped sessions (default: false)
    */
-  const fetchSessionState = useCallback(async (sid: SessionId) => {
+  const fetchSessionState = useCallback(async (sid: SessionId, autoResume = false) => {
     const transport = getTransport() as WebSocketTransport;
     if (!transport.isConnected()) {
       throw new Error("Not connected to server");
     }
 
-    const response = await transport.getSessionState(sid);
+    const response = await transport.getSessionState(sid, autoResume);
     return response;
   }, []);
 
