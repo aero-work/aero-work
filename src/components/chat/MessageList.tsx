@@ -96,24 +96,8 @@ export function MessageList({
     scrollToBottom(false);
   }, []);
 
-  // Deduplicate chat items by key (message.id or toolCall.toolCallId)
-  // This prevents React warnings about duplicate keys
-  const deduplicatedItems = chatItems.reduce<ChatItem[]>((acc, item) => {
-    const key = item.type === "message" ? item.message.id : item.toolCall.toolCallId;
-    const exists = acc.some((existing) =>
-      existing.type === item.type &&
-      (existing.type === "message"
-        ? existing.message.id === key
-        : existing.toolCall.toolCallId === key)
-    );
-    if (!exists) {
-      acc.push(item);
-    }
-    return acc;
-  }, []);
-
   // Check if the last item is an assistant message (for loading indicator)
-  const lastItem = deduplicatedItems[deduplicatedItems.length - 1];
+  const lastItem = chatItems[chatItems.length - 1];
   const lastIsAssistantMessage =
     lastItem?.type === "message" && lastItem.message.role === "assistant";
 
@@ -125,7 +109,7 @@ export function MessageList({
         onScroll={handleScroll}
       >
         <div className="space-y-2 max-w-4xl mx-auto">
-          {deduplicatedItems.length === 0 && !isLoading && (
+          {chatItems.length === 0 && !isLoading && (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
               <Bot className="w-12 h-12 mb-4 opacity-50" />
               <p className="text-lg">{t("chat.startConversation")}</p>
@@ -133,7 +117,7 @@ export function MessageList({
             </div>
           )}
 
-          {deduplicatedItems.map((item) => {
+          {chatItems.map((item) => {
             if (item.type === "message") {
               return <MessageBubble key={item.message.id} message={item.message} />;
             } else {
