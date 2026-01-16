@@ -1,6 +1,6 @@
 # Aero Work
 
-让每个人都能用上的跨平台 AI 助手。
+随时随地，人人可用的 AI Agent。
 
 ![截图](aerowork.png)
 

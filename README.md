@@ -1,6 +1,6 @@
 # Aero Work
 
-A cross-platform AI assistant for everyone.
+An AI agent for everyone from everywhere.
 
 ![Screenshot](aerowork.png)
 
