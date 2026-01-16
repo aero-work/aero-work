@@ -4,18 +4,34 @@ A cross-platform GUI for AI coding agents.
 
 ![Screenshot](aerowork.png)
 
-## Features
+## About
 
-- Chat with AI coding agents (Claude Code, etc.)
-- File browser with syntax highlighting
-- Tool call visualization with permission control
-- Session management (create, resume, fork)
-- Multiple model providers with easy switching
-- MCP server configuration
-- Permission rules management
-- Light/Dark theme
-- Desktop + Web + PWA
-- i18n support (English, Chinese)
+Inspired by Anthropic's [Cowork](https://claude.com/blog/cowork-research-preview), Aero Code aims to bring AI agent capabilities to everyone - not just developers. While Cowork is macOS-only and requires Claude Max, Aero Code is open-source, cross-platform, and works with any Anthropic-compatible API.
+
+### Design Principles
+
+**Speed** - Built with Tauri + Rust for a lightweight, fast experience. The Rust backend manages all sessions and agent processes efficiently, with minimal memory footprint compared to Electron alternatives.
+
+**Collaboration** - Work from anywhere. Start on desktop, monitor and control from your phone via PWA. Combine with [Tailscale](https://tailscale.com/) for secure remote access - approve permissions, check task status, and manage your agent from anywhere.
+
+**Standardization** - Uses [Agent Client Protocol (ACP)](https://github.com/anthropics/agent-client-protocol) for Claude Code integration. Future plans include support for OpenCode, Gemini CLI, and other ACP-compatible agents.
+
+## Highlights
+
+| | |
+|---|---|
+| **Agent Chat** | Real-time streaming, tool call visualization, permission prompts |
+| **File Browser** | Syntax highlighting, image/PDF preview, remote file management |
+| **Terminal** | Full PTY support, works locally and remotely |
+| **Session Management** | Create, resume, fork sessions with full history |
+| **Yolo Mode** | "You Only Look Once" - auto-approve all tool calls |
+| **Permission Rules** | Fine-grained control with regex patterns for tools and paths |
+| **Multi-Provider** | Anthropic, Amazon Bedrock, BigModel/Zhipu, MiniMax, Moonshot AI/Kimi, Custom |
+| **MCP Servers** | Visual management of Claude Code's MCP servers |
+| **Skills** | Enable/disable Claude Code skills through UI |
+| **Remote Access** | Everything works via WebSocket - use from phone PWA |
+| **i18n** | English, Chinese |
+| **Themes** | Light / Dark / System |
 
 ## Quick Start
 

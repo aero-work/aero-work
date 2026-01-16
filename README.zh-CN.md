@@ -4,18 +4,34 @@ AI 编程助手的跨平台图形界面。
 
 ![截图](aerowork.png)
 
-## 功能
+## 关于
 
-- 与 AI 编程助手对话 (Claude Code 等)
-- 文件浏览器 + 语法高亮
-- 工具调用可视化 + 权限控制
-- 会话管理 (创建、恢复、分支)
-- 多模型提供商，一键切换
-- MCP 服务器配置
-- 权限规则管理
-- 亮色/暗色主题
-- 桌面端 + 网页端 + PWA
-- 多语言支持 (中文、英文)
+灵感来源于 Anthropic 发布的 [Cowork](https://claude.com/blog/cowork-research-preview)，Aero Code 致力于让每个人都能使用 AI Agent 能力，而不仅仅是开发者。Cowork 仅支持 macOS 且需要 Claude Max 订阅，而 Aero Code 是开源的、跨平台的，支持任何 Anthropic 兼容 API。
+
+### 设计原则
+
+**速度** - 基于 Tauri + Rust 构建，轻量快速。Rust 后端高效管理所有会话和 Agent 进程，内存占用远低于 Electron 方案。
+
+**协同** - 随时随地工作。桌面端启动，手机 PWA 远程监控。配合 [Tailscale](https://tailscale.com/) 实现安全远程访问 - 随时随地确认权限、查看任务状态、管理 Agent。
+
+**标准化** - 使用 [Agent Client Protocol (ACP)](https://github.com/anthropics/agent-client-protocol) 接入 Claude Code。未来计划支持 OpenCode、Gemini CLI 等更多 ACP 兼容的 Agent。
+
+## 功能亮点
+
+| | |
+|---|---|
+| **Agent 对话** | 实时流式响应、工具调用可视化、权限确认弹窗 |
+| **文件浏览器** | 语法高亮、图片/PDF 预览、远程文件管理 |
+| **终端** | 完整 PTY 支持，本地远程均可用 |
+| **会话管理** | 创建、恢复、分支会话，完整历史记录 |
+| **Yolo 模式** | "You Only Look Once" - 自动通过所有工具调用 |
+| **权限规则** | 精细化控制，正则匹配工具和路径 |
+| **多提供商** | Anthropic、Amazon Bedrock、BigModel/智谱、MiniMax、Moonshot AI/Kimi、自定义 |
+| **MCP 服务器** | 可视化管理 Claude Code 的 MCP 服务器 |
+| **Skills** | 通过界面启用/禁用 Claude Code Skills |
+| **远程访问** | 全部功能通过 WebSocket 远程可用，手机 PWA 随时访问 |
+| **多语言** | 中文、英文 |
+| **主题** | 亮色 / 暗色 / 跟随系统 |
 
 ## 快速开始
 
