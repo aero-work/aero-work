@@ -2,12 +2,11 @@ import { useTranslation } from "react-i18next";
 import { useSettingsStore, type SettingsPanel } from "@/stores/settingsStore";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { X, Settings2, Bot, Wrench, Shield, Puzzle, Sparkles } from "lucide-react";
+import { X, Settings2, Wrench, Shield, Puzzle, Sparkles } from "lucide-react";
 import { MCPSettings } from "./MCPSettings";
 import { ModelSettings } from "./ModelSettings";
 import { PermissionSettings } from "./PermissionSettings";
 import { GeneralSettings } from "./GeneralSettings";
-import { AgentSettings } from "./AgentSettings";
 import { PluginsSettings } from "./PluginsSettings";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -15,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 const PANEL_CONFIG: { id: SettingsPanel; labelKey: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "general", labelKey: "settings.general", icon: Settings2 },
-  { id: "agents", labelKey: "settings.agents", icon: Bot },
+  // { id: "agents", labelKey: "settings.agents", icon: Bot }, // Hidden for now
   { id: "models", labelKey: "settings.models", icon: Sparkles },
   { id: "mcp", labelKey: "settings.mcpServers", icon: Wrench },
   { id: "plugins", labelKey: "settings.plugins", icon: Puzzle },
@@ -91,9 +90,11 @@ export function SettingsPage() {
               <GeneralSettings />
             </TabsContent>
 
+            {/* Hidden for now
             <TabsContent value="agents" className="m-0 mt-0">
               <AgentSettings />
             </TabsContent>
+            */}
 
             <TabsContent value="models" className="m-0 mt-0">
               <ModelSettings />
