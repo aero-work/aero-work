@@ -392,11 +392,19 @@ class AgentAPI {
   }
 
   /**
-   * Cancel current prompt in a session
+   * Cancel current prompt in a session (only works if session is running)
    */
   async cancelSession(sessionId: SessionId): Promise<void> {
     const transport = getTransport();
     await transport.cancelSession(sessionId);
+  }
+
+  /**
+   * Stop a session: cancel if running, unload from memory, mark as stopped
+   */
+  async stopSession(sessionId: SessionId): Promise<void> {
+    const transport = getTransport();
+    await transport.request("stop_session", { sessionId });
   }
 
   /**

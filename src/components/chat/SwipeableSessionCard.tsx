@@ -229,9 +229,9 @@ export function SwipeableSessionCard({
       className="relative overflow-hidden"
     >
       {/* Action button (behind the card) */}
-      {/* Show stop button only for running/pending sessions, delete for all others */}
-      {(session.status === "running" || session.status === "pending") ? (
-        /* Stop button for running/pending sessions */
+      {/* Show stop button for active sessions (running/pending/idle), delete for stopped sessions */}
+      {session.active ? (
+        /* Stop button for active sessions (unload from memory) */
         <div
           className="absolute right-0 top-0 bottom-0 flex items-center justify-center bg-orange-500 text-white"
           style={{ width: DELETE_WIDTH }}
@@ -242,7 +242,7 @@ export function SwipeableSessionCard({
           <Square className="w-6 h-6 fill-current" />
         </div>
       ) : (
-        /* Delete button for idle/stopped sessions */
+        /* Delete button for stopped/inactive sessions */
         <div
           className="absolute right-0 top-0 bottom-0 flex items-center justify-center bg-destructive text-destructive-foreground"
           style={{ width: DELETE_WIDTH }}

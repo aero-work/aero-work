@@ -101,10 +101,10 @@ export function MobileSessionList() {
     }
   }, []);
 
-  // Stop/cancel active session (keeps connection alive)
+  // Stop session: cancel if running, unload from memory, mark as stopped
   const handleStopSession = useCallback(async (sessionId: string) => {
     try {
-      await agentAPI.cancelSession(sessionId);
+      await agentAPI.stopSession(sessionId);
     } catch (error) {
       console.error("Failed to stop session:", error);
     }

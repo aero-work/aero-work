@@ -480,6 +480,13 @@ async fn dispatch_method(
             cancel_session_handler(state, session_id).await?;
             Ok(serde_json::Value::Null)
         }
+        "stop_session" => {
+            let session_id = params.get("sessionId")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing sessionId parameter")?;
+            stop_session_handler(state, session_id, event_tx).await?;
+            Ok(serde_json::Value::Null)
+        }
         "set_session_mode" => {
             let session_id = params.get("sessionId")
                 .and_then(|v| v.as_str())
@@ -1283,6 +1290,47 @@ async fn cancel_session_handler(state: &Arc<AppState>, session_id: &str) -> Resu
     info!("WebSocket: Cancelling session {}", session_id);
     let manager = AgentManager::new(state.client.clone());
     manager.cancel(session_id).await.map_err(|e: AcpError| e.to_string())
+}
+
+/// Stop a session: cancel if running, unload from memory, update status to stopped
+async fn stop_session_handler(
+    state: &Arc<AppState>,
+    session_id: &str,
+    event_tx: &broadcast::Sender<String>,
+) -> Result<(), String> {
+    info!("WebSocket: Stopping session {}", session_id);
+
+    // Check current session status
+    let current_status = state.session_registry.get_session_info(session_id)
+        .map(|info| info.status.clone());
+
+    // If session is running or pending, cancel it first
+    if let Some(status) = &current_status {
+        if *status == crate::core::SessionStatus::Running || *status == crate::core::SessionStatus::Pending {
+            info!("Session {} is {:?}, cancelling first...", session_id, status);
+            let manager = AgentManager::new(state.client.clone());
+            // Ignore cancel errors (session might already be done)
+            let _ = manager.cancel(session_id).await;
+        }
+    }
+
+    // Remove session from memory (SessionStateManager)
+    state.session_state_manager.remove_session(&session_id.to_string());
+
+    // Update session status to Stopped
+    state.session_registry.update_status(&session_id.to_string(), crate::core::SessionStatus::Stopped);
+
+    // Broadcast sessions update to all clients
+    let sessions = state.session_registry.list_sessions(None, 50, 0);
+    let notification = JsonRpcNotification {
+        jsonrpc: "2.0".to_string(),
+        method: "sessions/updated".to_string(),
+        params: serde_json::json!({ "sessions": sessions.sessions }),
+    };
+    let _ = event_tx.send(serde_json::to_string(&notification).unwrap());
+
+    info!("Session {} stopped successfully", session_id);
+    Ok(())
 }
 
 async fn set_session_mode_handler(state: &Arc<AppState>, session_id: &str, mode_id: &str) -> Result<(), String> {
