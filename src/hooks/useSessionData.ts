@@ -351,13 +351,14 @@ export function useSessionData(sessionId: SessionId | null): UseSessionDataResul
       return;
     }
 
-    // Fetch initial state
+    // Fetch initial state (with autoResume=true since user explicitly selected this session)
     const loadState = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const newState = await fetchSessionState(sessionId);
+        // Use autoResume=true for initial load - user explicitly selected this session
+        const newState = await fetchSessionState(sessionId, true);
         if (currentSessionRef.current === sessionId) {
           setState(newState);
 
