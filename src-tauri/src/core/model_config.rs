@@ -1,7 +1,7 @@
 //! Model Provider Configuration
 //!
 //! Manages model provider settings stored in ~/.config/aerowork/models.json
-//! and generates environment variables for the ACP agent process.
+//! and syncs environment variables to ~/.claude/settings.json for Claude Code.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -238,6 +238,57 @@ impl ModelConfig {
             .map_err(|e| format!("Failed to write model config: {}", e))?;
 
         info!("Saved model config to {:?}", path);
+        Ok(())
+    }
+
+    /// Get the path to Claude settings file (~/.claude/settings.json)
+    fn claude_settings_path() -> Option<PathBuf> {
+        dirs::home_dir().map(|home| home.join(".claude").join("settings.json"))
+    }
+
+    /// Sync environment variables to ~/.claude/settings.json
+    /// This writes the env vars to Claude's settings file so Claude Code picks them up
+    pub fn sync_to_claude_settings(&self) -> Result<(), String> {
+        let settings_path = Self::claude_settings_path()
+            .ok_or("Could not find home directory")?;
+
+        // Read existing settings or create new
+        let mut settings: serde_json::Value = if settings_path.exists() {
+            let content = std::fs::read_to_string(&settings_path)
+                .map_err(|e| format!("Failed to read Claude settings: {}", e))?;
+            serde_json::from_str(&content)
+                .map_err(|e| format!("Failed to parse Claude settings: {}", e))?
+        } else {
+            // Create .claude directory if it doesn't exist
+            if let Some(parent) = settings_path.parent() {
+                std::fs::create_dir_all(parent)
+                    .map_err(|e| format!("Failed to create .claude directory: {}", e))?;
+            }
+            serde_json::json!({})
+        };
+
+        // Get env vars for active provider
+        let env_vars = self.get_env_vars();
+
+        // Convert to JSON object
+        let env_object: serde_json::Value = env_vars.into_iter()
+            .map(|(k, v)| (k, serde_json::Value::String(v)))
+            .collect::<serde_json::Map<String, serde_json::Value>>()
+            .into();
+
+        // Update the env field
+        if let Some(obj) = settings.as_object_mut() {
+            obj.insert("env".to_string(), env_object);
+        }
+
+        // Write back
+        let content = serde_json::to_string_pretty(&settings)
+            .map_err(|e| format!("Failed to serialize Claude settings: {}", e))?;
+
+        std::fs::write(&settings_path, content)
+            .map_err(|e| format!("Failed to write Claude settings: {}", e))?;
+
+        info!("Synced model config to {:?}", settings_path);
         Ok(())
     }
 

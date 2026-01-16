@@ -67,25 +67,14 @@ impl AcpClient {
         &mut self,
         command: &str,
         args: &[&str],
-        env_vars: HashMap<String, String>,
     ) -> Result<()> {
         info!("Starting ACP agent: {} {:?}", command, args);
-        // Log env var keys (not values for security)
-        if !env_vars.is_empty() {
-            let keys: Vec<&str> = env_vars.keys().map(|s| s.as_str()).collect();
-            info!("With environment variables: {:?}", keys);
-        }
 
         let mut cmd = Command::new(command);
         cmd.args(args)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
-
-        // Apply custom environment variables
-        for (key, value) in &env_vars {
-            cmd.env(key, value);
-        }
 
         let mut child = cmd.spawn()?;
 

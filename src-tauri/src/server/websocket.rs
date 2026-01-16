@@ -1113,14 +1113,18 @@ async fn ensure_agent_connected(state: &Arc<AppState>) -> Result<(), String> {
     let notification_tx = state.notification_tx.clone();
     let permission_tx = state.permission_tx.clone();
 
-    // Load model config and get environment variables
+    // Load model config and sync to ~/.claude/settings.json
     let model_config = ModelConfig::load().unwrap_or_default();
-    let env_vars = model_config.get_env_vars();
     info!("Active provider: {}", model_config.active_provider);
+
+    // Sync env vars to Claude settings file (Claude Code reads from here)
+    if let Err(e) = model_config.sync_to_claude_settings() {
+        warn!("Failed to sync model config to Claude settings: {}", e);
+    }
 
     let mut client = AcpClient::new(notification_tx, permission_tx);
     client
-        .connect("npx", &["@zed-industries/claude-code-acp"], env_vars)
+        .connect("npx", &["@anthropic-ai/claude-code", "--acp"])
         .await
         .map_err(|e| e.to_string())?;
 
@@ -1763,12 +1767,18 @@ fn get_model_config_handler() -> Result<ModelConfig, String> {
 
 /// Set the entire model configuration
 fn set_model_config_handler(config: ModelConfig) -> Result<(), String> {
-    config.save()
+    // Save to our config file
+    config.save()?;
+    // Also sync to Claude settings
+    config.sync_to_claude_settings()
 }
 
 /// Set only the active provider
 fn set_active_provider_handler(provider: &str) -> Result<(), String> {
     let mut config = ModelConfig::load()?;
     config.active_provider = provider.to_string();
-    config.save()
+    // Save to our config file
+    config.save()?;
+    // Also sync to Claude settings
+    config.sync_to_claude_settings()
 }
