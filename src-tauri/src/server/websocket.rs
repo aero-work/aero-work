@@ -1113,14 +1113,9 @@ async fn ensure_agent_connected(state: &Arc<AppState>) -> Result<(), String> {
     let notification_tx = state.notification_tx.clone();
     let permission_tx = state.permission_tx.clone();
 
-    // Load model config and sync to ~/.claude/settings.json
+    // Log active provider (config is synced to ~/.claude/settings.json when user saves)
     let model_config = ModelConfig::load().unwrap_or_default();
     info!("Active provider: {}", model_config.active_provider);
-
-    // Sync env vars to Claude settings file (Claude Code reads from here)
-    if let Err(e) = model_config.sync_to_claude_settings() {
-        warn!("Failed to sync model config to Claude settings: {}", e);
-    }
 
     let mut client = AcpClient::new(notification_tx, permission_tx);
     client
