@@ -1,96 +1,77 @@
-# Aero Work
+# Aero Code
 
-A cross-platform AI code agent application built with Tauri + React that provides a visual interface for interacting with AI coding agents via the Agent Client Protocol (ACP).
+A cross-platform GUI for AI coding agents.
+
+![Screenshot](aerowork.png)
 
 ## Features
 
-- **ACP Integration** - Connect to Claude Code and other ACP-compatible agents
-- **Chat Interface** - Real-time streaming responses with markdown support
-- **Tool Visualization** - See what tools the agent is using (read, edit, search, execute)
-- **Permission Control** - Approve or reject sensitive operations
-- **Session Management** - Create and switch between multiple sessions
-- **Cross-Platform** - Runs on macOS, Windows, and Linux
+- Chat with AI coding agents (Claude Code, etc.)
+- File browser with syntax highlighting
+- Tool call visualization with permission control
+- Session management (create, resume, fork)
+- Multiple model providers with easy switching
+- MCP server configuration
+- Permission rules management
+- Light/Dark theme
+- Desktop + Web + PWA
+- i18n support (English, Chinese)
 
-## Tech Stack
+## Quick Start
 
-- **Frontend**: React 19, TypeScript, Tailwind CSS, shadcn/ui, Zustand
-- **Backend**: Tauri 2.0, Rust
-- **Protocol**: Agent Client Protocol (ACP) over JSON-RPC
-
-## Prerequisites
-
-- [Rust](https://rustup.rs/) (latest stable)
-- [Bun](https://bun.sh/) (or npm/pnpm/yarn)
-- [Node.js](https://nodejs.org/) 18+ (for npx)
-
-## Getting Started
-
-### Install Dependencies
+**Prerequisites:** [Bun](https://bun.sh/), [Rust](https://rustup.rs/), Claude Code (`npm i -g @anthropic-ai/claude-code`)
 
 ```bash
+# Install
 bun install
-```
 
-### Development
-
-```bash
+# Desktop app
 bun run tauri dev
+
+# Web app (run both commands)
+cargo run --bin aero-server --manifest-path src-tauri/Cargo.toml
+bun run dev
+# Open http://localhost:5173
 ```
 
-### Build for Production
+## Build
 
 ```bash
-bun run tauri build
+bun run tauri build   # Desktop
+bun run build         # Web
 ```
 
-## Project Structure
+## Model Providers
 
-```
-aero-work/
-├── src/                    # React frontend
-│   ├── components/
-│   │   ├── ui/            # shadcn/ui components
-│   │   ├── chat/          # Chat interface components
-│   │   ├── layout/        # Layout components
-│   │   └── common/        # Shared components
-│   ├── stores/            # Zustand state management
-│   ├── services/          # API and transport layer
-│   ├── types/             # TypeScript type definitions
-│   └── lib/               # Utility functions
-├── src-tauri/             # Rust backend
-│   └── src/
-│       ├── acp/           # ACP protocol implementation
-│       ├── core/          # Core business logic
-│       └── commands/      # Tauri IPC commands
-├── .agent/                # Project documentation
-└── reference/             # Reference implementations (read-only)
-```
+Configure in **Settings > Models**. Environment variables are passed to the agent process at startup.
 
-## Usage
+| Provider | Configuration |
+|----------|---------------|
+| Default | Uses system environment variables |
+| Anthropic | API Key / Auth Token, Base URL, Model selection |
+| Amazon Bedrock | Bearer Token, Region, Model selection |
+| BigModel / Zhipu | Auth Token |
+| MiniMax | Auth Token, Model selection |
+| Moonshot AI / Kimi | Auth Token, Model selection |
+| Custom | Base URL + API Key / Auth Token |
 
-1. Click **Connect** to start the Claude Code ACP agent
-2. Click **New Session** to create a chat session
-3. Type your coding request in the input field
-4. The agent will respond with streaming text and tool calls
-5. Approve or reject permission requests as needed
+Config stored in: `~/.config/aerowork/models.json`
 
 ## Configuration
 
-The app connects to Claude Code via:
-```
-npx @anthropic-ai/claude-code-acp
-```
+All config files are stored in `~/.config/aerowork/`:
 
-Make sure you have a valid Anthropic API key configured for Claude Code.
+| File | Purpose |
+|------|---------|
+| `config.json` | General settings |
+| `models.json` | Model provider configuration |
+| `mcp.json` | MCP server configuration |
 
-## Development Roadmap
+## Tech Stack
 
-- [x] Phase 1: Core Infrastructure (MVP)
-- [ ] Phase 2: File & Terminal Integration
-- [ ] Phase 3: Session Management
-- [ ] Phase 4: Web Server Mode
-- [ ] Phase 5: Multi-Agent Support
-- [ ] Phase 6: Advanced Features
+- **Frontend:** React 18, TypeScript, Tailwind CSS v4, shadcn/ui, Zustand
+- **Backend:** Tauri 2.0, Rust, Axum
+- **Protocol:** Agent Client Protocol (ACP)
 
 ## License
 

@@ -27,6 +27,7 @@ aero-work/
 │   │   │   ├── agent.rs          # AgentManager (spawn, message handling)
 │   │   │   ├── state.rs          # AppState (shared state)
 │   │   │   ├── config.rs         # ConfigManager (XDG config persistence)
+│   │   │   ├── model_config.rs   # ModelConfig (model provider settings, env vars)
 │   │   │   ├── session_registry.rs    # SessionRegistry (session file scanning, history loading)
 │   │   │   ├── session_state.rs       # SessionState (chat items, tool calls storage)
 │   │   │   ├── session_state_manager.rs # SessionStateManager (state sync, subscriptions)
@@ -122,6 +123,7 @@ aero-work/
 │   │   └── useSessionData.ts     # Session data subscription hook
 │   ├── types/
 │   │   ├── acp.ts                # ACP protocol types (must match Rust)
+│   │   ├── models.ts             # Model provider types and constants
 │   │   └── plugins.ts            # Plugin and marketplace types
 │   ├── lib/
 │   │   ├── utils.ts              # cn(), formatters, etc.

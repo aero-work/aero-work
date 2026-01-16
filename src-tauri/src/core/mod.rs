@@ -1,5 +1,6 @@
 pub mod agent;
 pub mod config;
+pub mod model_config;
 pub mod plugins;
 pub mod session_registry;
 pub mod session_state;
@@ -9,6 +10,7 @@ pub mod terminal;
 
 pub use agent::AgentManager;
 pub use config::{Config, ConfigManager, config_dir, data_dir, cache_dir};
+pub use model_config::ModelConfig;
 pub use plugins::{
     AddMarketplaceRequest, InstallPluginRequest, InstallPluginResponse,
     ListPluginsResponse, MarketplaceResponse, PluginManager, UninstallPluginResponse,

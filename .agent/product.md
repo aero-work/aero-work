@@ -78,10 +78,24 @@ Build a unified interface for AI-powered code development that works seamlessly 
 
 ### Settings
 - **Agent Settings**: Configure connected agents (command, args, environment)
+- **Model Provider Settings**: Configure AI model provider (Anthropic, Bedrock, BigModel, MiniMax, Moonshot, Custom)
 - **Permission Settings**: Default permission rules and patterns
 - **UI Settings**: Theme (light/dark), layout preferences, font settings, language selection
 - **Workspace Settings**: Project-specific configurations
 - **Server Settings**: Web server port, authentication settings
+
+### Model Provider Configuration
+- **Provider Selection**: Choose from built-in providers or create custom providers
+- **Built-in Providers**:
+  - Default: Uses system environment variables
+  - Anthropic: Direct API with model selection (Opus/Sonnet/Haiku)
+  - Amazon Bedrock: AWS integration with region selection
+  - BigModel/Zhipu: Chinese AI provider
+  - MiniMax: Chinese AI provider with model selection
+  - Moonshot AI/Kimi: Chinese AI provider with model selection
+- **Custom Providers**: Configure any Anthropic-compatible API endpoint
+- **Environment Variables**: Automatically passed to agent process at startup
+- **Config Persistence**: Stored in `~/.config/aerowork/models.json`
 
 ### Internationalization (i18n)
 - **Multi-language Support**: UI elements support different languages (English, Chinese)
@@ -258,6 +272,8 @@ See `.agent/mobile-redesign.md` for full design specification.
 - [x] MCP server integration (dual-config with enable/disable)
 - [x] Plugin system (marketplaces, install/uninstall)
 - [x] Settings page responsive design (360px minimum width)
+- [x] Model provider configuration (Anthropic, Bedrock, BigModel, MiniMax, Moonshot, Custom)
+- [x] PWA support for web mode
 
 ## Configuration Examples
 

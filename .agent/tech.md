@@ -293,6 +293,43 @@ interface SettingsStore {
 - Use canvas-based rendering (xterm.js default)
 - Limit scrollback buffer size
 
+## Model Provider Configuration
+
+The model provider system allows users to configure different AI providers with their credentials.
+
+### Config File
+- **Location**: `~/.config/aerowork/models.json`
+
+### Supported Providers
+| Provider | Environment Variables |
+|----------|----------------------|
+| Default | None (uses system env) |
+| Anthropic | `ANTHROPIC_MODEL`, `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_BASE_URL` |
+| Bedrock | `CLAUDE_CODE_USE_BEDROCK`, `AWS_BEARER_TOKEN_BEDROCK`, `AWS_REGION`, `ANTHROPIC_MODEL` |
+| BigModel | `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN` |
+| MiniMax | `ANTHROPIC_BASE_URL`, `ANTHROPIC_MODEL`, `ANTHROPIC_AUTH_TOKEN` |
+| Moonshot | `ANTHROPIC_BASE_URL`, `ANTHROPIC_MODEL`, `ANTHROPIC_AUTH_TOKEN` |
+| Custom | User-defined: `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN` |
+
+### Environment Variable Flow
+```
+User configures provider in UI
+    ↓
+ModelSettings.tsx saves to backend
+    ↓
+model_config.rs saves to ~/.config/aerowork/models.json
+    ↓
+On agent connect, websocket.rs calls ModelConfig::load()
+    ↓
+ModelConfig::get_env_vars() generates HashMap<String, String>
+    ↓
+AcpClient::connect() receives env_vars parameter
+    ↓
+Command::env() sets vars on child process
+    ↓
+Agent process receives environment variables
+```
+
 ## MCP Configuration Architecture
 
 The MCP server configuration uses a dual-config approach:

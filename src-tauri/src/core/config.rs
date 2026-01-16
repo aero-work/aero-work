@@ -2,9 +2,9 @@
 //!
 //! Manages persistent configuration for Aero Work.
 //! Follows XDG Base Directory Specification:
-//! - Config: ~/.config/aero-work/ (or $XDG_CONFIG_HOME/aero-work/)
-//! - Data: ~/.local/share/aero-work/ (or $XDG_DATA_HOME/aero-work/)
-//! - Cache: ~/.cache/aero-work/ (or $XDG_CACHE_HOME/aero-work/)
+//! - Config: ~/.config/aerowork/ (or $XDG_CONFIG_HOME/aerowork/)
+//! - Data: ~/.local/share/aerowork/ (or $XDG_DATA_HOME/aerowork/)
+//! - Cache: ~/.cache/aerowork/ (or $XDG_CACHE_HOME/aerowork/)
 
 use std::path::PathBuf;
 
@@ -12,13 +12,13 @@ use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
 
 /// Application name for directory paths
-const APP_NAME: &str = "aero-work";
+const APP_NAME: &str = "aerowork";
 
 /// Main configuration file name
 const CONFIG_FILE: &str = "config.json";
 
 /// Get the configuration directory path
-/// Returns ~/.config/aero-work/ or $XDG_CONFIG_HOME/aero-work/
+/// Returns ~/.config/aerowork/ or $XDG_CONFIG_HOME/aerowork/
 pub fn config_dir() -> PathBuf {
     dirs::config_dir()
         .unwrap_or_else(|| dirs::home_dir().unwrap_or_else(|| PathBuf::from(".")).join(".config"))
@@ -26,7 +26,7 @@ pub fn config_dir() -> PathBuf {
 }
 
 /// Get the data directory path
-/// Returns ~/.local/share/aero-work/ or $XDG_DATA_HOME/aero-work/
+/// Returns ~/.local/share/aerowork/ or $XDG_DATA_HOME/aerowork/
 pub fn data_dir() -> PathBuf {
     dirs::data_dir()
         .unwrap_or_else(|| {
@@ -38,7 +38,7 @@ pub fn data_dir() -> PathBuf {
 }
 
 /// Get the cache directory path
-/// Returns ~/.cache/aero-work/ or $XDG_CACHE_HOME/aero-work/
+/// Returns ~/.cache/aerowork/ or $XDG_CACHE_HOME/aerowork/
 pub fn cache_dir() -> PathBuf {
     dirs::cache_dir()
         .unwrap_or_else(|| {

@@ -836,6 +836,26 @@ async fn dispatch_method(
             Ok(serde_json::json!({ "projects": [] }))
         }
 
+        // Model config commands
+        "get_model_config" => {
+            let config = get_model_config_handler()?;
+            serde_json::to_value(config).map_err(|e| e.to_string())
+        }
+        "set_model_config" => {
+            let config: crate::core::model_config::ModelConfig = serde_json::from_value(
+                params.clone()
+            ).map_err(|e| format!("Invalid model config: {}", e))?;
+            set_model_config_handler(config)?;
+            Ok(serde_json::Value::Null)
+        }
+        "set_active_provider" => {
+            let provider = params.get("provider")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing provider parameter")?;
+            set_active_provider_handler(provider)?;
+            Ok(serde_json::Value::Null)
+        }
+
         _ => Err(format!("Unknown method: {}", method)),
     }
 }
@@ -1076,6 +1096,7 @@ async fn get_session_state_handler(
 /// This is called lazily when creating/resuming/forking sessions
 async fn ensure_agent_connected(state: &Arc<AppState>) -> Result<(), String> {
     use crate::acp::AcpClient;
+    use crate::core::ModelConfig;
 
     // Check if already connected
     {
@@ -1092,9 +1113,14 @@ async fn ensure_agent_connected(state: &Arc<AppState>) -> Result<(), String> {
     let notification_tx = state.notification_tx.clone();
     let permission_tx = state.permission_tx.clone();
 
+    // Load model config and get environment variables
+    let model_config = ModelConfig::load().unwrap_or_default();
+    let env_vars = model_config.get_env_vars();
+    info!("Active provider: {}", model_config.active_provider);
+
     let mut client = AcpClient::new(notification_tx, permission_tx);
     client
-        .connect("npx", &["@zed-industries/claude-code-acp"])
+        .connect("npx", &["@zed-industries/claude-code-acp"], env_vars)
         .await
         .map_err(|e| e.to_string())?;
 
@@ -1725,4 +1751,24 @@ fn remove_recent_project(path: &str) -> Result<(), String> {
 /// Clear all recent projects
 fn clear_recent_projects() -> Result<(), String> {
     save_recent_projects(&[])
+}
+
+// ===== Model Config Handlers =====
+use crate::core::model_config::ModelConfig;
+
+/// Get the current model configuration
+fn get_model_config_handler() -> Result<ModelConfig, String> {
+    ModelConfig::load()
+}
+
+/// Set the entire model configuration
+fn set_model_config_handler(config: ModelConfig) -> Result<(), String> {
+    config.save()
+}
+
+/// Set only the active provider
+fn set_active_provider_handler(provider: &str) -> Result<(), String> {
+    let mut config = ModelConfig::load()?;
+    config.active_provider = provider.to_string();
+    config.save()
 }
