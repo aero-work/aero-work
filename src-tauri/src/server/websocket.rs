@@ -1099,6 +1099,7 @@ async fn get_session_state_handler(
 }
 
 /// Bundled agent paths configuration (shared runtime approach)
+#[cfg(feature = "bundled-agent")]
 struct BundledAgentPaths {
     /// Path to the Bun runtime binary
     bun_runtime: Option<String>,
@@ -1109,6 +1110,7 @@ struct BundledAgentPaths {
 }
 
 /// Find bundled agent files (shared Bun runtime + JS bundles).
+#[cfg(feature = "bundled-agent")]
 fn find_bundled_agents() -> BundledAgentPaths {
     let mut paths = BundledAgentPaths {
         bun_runtime: None,
