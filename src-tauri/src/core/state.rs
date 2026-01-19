@@ -1,17 +1,27 @@
+#[cfg(not(target_os = "android"))]
 use std::sync::Arc;
+
+#[cfg(not(target_os = "android"))]
 use tokio::sync::{mpsc, RwLock};
 
+#[cfg(not(target_os = "android"))]
 use crate::acp::{AcpClient, PermissionRequest, SessionId, SessionNotification};
+#[cfg(not(target_os = "android"))]
 use crate::core::session_registry::SessionRegistry;
+#[cfg(not(target_os = "android"))]
 use crate::core::session_state_manager::SessionStateManager;
+#[cfg(not(target_os = "android"))]
 use crate::core::terminal::{TerminalManager, TerminalOutput};
 
 /// Notification for session activation changes
+#[cfg(not(target_os = "android"))]
 #[derive(Debug, Clone)]
 pub struct SessionActivated {
     pub session_id: Option<SessionId>,
 }
 
+/// Desktop AppState - full featured with agent, terminal, sessions
+#[cfg(not(target_os = "android"))]
 pub struct AppState {
     pub client: Arc<RwLock<Option<AcpClient>>>,
     pub notification_tx: mpsc::Sender<SessionNotification>,
@@ -35,6 +45,7 @@ pub struct AppState {
     pub pending_permission: Arc<parking_lot::RwLock<Option<PermissionRequest>>>,
 }
 
+#[cfg(not(target_os = "android"))]
 impl AppState {
     pub fn new() -> Self {
         let (notification_tx, notification_rx) = mpsc::channel(100);
@@ -97,6 +108,29 @@ impl AppState {
     }
 }
 
+#[cfg(not(target_os = "android"))]
+impl Default for AppState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Mobile AppState - minimal, just for WebView container
+/// Mobile app connects to desktop server via WebSocket, no local agent
+#[cfg(target_os = "android")]
+pub struct AppState {
+    // Placeholder for any mobile-specific state if needed in the future
+    _private: (),
+}
+
+#[cfg(target_os = "android")]
+impl AppState {
+    pub fn new() -> Self {
+        Self { _private: () }
+    }
+}
+
+#[cfg(target_os = "android")]
 impl Default for AppState {
     fn default() -> Self {
         Self::new()

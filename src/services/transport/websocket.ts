@@ -74,6 +74,16 @@ export class WebSocketTransport implements Transport {
       return;
     }
 
+    // Check for mixed content issue: HTTPS page trying to connect to ws://
+    const isHttpsPage = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const isInsecureWs = this.url.startsWith('ws://');
+    if (isHttpsPage && isInsecureWs) {
+      throw new Error(
+        "Cannot connect to ws:// from HTTPS page. " +
+        "Please use HTTP to access this page, or configure WSS on the server."
+      );
+    }
+
     return new Promise((resolve, reject) => {
       // Set connection timeout
       const timeoutId = setTimeout(() => {

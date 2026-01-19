@@ -28,13 +28,14 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 async-trait = "0.1"
 parking_lot = "0.12"
-portable-pty = "0.8"
 chrono = { version = "0.4", features = ["serde"] }
 dirs = "5"
 base64 = "0.22"
-get_if_addrs = "0.5"
 
-# WebSocket server
+# Desktop-only dependencies
+[target.'cfg(not(target_os = "android"))'.dependencies]
+portable-pty = "0.8"
+get_if_addrs = "0.5"
 axum = { version = "0.7", features = ["ws"] }
 tower = "0.4"
 tower-http = { version = "0.5", features = ["cors", "trace", "fs"] }
@@ -44,7 +45,9 @@ name = "aero-server"
 path = "src/bin/server.rs"
 
 [features]
-default = ["websocket"]
+# Desktop enables websocket by default, mobile doesn't
+default = ["desktop"]
+desktop = ["websocket"]
 websocket = []
 # Enable bundled agent mode - requires running scripts/bundle-agent.sh first
 bundled-agent = []

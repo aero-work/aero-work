@@ -1,26 +1,31 @@
+// Desktop-only modules
+#[cfg(not(target_os = "android"))]
 pub mod acp;
+#[cfg(not(target_os = "android"))]
 pub mod commands;
-pub mod core;
-#[cfg(feature = "websocket")]
+#[cfg(all(feature = "websocket", not(target_os = "android")))]
 pub mod server;
 
+pub mod core;
+
 use std::sync::Arc;
-use tauri::Manager;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::commands::{
-    cancel_session, connect_agent, create_directory, create_file, create_session, delete_path,
-    disconnect_agent, initialize_agent, list_directory, read_file, rename_path, respond_permission,
-    send_prompt, set_session_mode, write_file,
-    // Session management commands
-    resume_session, fork_session, list_sessions, get_session_info,
-    // Terminal commands
-    create_terminal, write_terminal, resize_terminal, kill_terminal, list_terminals,
-};
 use crate::core::AppState;
 
+/// Desktop entry point - full featured with agent, terminal, WebSocket server
+#[cfg(not(target_os = "android"))]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    use tauri::Manager;
+    use crate::commands::{
+        cancel_session, connect_agent, create_directory, create_file, create_session, delete_path,
+        disconnect_agent, initialize_agent, list_directory, read_file, rename_path, respond_permission,
+        send_prompt, set_session_mode, write_file,
+        resume_session, fork_session, list_sessions, get_session_info,
+        create_terminal, write_terminal, resize_terminal, kill_terminal, list_terminals,
+    };
+
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -66,8 +71,6 @@ pub fn run() {
         ])
         .setup(|app| {
             // Start WebSocket server if enabled
-            // Note: WebSocket server handles all event forwarding (session updates, permissions, terminal output)
-            // This makes the architecture simpler - both desktop and web clients use WebSocket
             #[cfg(feature = "websocket")]
             {
                 let ws_state = app.state::<Arc<AppState>>().inner().clone();
@@ -92,6 +95,28 @@ pub fn run() {
 
             Ok(())
         })
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+
+/// Mobile entry point - WebView only, connects to desktop server
+#[cfg(target_os = "android")]
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "aero_work=info".into()),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
+    let state = Arc::new(AppState::new());
+
+    tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
+        .manage(state)
+        .invoke_handler(tauri::generate_handler![])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
