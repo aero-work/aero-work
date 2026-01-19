@@ -288,6 +288,22 @@ class AgentAPI {
       }
 
       sessionStore.setAvailableSessions(sessions);
+
+      // Validate activeSessionId against available sessions
+      // Clear it if session doesn't exist or doesn't match current project
+      const activeSessionId = sessionStore.activeSessionId;
+      if (activeSessionId) {
+        const activeSession = sessions.find(s => s.id === activeSessionId);
+        const shouldClear = !activeSession || (cwd && activeSession.cwd !== cwd);
+        if (shouldClear) {
+          console.log(
+            `Clearing invalid activeSessionId: ${activeSessionId}`,
+            activeSession ? `(cwd mismatch: ${activeSession.cwd} vs ${cwd})` : "(session not found)"
+          );
+          sessionStore.setActiveSession(null);
+        }
+      }
+
       return { ...response, sessions };
     } finally {
       sessionStore.setAvailableSessionsLoading(false);
