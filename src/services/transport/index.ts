@@ -19,6 +19,21 @@ function isTauriApp(): boolean {
 // Store the current WebSocket URL for display
 let currentWebSocketUrl: string | null = null;
 
+// Get stored WS URL from localStorage (for web clients)
+function getStoredWsUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem("aero-work-settings");
+    if (stored) {
+      const settings = JSON.parse(stored);
+      return settings.state?.wsUrl || null;
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return null;
+}
+
 // Get WebSocket URL - always use WebSocket, but different URL for Tauri vs Web
 function getWebSocketUrl(): string {
   // Check for environment variable set by Vite
@@ -33,7 +48,13 @@ function getWebSocketUrl(): string {
     return `ws://127.0.0.1:${port}/ws`;
   }
 
-  // For web, connect to same host
+  // For web clients, check if there's a stored custom URL
+  const storedUrl = getStoredWsUrl();
+  if (storedUrl) {
+    return storedUrl;
+  }
+
+  // Default: connect to same host
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const host = window.location.hostname || "localhost";
   const port = import.meta.env?.VITE_WS_PORT || "8765";

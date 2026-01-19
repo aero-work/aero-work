@@ -66,6 +66,7 @@ interface SettingsState {
   theme: "light" | "dark" | "system";
   autoCleanEmptySessions: boolean;
   language: string; // Empty string means auto-detect from system
+  wsUrl: string | null; // Custom WebSocket URL for web clients (null = auto-detect)
 }
 
 interface SettingsActions {
@@ -98,6 +99,7 @@ interface SettingsActions {
   setTheme: (theme: "light" | "dark" | "system") => void;
   setAutoCleanEmptySessions: (auto: boolean) => void;
   setLanguage: (lang: string) => void;
+  setWsUrl: (url: string | null) => void;
 }
 
 const initialState: SettingsState = {
@@ -158,6 +160,7 @@ const initialState: SettingsState = {
   theme: "system",
   autoCleanEmptySessions: true,
   language: "", // Empty means auto-detect
+  wsUrl: null, // null means auto-detect
 };
 
 export const useSettingsStore = create<SettingsState & SettingsActions>()(
@@ -327,6 +330,12 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           i18n.changeLanguage(detectLanguage());
         }
       },
+
+      setWsUrl: (url) => {
+        set((state) => {
+          state.wsUrl = url;
+        });
+      },
     })),
     {
       name: "aero-work-settings",
@@ -340,6 +349,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
         theme: state.theme,
         autoCleanEmptySessions: state.autoCleanEmptySessions,
         language: state.language,
+        wsUrl: state.wsUrl,
       }),
     }
   )

@@ -32,11 +32,12 @@ portable-pty = "0.8"
 chrono = { version = "0.4", features = ["serde"] }
 dirs = "5"
 base64 = "0.22"
+get_if_addrs = "0.5"
 
 # WebSocket server
 axum = { version = "0.7", features = ["ws"] }
 tower = "0.4"
-tower-http = { version = "0.5", features = ["cors", "trace"] }
+tower-http = { version = "0.5", features = ["cors", "trace", "fs"] }
 
 [[bin]]
 name = "aero-server"

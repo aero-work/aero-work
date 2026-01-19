@@ -67,4 +67,5 @@ export interface ServerInfo {
   port: number;
   cwd: string;
   home: string;
+  lanAddresses?: string[];
 }

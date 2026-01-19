@@ -1,7 +1,12 @@
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { QRCodeSVG } from "qrcode.react";
 import { useSettingsStore } from "@/stores/settingsStore";
+import { useAgentStore } from "@/stores/agentStore";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -10,6 +15,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { languages, supportedLanguages } from "@/i18n";
+import { isDesktopApp, getWebSocketEndpoint } from "@/services/transport";
+import { getTransport } from "@/services/transport";
+import { Copy, QrCode, Check, Wifi } from "lucide-react";
+import type { ServerInfo } from "@/services/transport";
 
 export function GeneralSettings() {
   const { t } = useTranslation();
@@ -18,11 +27,60 @@ export function GeneralSettings() {
   const theme = useSettingsStore((state) => state.theme);
   const autoCleanEmptySessions = useSettingsStore((state) => state.autoCleanEmptySessions);
   const language = useSettingsStore((state) => state.language);
+  const wsUrl = useSettingsStore((state) => state.wsUrl);
   const setAutoConnect = useSettingsStore((state) => state.setAutoConnect);
   const setShowHiddenFiles = useSettingsStore((state) => state.setShowHiddenFiles);
   const setTheme = useSettingsStore((state) => state.setTheme);
   const setAutoCleanEmptySessions = useSettingsStore((state) => state.setAutoCleanEmptySessions);
   const setLanguage = useSettingsStore((state) => state.setLanguage);
+  const setWsUrl = useSettingsStore((state) => state.setWsUrl);
+
+  const connectionStatus = useAgentStore((state) => state.connectionStatus);
+  const isConnected = connectionStatus === "connected";
+
+  const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
+  const [showQrCode, setShowQrCode] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string>("");
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+  const [inputWsUrl, setInputWsUrl] = useState(wsUrl || "");
+
+  const isDesktop = isDesktopApp();
+  const currentWsEndpoint = getWebSocketEndpoint();
+
+  // Fetch server info when connected
+  useEffect(() => {
+    if (isConnected) {
+      const transport = getTransport();
+      transport.request<ServerInfo>("get_server_info")
+        .then((info) => {
+          setServerInfo(info);
+          if (info.lanAddresses && info.lanAddresses.length > 0) {
+            // Select first LAN address (not localhost) by default
+            const lanAddress = info.lanAddresses.find(addr => !addr.includes("127.0.0.1")) || info.lanAddresses[0];
+            setSelectedAddress(lanAddress);
+          }
+        })
+        .catch(console.error);
+    } else {
+      setServerInfo(null);
+    }
+  }, [isConnected]);
+
+  const handleCopyAddress = async (address: string) => {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopiedAddress(address);
+      setTimeout(() => setCopiedAddress(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  const handleSaveWsUrl = () => {
+    setWsUrl(inputWsUrl || null);
+    // Reload the page to apply new WS URL
+    window.location.reload();
+  };
 
   return (
     <div className="space-y-6">
@@ -34,6 +92,135 @@ export function GeneralSettings() {
       </div>
 
       <div className="space-y-4">
+        {/* Server Connection - Show for web clients or when connected */}
+        {(!isDesktop || isConnected) && (
+          <div className="rounded-lg border p-3 sm:p-4 space-y-4">
+            <div className="space-y-0.5">
+              <Label className="text-sm sm:text-base flex items-center gap-2">
+                <Wifi className="h-4 w-4" />
+                {t("settings.serverConnection.title")}
+              </Label>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                {t("settings.serverConnection.description")}
+              </p>
+            </div>
+
+            {/* For web clients: Show WS URL input */}
+            {!isDesktop && (
+              <div className="space-y-2">
+                <Label className="text-sm">{t("settings.serverConnection.wsUrl")}</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={inputWsUrl}
+                    onChange={(e) => setInputWsUrl(e.target.value)}
+                    placeholder={t("settings.serverConnection.wsUrlPlaceholder")}
+                    className="font-mono text-sm"
+                  />
+                  <Button onClick={handleSaveWsUrl} size="sm">
+                    {t("common.save")}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t("settings.serverConnection.wsUrlDescription")}
+                </p>
+              </div>
+            )}
+
+            {/* For desktop app: Show current endpoint */}
+            {isDesktop && currentWsEndpoint && (
+              <div className="space-y-2">
+                <Label className="text-sm">{t("settings.serverConnection.wsUrl")}</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 px-3 py-2 bg-muted rounded-md text-sm font-mono truncate">
+                    {currentWsEndpoint}
+                  </code>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {t("settings.serverConnection.autoDetected")}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* LAN Addresses */}
+            {isConnected && serverInfo?.lanAddresses && serverInfo.lanAddresses.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm">{t("settings.serverConnection.lanAddresses")}</Label>
+                <div className="space-y-1">
+                  {serverInfo.lanAddresses.map((address) => (
+                    <div
+                      key={address}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors ${
+                        selectedAddress === address
+                          ? "bg-primary/10 border border-primary/30"
+                          : "bg-muted hover:bg-muted/80"
+                      }`}
+                      onClick={() => setSelectedAddress(address)}
+                    >
+                      <code className="flex-1 text-sm font-mono truncate">{address}</code>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 flex-shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopyAddress(address);
+                        }}
+                      >
+                        {copiedAddress === address ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* QR Code */}
+            {isConnected && selectedAddress && (
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowQrCode(!showQrCode)}
+                  className="gap-2"
+                >
+                  <QrCode className="h-4 w-4" />
+                  {showQrCode
+                    ? t("settings.serverConnection.hideQrCode")
+                    : t("settings.serverConnection.showQrCode")}
+                </Button>
+
+                {showQrCode && (
+                  <div className="flex flex-col items-center gap-2 p-4 bg-white rounded-lg">
+                    <QRCodeSVG
+                      value={selectedAddress}
+                      size={200}
+                      level="M"
+                      includeMargin
+                    />
+                    <p className="text-xs text-gray-600 text-center">
+                      {t("settings.serverConnection.scanToConnect")}
+                    </p>
+                    <code className="text-xs text-gray-500 font-mono">
+                      {selectedAddress}
+                    </code>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Not connected message */}
+            {!isConnected && (
+              <p className="text-sm text-muted-foreground">
+                {t("settings.serverConnection.noServer")}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Language */}
         <div className="flex items-center justify-between gap-4 rounded-lg border p-3 sm:p-4">
           <div className="space-y-0.5 min-w-0">

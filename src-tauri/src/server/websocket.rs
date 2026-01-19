@@ -798,10 +798,12 @@ async fn dispatch_method(
             let home = dirs::home_dir()
                 .map(|p| p.to_string_lossy().to_string())
                 .unwrap_or_else(|| "/".to_string());
+            let lan_addresses = get_lan_addresses(port);
             Ok(serde_json::json!({
                 "port": port,
                 "cwd": cwd,
-                "home": home
+                "home": home,
+                "lanAddresses": lan_addresses
             }))
         }
 
@@ -1884,4 +1886,34 @@ fn set_active_provider_handler(provider: &str) -> Result<(), String> {
     config.save()?;
     // Also sync to Claude settings
     config.sync_to_claude_settings()
+}
+
+/// Get LAN IP addresses and construct WebSocket URLs
+fn get_lan_addresses(port: u16) -> Vec<String> {
+    let mut addresses = Vec::new();
+
+    // Always include localhost
+    addresses.push(format!("ws://127.0.0.1:{}/ws", port));
+
+    // Get network interfaces
+    if let Ok(interfaces) = get_if_addrs::get_if_addrs() {
+        for iface in interfaces {
+            // Skip loopback interfaces
+            if iface.is_loopback() {
+                continue;
+            }
+
+            // Only include IPv4 addresses for simplicity
+            if let get_if_addrs::IfAddr::V4(v4) = iface.addr {
+                let ip = v4.ip;
+                // Skip link-local addresses (169.254.x.x)
+                if ip.octets()[0] == 169 && ip.octets()[1] == 254 {
+                    continue;
+                }
+                addresses.push(format!("ws://{}:{}/ws", ip, port));
+            }
+        }
+    }
+
+    addresses
 }
