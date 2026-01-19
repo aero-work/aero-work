@@ -1092,6 +1092,109 @@ async fn get_session_state_handler(
         .ok_or_else(|| format!("Failed to get state for resumed session: {}", response.session_id))
 }
 
+/// Bundled agent paths configuration (shared runtime approach)
+struct BundledAgentPaths {
+    /// Path to the Bun runtime binary
+    bun_runtime: Option<String>,
+    /// Path to the ACP adapter JS bundle (claude-code-agent.js)
+    acp_agent_js: Option<String>,
+    /// Path to the Claude Code CLI wrapper script (claude-code-cli)
+    claude_cli_wrapper: Option<String>,
+}
+
+/// Find bundled agent files (shared Bun runtime + JS bundles).
+fn find_bundled_agents() -> BundledAgentPaths {
+    let mut paths = BundledAgentPaths {
+        bun_runtime: None,
+        acp_agent_js: None,
+        claude_cli_wrapper: None,
+    };
+
+    if let Ok(exe_path) = std::env::current_exe() {
+        let exe_dir = exe_path.parent().unwrap_or(std::path::Path::new("."));
+
+        // Possible locations for bundled files
+        let candidate_dirs = [
+            // macOS .app bundle: Contents/MacOS/../Resources/
+            exe_dir.join("../Resources"),
+            // Next to executable
+            exe_dir.to_path_buf(),
+            // In resources subdirectory (for development)
+            exe_dir.join("resources"),
+            // From project root during development
+            exe_dir.join("../resources"),
+        ];
+
+        for dir in &candidate_dirs {
+            // Look for Bun runtime
+            if paths.bun_runtime.is_none() {
+                let bun_path = dir.join("bun-runtime");
+                if let Ok(canonical) = bun_path.canonicalize() {
+                    if canonical.exists() && canonical.is_file() {
+                        info!("Found bundled Bun runtime at: {:?}", canonical);
+                        paths.bun_runtime = Some(canonical.to_string_lossy().to_string());
+                    }
+                }
+            }
+
+            // Look for ACP agent JS bundle
+            if paths.acp_agent_js.is_none() {
+                let agent_path = dir.join("claude-code-agent.js");
+                if let Ok(canonical) = agent_path.canonicalize() {
+                    if canonical.exists() && canonical.is_file() {
+                        info!("Found bundled ACP agent JS at: {:?}", canonical);
+                        paths.acp_agent_js = Some(canonical.to_string_lossy().to_string());
+                    }
+                }
+            }
+
+            // Look for Claude Code CLI wrapper script
+            if paths.claude_cli_wrapper.is_none() {
+                let cli_path = dir.join("claude-code-cli");
+                if let Ok(canonical) = cli_path.canonicalize() {
+                    if canonical.exists() && canonical.is_file() {
+                        info!("Found bundled Claude CLI wrapper at: {:?}", canonical);
+                        paths.claude_cli_wrapper = Some(canonical.to_string_lossy().to_string());
+                    }
+                }
+            }
+
+            // If all found, no need to continue
+            if paths.bun_runtime.is_some() && paths.acp_agent_js.is_some() && paths.claude_cli_wrapper.is_some() {
+                break;
+            }
+        }
+    }
+
+    paths
+}
+
+/// Find the agent command to use and any environment variables needed.
+/// Priority:
+/// 1. Bundled: bun-runtime + claude-code-agent.js (with CLAUDE_CODE_EXECUTABLE pointing to claude-code-cli wrapper)
+/// 2. Fallback to npx @zed-industries/claude-code-acp
+fn find_agent_command() -> (String, Vec<String>, Option<Vec<(String, String)>>) {
+    let bundled = find_bundled_agents();
+
+    // If we have both bun runtime and ACP agent JS, use bundled approach
+    if let (Some(bun_path), Some(acp_js_path)) = (bundled.bun_runtime.clone(), bundled.acp_agent_js) {
+        let mut env_vars = Vec::new();
+
+        // If we have bundled Claude CLI wrapper, set it as the executable path
+        if let Some(cli_wrapper_path) = bundled.claude_cli_wrapper {
+            // The wrapper script is a single executable file that the SDK can check exists
+            env_vars.push(("CLAUDE_CODE_EXECUTABLE".to_string(), cli_wrapper_path));
+        }
+
+        let env_vars_opt = if env_vars.is_empty() { None } else { Some(env_vars) };
+        return (bun_path, vec![acp_js_path], env_vars_opt);
+    }
+
+    // Fallback to npx
+    info!("No bundled agent found, falling back to npx");
+    ("npx".to_string(), vec!["@zed-industries/claude-code-acp".to_string()], None)
+}
+
 /// Ensure ACP agent is running, start if not connected
 /// This is called lazily when creating/resuming/forking sessions
 async fn ensure_agent_connected(state: &Arc<AppState>) -> Result<(), String> {
@@ -1118,8 +1221,13 @@ async fn ensure_agent_connected(state: &Arc<AppState>) -> Result<(), String> {
     info!("Active provider: {}", model_config.active_provider);
 
     let mut client = AcpClient::new(notification_tx, permission_tx);
+
+    // Try to find bundled agent first, fallback to npx
+    let (command, args, env_vars) = find_agent_command();
+    info!("Using agent command: {} {:?}", command, args);
+
     client
-        .connect("npx", &["@zed-industries/claude-code-acp"])
+        .connect(&command, &args.iter().map(|s| s.as_str()).collect::<Vec<_>>(), env_vars)
         .await
         .map_err(|e| e.to_string())?;
 

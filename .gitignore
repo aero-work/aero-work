@@ -27,3 +27,5 @@ dist-ssr
 website/
 reference/
 dev-dist/
+src-tauri/target/*
+src-tauri/target

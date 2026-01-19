@@ -4,132 +4,111 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Aero Work** is a cross-platform AI code agent application built with Tauri (Rust backend) + React (TypeScript frontend). It provides a visual interface for interacting with AI coding agents like Claude Code via the Agent Client Protocol (ACP).
+**Aero Work** is a cross-platform AI code agent application built with Tauri 2.0 (Rust backend) + React 19 (TypeScript frontend). It provides a visual interface for interacting with AI coding agents like Claude Code via the Agent Client Protocol (ACP).
 
-### Current Status
-
-**Phase 1 - Core Features (Completed)**
-- ✅ Project setup (Tauri 2.0 + Vite + React + TypeScript + Tailwind v4 + shadcn/ui)
-- ✅ ACP client implementation in Rust (JSON-RPC over stdio)
-- ✅ Unified transport layer (WebSocket for both desktop and web)
-- ✅ VSCode-like UI with resizable panels
-- ✅ Chat interface with markdown rendering and syntax highlighting
-- ✅ Tool Call Cards with expand/collapse
-- ✅ Permission dialog for tool authorization
-- ✅ Session management (create, resume, fork, delete)
-- ✅ Session history loading with tool calls
-
-**Phase 2 - Extended Features (Completed)**
-- ✅ Light/Dark/System theme support (shadcn/ui Slate theme)
-- ✅ Plugin management system (marketplaces, install/uninstall)
-- ✅ File tree browser with hidden files toggle
-- ✅ Settings page with tabs (General, Agents, Models, MCP, Plugins, Permissions)
-- ✅ Auto-connect on startup
-- ✅ Auto-clean empty sessions option
-- ✅ Custom zoom for desktop (Cmd+/-), browser native zoom for web
-
-**Recent Code Review (2026-01-15)**
-- Fixed 4 bugs: memory leak in useSessionData, stale closure in CodeEditor, FileTree effect dependencies, permission dialog cleanup
-- Verified 5 issues as safe/not bugs
-- Documented 4 enhancement suggestions for future
-
-**Known Issues**
-- Chinese IME Enter key issue in desktop app (see `.agent/known-issues.md`)
-- See `.agent/code-review-issues.md` for full code review results
-
-### Key Architecture Decisions
-
-- **Unified Rust Backend**: Single Tauri backend serves both desktop and web modes
-- **WebSocket Transport**: Both desktop and web use WebSocket for communication
-- **ACP Protocol**: Agent Client Protocol for standardized agent communication (JSON-RPC over stdio)
-- **Agent**: Uses `npx @zed-industries/claude-code-acp` to spawn Claude Code agent
-- **State Management**: Backend is the source of truth for session data; frontend subscribes via hooks
-
-## Project Structure
-
-```
-aero-work/
-├── .agent/              # Project documentation - READ THESE FIRST
-│   ├── product.md       # Product requirements, UI/UX design
-│   ├── structure.md     # Directory structure, code patterns
-│   ├── tech.md          # Technology stack, architecture
-│   └── known-issues.md  # Known bugs and issues
-├── src-tauri/           # Rust backend (Tauri)
-│   └── src/
-│       ├── lib.rs       # Tauri app setup
-│       ├── acp/         # ACP protocol implementation
-│       │   ├── client.rs   # JSON-RPC client over stdio
-│       │   └── types.rs    # Protocol types
-│       ├── core/        # Business logic
-│       │   ├── agent.rs    # AgentManager (spawn, communicate)
-│       │   ├── state.rs    # AppState (shared state)
-│       │   ├── session_registry.rs  # Session file scanning, history loading
-│       │   ├── session_state.rs     # Session state types
-│       │   ├── plugins.rs           # Plugin management
-│       │   └── terminal.rs          # PTY management
-│       └── server/      # WebSocket server
-│           └── websocket.rs  # JSON-RPC over WebSocket
-└── src/                 # React frontend
-    ├── components/
-    │   ├── layout/      # MainLayout, Header, Sidebar
-    │   ├── chat/        # ChatView, MessageList, ChatInput, ToolCallCard
-    │   ├── settings/    # Settings tabs (General, Agents, Plugins, etc.)
-    │   ├── common/      # PermissionDialog, ProjectSelector
-    │   └── ui/          # shadcn/ui components
-    ├── stores/          # Zustand state management
-    │   ├── sessionStore.ts   # UI state (activeSessionId, isLoading)
-    │   ├── agentStore.ts     # Connection status, agent info
-    │   ├── fileStore.ts      # Working directory, recent projects
-    │   └── settingsStore.ts  # Settings, theme, preferences
-    ├── hooks/           # Custom React hooks
-    │   ├── useSessionData.ts # Session data subscription
-    │   ├── useTheme.ts       # Theme management
-    │   └── useZoom.ts        # Desktop zoom (Cmd+/-)
-    ├── services/        # Backend communication
-    │   ├── transport/
-    │   │   ├── websocket.ts  # WebSocket transport
-    │   │   └── types.ts      # Transport interface
-    │   └── api.ts            # AgentAPI class
-    └── types/
-        ├── acp.ts       # ACP protocol types
-        └── plugins.ts   # Plugin types
-```
-
-## Running the App
+## Development Commands
 
 ```bash
 # Install dependencies
 bun install
 
-# Development mode (desktop)
+# Desktop app development (Tauri + Vite hot reload)
 bun run tauri dev
 
-# Development mode (web only)
+# Web-only development (frontend only)
 bun run dev
 
-# Production build
-bun run tauri build
+# Headless mode (web frontend + WebSocket server concurrently)
+bun run headless
 
-# Run standalone WebSocket server (for web mode)
-cargo run --bin aero-server
+# Build production
+bun run tauri build        # Desktop app
+bun run build              # Web app only
+bun run headless:build     # Web + server
+
+# Run standalone WebSocket server (for web/PWA mode)
+cargo run --bin aero-server --manifest-path src-tauri/Cargo.toml
+
+# Rust checks
+cargo check --manifest-path src-tauri/Cargo.toml
+cargo clippy --manifest-path src-tauri/Cargo.toml
+cargo test --manifest-path src-tauri/Cargo.toml
+
+# TypeScript checks
+bunx tsc --noEmit
 ```
 
-## Key Files to Know
+## Architecture
 
-| File | Purpose |
-|------|---------|
-| `src-tauri/src/acp/client.rs` | ACP JSON-RPC client, message parsing |
-| `src-tauri/src/server/websocket.rs` | WebSocket server, JSON-RPC dispatch |
-| `src-tauri/src/core/session_registry.rs` | Session history loading |
-| `src/hooks/useSessionData.ts` | Frontend session data subscription |
-| `src/services/api.ts` | Frontend API for agent communication |
-| `src/index.css` | Theme CSS variables (shadcn/ui Slate theme) |
+### Key Design Decisions
 
-## Important Context
+- **Unified Rust Backend**: Single Tauri backend serves both desktop (IPC) and web (WebSocket) modes
+- **WebSocket-First**: Both desktop and web use WebSocket for agent communication; desktop IPC is only used for window management
+- **ACP Protocol**: JSON-RPC 2.0 over stdio to spawn Claude Code agent (`npx @zed-industries/claude-code-acp`)
+- **Backend is Source of Truth**: Session state lives in Rust; frontend subscribes via hooks
 
-Before making changes, read the documentation in `.agent/`:
-- `.agent/product.md` - Product requirements, UI/UX design
-- `.agent/structure.md` - Directory structure, code patterns
-- `.agent/tech.md` - Technology stack, architecture
+### Data Flow
+
+```
+Frontend (React)
+    ↓
+Zustand stores → api.ts → WebSocketTransport
+    ↓
+WebSocket Server (axum, port 9527)
+    ↓
+Core Services (AgentManager, SessionRegistry)
+    ↓
+ACP Client → Agent Process (stdio)
+```
+
+### Key Directories
+
+| Directory | Purpose |
+|-----------|---------|
+| `src-tauri/src/acp/` | ACP protocol: `client.rs` (JSON-RPC over stdio), `types.rs` |
+| `src-tauri/src/core/` | Business logic: agent, session, config, terminal managers |
+| `src-tauri/src/server/` | WebSocket server: `websocket.rs` (JSON-RPC dispatch) |
+| `src/stores/` | Zustand stores: session, agent, file, settings, terminal |
+| `src/services/` | Backend API: `api.ts`, `transport/websocket.ts` |
+| `src/hooks/` | React hooks: `useSessionData.ts` (key subscription hook) |
+| `src/components/chat/` | Chat UI: MessageList, ToolCallCard, ChatInput |
+
+### Critical Files
+
+- `src-tauri/src/server/websocket.rs` - All JSON-RPC method handlers
+- `src-tauri/src/acp/client.rs` - Agent process spawn, message parsing
+- `src-tauri/src/core/session_state_manager.rs` - Session state sync
+- `src/hooks/useSessionData.ts` - Frontend session subscription
+- `src/services/transport/websocket.ts` - WebSocket transport layer
+- `src/main.tsx` - Must call `enableMapSet()` from immer for Set/Map support
+
+## Configuration
+
+User config files are stored in `~/.config/aerowork/`:
+- `config.json` - General settings
+- `models.json` - Model provider configuration (Anthropic, Bedrock, etc.)
+- `mcp.json` - MCP servers with enable/disable (syncs to `~/.claude.json`)
+- `permission.json` - Permission rules
+
+## Important Notes
+
+### Frontend
+- Uses Tailwind CSS v4 with oklch colors and shadcn/ui (Slate theme)
+- Responsive: mobile layout (`<768px`) uses WeChat-style navigation
+- i18n via react-i18next: translations in `src/i18n/locales/`
+
+### Backend
+- WebSocket server runs on port 9527 by default
+- Agent spawned via: `npx @zed-industries/claude-code-acp`
+- PTY support via `portable-pty` for terminal feature
+
+### Known Issues
+- Chinese IME Enter key issue in desktop Tauri WebView (see `.agent/known-issues.md`)
+
+## Detailed Documentation
+
+Read `.agent/` directory for comprehensive docs:
+- `.agent/product.md` - Product requirements, UI/UX
+- `.agent/structure.md` - Full directory structure, code patterns, interfaces
+- `.agent/tech.md` - Technology stack, architecture diagrams, protocols
 - `.agent/known-issues.md` - Known bugs and workarounds
-- `.agent/code-review-issues.md` - Code review results and fixes (2026-01-15)

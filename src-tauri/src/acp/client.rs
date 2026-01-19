@@ -67,6 +67,7 @@ impl AcpClient {
         &mut self,
         command: &str,
         args: &[&str],
+        env_vars: Option<Vec<(String, String)>>,
     ) -> Result<()> {
         info!("Starting ACP agent: {} {:?}", command, args);
 
@@ -75,6 +76,42 @@ impl AcpClient {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
+
+        // Apply any custom environment variables (e.g., CLAUDE_CODE_EXECUTABLE for bundled CLI)
+        if let Some(vars) = env_vars {
+            for (key, value) in vars {
+                info!("Setting env var: {}={}", key, value);
+                cmd.env(key, value);
+            }
+        }
+
+        // On macOS, when launched via .app bundle (double-click), the PATH is minimal.
+        // We need to add common Node.js installation paths so npx can be found.
+        #[cfg(target_os = "macos")]
+        {
+            let current_path = std::env::var("PATH").unwrap_or_default();
+            let home = std::env::var("HOME").unwrap_or_default();
+            let mut additional_paths = vec![
+                "/usr/local/bin".to_string(),
+                "/opt/homebrew/bin".to_string(),
+                "/opt/local/bin".to_string(),
+                format!("{}/.local/bin", home),
+                format!("{}/Library/pnpm", home),
+                format!("{}/.bun/bin", home),
+            ];
+            // Find nvm node versions (glob doesn't work in PATH, so we need to enumerate)
+            let nvm_versions_dir = format!("{}/.nvm/versions/node", home);
+            if let Ok(entries) = std::fs::read_dir(&nvm_versions_dir) {
+                for entry in entries.flatten() {
+                    let bin_path = entry.path().join("bin");
+                    if bin_path.exists() {
+                        additional_paths.push(bin_path.to_string_lossy().to_string());
+                    }
+                }
+            }
+            let new_path = format!("{}:{}", additional_paths.join(":"), current_path);
+            cmd.env("PATH", new_path);
+        }
 
         let mut child = cmd.spawn()?;
 
