@@ -8,10 +8,13 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "./scripts/bundle-agent.sh && tauri build",
     "server": "cd src-tauri && cargo run --bin aero-server --features websocket",
     "server:build": "cd src-tauri && cargo build --release --bin aero-server --features websocket",
     "headless": "concurrently -n web,ws -c blue,green \"bun run dev\" \"bun run server\"",
-    "headless:build": "bun run build && bun run server:build"
+    "headless:build": "bun run build && bun run server:build",
+    "bundle:agent": "./scripts/bundle-agent.sh"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

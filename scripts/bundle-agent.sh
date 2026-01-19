@@ -35,11 +35,13 @@ fi
 cat "$BUN_PATH" > "$RESOURCES_DIR/bun-runtime"
 chmod +x "$RESOURCES_DIR/bun-runtime"
 
-# Remove original code signature and re-sign with adhoc signature
+# On macOS: Remove original code signature and re-sign with adhoc signature
 # This is necessary because macOS doesn't allow signed binaries inside adhoc-signed app bundles
-echo "   Re-signing bun runtime with adhoc signature..."
-codesign --remove-signature "$RESOURCES_DIR/bun-runtime" 2>/dev/null || true
-codesign -s - "$RESOURCES_DIR/bun-runtime"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "   Re-signing bun runtime with adhoc signature..."
+    codesign --remove-signature "$RESOURCES_DIR/bun-runtime" 2>/dev/null || true
+    codesign -s - "$RESOURCES_DIR/bun-runtime"
+fi
 
 echo "✅ Bun runtime copied: $(du -h "$RESOURCES_DIR/bun-runtime" | cut -f1)"
 
