@@ -7,7 +7,12 @@ import { SettingsPage } from "@/components/settings";
 import { XTerminal } from "@/components/terminal/XTerminal";
 import { FileTree } from "@/components/editor/FileTree";
 import { PermissionDialog } from "@/components/common/PermissionDialog";
+import { WsSetupDialog } from "@/components/common/WsSetupDialog";
 import { useMobileNavStore, type MobileView } from "@/stores/mobileNavStore";
+import { useAgentStore } from "@/stores/agentStore";
+import { useSettingsStore } from "@/stores/settingsStore";
+import { isMobileTauriApp } from "@/services/transport";
+import { agentAPI } from "@/services/api";
 import { useFileStore, type OpenFile } from "@/stores/fileStore";
 import { useTerminalStore } from "@/stores/terminalStore";
 import { useIsDarkMode } from "@/hooks/useIsDarkMode";
@@ -437,6 +442,22 @@ const VIEW_COMPONENTS: Record<MobileView, React.ComponentType> = {
 export function MobileLayout() {
   const currentView = useMobileNavStore((state) => state.currentView);
   const ViewComponent = VIEW_COMPONENTS[currentView];
+  const connectionStatus = useAgentStore((state) => state.connectionStatus);
+  const wsUrl = useSettingsStore((state) => state.wsUrl);
+
+  // Show WS setup dialog for mobile Tauri app when not configured or connection failed
+  const [showWsSetup, setShowWsSetup] = useState(false);
+
+  useEffect(() => {
+    // On mobile Tauri app, show setup dialog if no URL configured and disconnected
+    if (isMobileTauriApp() && !wsUrl && connectionStatus === "disconnected") {
+      setShowWsSetup(true);
+    }
+  }, [wsUrl, connectionStatus]);
+
+  const handleWsConnect = useCallback(() => {
+    agentAPI.connect().catch(console.error);
+  }, []);
 
   return (
     <div className="h-[100dvh] flex flex-col bg-background">
@@ -448,6 +469,11 @@ export function MobileLayout() {
 
       <MobileTabBar />
       <PermissionDialog />
+      <WsSetupDialog
+        open={showWsSetup}
+        onOpenChange={setShowWsSetup}
+        onConnect={handleWsConnect}
+      />
     </div>
   );
 }

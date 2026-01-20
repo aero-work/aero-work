@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSettingsStore } from "@/stores/settingsStore";
-import { isDesktopApp } from "@/services/transport";
+import { isDesktopApp, isMobileTauriApp } from "@/services/transport";
 import { Wifi, QrCode } from "lucide-react";
 
 interface WsSetupDialogProps {
@@ -46,8 +46,9 @@ export function WsSetupDialog({ open, onOpenChange, onConnect }: WsSetupDialogPr
     onConnect();
   };
 
-  // Don't show for desktop apps
-  if (isDesktopApp()) {
+  // Don't show for desktop Tauri apps (they auto-connect to localhost)
+  // But DO show for mobile Tauri apps (they need to configure server URL)
+  if (isDesktopApp() && !isMobileTauriApp()) {
     return null;
   }
 
