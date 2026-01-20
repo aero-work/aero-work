@@ -30,12 +30,21 @@ MANIFEST="$ANDROID_APP_DIR/AndroidManifest.xml"
 if [ -f "$MANIFEST" ]; then
     # Check if already configured
     if grep -q "networkSecurityConfig" "$MANIFEST"; then
-        echo "AndroidManifest.xml already configured, skipping..."
+        echo "AndroidManifest.xml network config already set, skipping..."
     else
         # Add networkSecurityConfig and usesCleartextTraffic="true"
         sed -i.bak 's|android:usesCleartextTraffic="\${usesCleartextTraffic}"|android:networkSecurityConfig="@xml/network_security_config"\n        android:usesCleartextTraffic="true"|' "$MANIFEST"
         rm -f "$MANIFEST.bak"
-        echo "Modified: AndroidManifest.xml"
+        echo "Modified: AndroidManifest.xml (network config)"
+    fi
+
+    # Add windowSoftInputMode for keyboard resize behavior
+    if grep -q "windowSoftInputMode" "$MANIFEST"; then
+        echo "AndroidManifest.xml keyboard config already set, skipping..."
+    else
+        sed -i.bak 's|android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"|android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"\n            android:windowSoftInputMode="adjustResize"|' "$MANIFEST"
+        rm -f "$MANIFEST.bak"
+        echo "Modified: AndroidManifest.xml (keyboard resize)"
     fi
 else
     echo "Error: AndroidManifest.xml not found at $MANIFEST"
