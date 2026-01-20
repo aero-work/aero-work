@@ -117,7 +117,8 @@
       "scanQrCode": "扫描二维码",
       "scanQrCodeHint": "将摄像头对准二维码以扫描 WebSocket 地址",
       "noCameraFound": "未找到摄像头",
-      "cameraAccessDenied": "摄像头访问被拒绝，请在浏览器设置中允许摄像头访问"
+      "cameraAccessDenied": "摄像头访问被拒绝，请在浏览器设置中允许摄像头访问",
+      "resetToDefault": "重置为默认服务器地址"
     }
   },
   "agent": {

@@ -17,7 +17,7 @@ import {
 import { languages, supportedLanguages } from "@/i18n";
 import { getWebSocketEndpoint, isDesktopApp } from "@/services/transport";
 import { getTransport } from "@/services/transport";
-import { Copy, QrCode, Check, Wifi, ScanLine } from "lucide-react";
+import { Copy, QrCode, Check, Wifi, ScanLine, RotateCcw } from "lucide-react";
 import { QrScanner } from "@/components/common/QrScanner";
 import type { ServerInfo } from "@/services/transport";
 
@@ -98,6 +98,16 @@ export function GeneralSettings() {
     setShowQrScanner(false);
   };
 
+  // Reset to current backend's actual WebSocket URL (desktop only)
+  const handleResetWsUrl = () => {
+    if (serverInfo?.port) {
+      const defaultUrl = `ws://127.0.0.1:${serverInfo.port}/ws`;
+      setInputWsUrl(defaultUrl);
+      setWsUrl(null); // Clear custom URL, use auto-detected
+      window.location.reload();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -144,6 +154,18 @@ export function GeneralSettings() {
               <Button onClick={handleSaveWsUrl} size="sm">
                 {t("common.save")}
               </Button>
+              {/* Reset button - only show on desktop app when connected */}
+              {isDesktopApp() && isConnected && serverInfo?.port && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetWsUrl}
+                  title={t("settings.serverConnection.resetToDefault")}
+                  className="flex-shrink-0"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              )}
             </div>
             {currentWsEndpoint && !wsUrl && (
               <p className="text-xs text-muted-foreground">

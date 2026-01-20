@@ -117,7 +117,8 @@
       "scanQrCode": "Scan QR Code",
       "scanQrCodeHint": "Point your camera at a QR code to scan the WebSocket URL",
       "noCameraFound": "No camera found on this device",
-      "cameraAccessDenied": "Camera access denied. Please allow camera access in your browser settings."
+      "cameraAccessDenied": "Camera access denied. Please allow camera access in your browser settings.",
+      "resetToDefault": "Reset to default server address"
     }
   },
   "agent": {
