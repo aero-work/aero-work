@@ -262,9 +262,6 @@ function MessageBubble({ message }: { message: Message }) {
                       margin: 0,
                       borderRadius: "0.5rem",
                       fontSize: "0.875rem",
-                      background: isDark
-                        ? "hsl(220, 13%, 12%)"
-                        : "hsl(220, 13%, 18%)",
                     }}
                   >
                     {String(children).replace(/\n$/, "")}
