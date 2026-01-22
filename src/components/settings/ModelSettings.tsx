@@ -932,7 +932,7 @@ export function ModelSettings() {
                 className="h-8 text-sm"
                 value={config.providers.openrouter.model}
                 onChange={(e) => handleOpenRouterChange("model", e.target.value)}
-                placeholder="anthropic/claude-sonnet-4"
+                placeholder="anthropic/claude-sonnet-4.5"
               />
               <p className="text-xs text-muted-foreground mt-1">
                 {t("modelProvider.openrouterModelHint")}

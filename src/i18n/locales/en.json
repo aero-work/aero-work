@@ -169,7 +169,7 @@
     "restartDescription": "Changes to model provider settings will take effect after restarting the agent connection.",
     "ollamaModelHint": "Enter the model name from your Ollama server (e.g., qwen3:32b, llama3.3)",
     "ollamaDescription": "Ollama provides local LLM inference. Default URL: http://localhost:11434",
-    "openrouterModelHint": "Enter the model ID from OpenRouter (e.g., anthropic/claude-sonnet-4)",
+    "openrouterModelHint": "Enter the model ID from OpenRouter (e.g., anthropic/claude-sonnet-4.5)",
     "openrouterTokenHint": "Your OpenRouter API key (starts with sk-or-)"
   },
   "mcpSettings": {
