@@ -184,11 +184,8 @@ export const useFileStore = create<FileState & FileActions>()(
         set((state) => {
           state.serverCwd = cwd;
           state.serverHome = home;
-          // If no working directory is set, use home as default
-          // (server cwd might be /usr or other system dirs on Linux)
-          if (!state.currentWorkingDir) {
-            state.currentWorkingDir = home;
-          }
+          // Don't auto-set currentWorkingDir - let user select project manually
+          // The path from server might not exist or be accessible on client
         });
       },
 
