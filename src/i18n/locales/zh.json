@@ -285,7 +285,10 @@
     "connecting": "连接中",
     "error": "连接错误",
     "setupDescription": "连接到 AeroWork 服务器开始使用",
-    "setupHint": "输入桌面端 AeroWork 应用显示的 WebSocket 地址，或扫描二维码连接"
+    "setupHint": "输入桌面端 AeroWork 应用显示的 WebSocket 地址，或扫描二维码连接",
+    "localServerDetected": "检测到本地服务器",
+    "localServerDetectedDescription": "连接失败，但在默认端口发现了本地服务器。是否连接到本地服务器？",
+    "connectToLocal": "连接本地服务器"
   },
   "time": {
     "justNow": "刚刚",

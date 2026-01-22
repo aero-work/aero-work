@@ -12,9 +12,11 @@
  * - sessionStore: UI-only state (isLoading, error)
  */
 
-import { getTransport } from "./transport";
+import { getTransport, isDesktopApp } from "./transport";
 import type { ServerInfo } from "./transport";
 import { WebSocketTransport } from "./transport/websocket";
+
+const DEFAULT_LOCAL_WS_URL = "ws://127.0.0.1:9527/ws";
 import { useAgentStore } from "@/stores/agentStore";
 import { useSettingsStore, type PermissionRule } from "@/stores/settingsStore";
 import { useFileStore } from "@/stores/fileStore";
@@ -194,10 +196,48 @@ class AgentAPI {
       }
 
       agentStore.setConnectionStatus("connected");
+      // Clear any detected local server since we're now connected
+      agentStore.setDetectedLocalServer(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to connect";
       agentStore.setError(message);
+
+      // For desktop app: if connection failed, try to detect local server on default port
+      if (isDesktopApp()) {
+        this.detectLocalServer();
+      }
+
       throw error;
+    }
+  }
+
+  /**
+   * Detect if local server is running on default port (desktop app only)
+   */
+  private async detectLocalServer(): Promise<void> {
+    const agentStore = useAgentStore.getState();
+    const currentUrl = getTransport().getUrl?.() || "";
+
+    // Don't detect if already trying to connect to default local URL
+    if (currentUrl === DEFAULT_LOCAL_WS_URL) {
+      return;
+    }
+
+    console.log("Checking for local server on default port...");
+
+    try {
+      // Try to connect to default local server
+      const testTransport = new WebSocketTransport(DEFAULT_LOCAL_WS_URL);
+      await testTransport.connect();
+
+      // If successful, store the detected URL and disconnect test connection
+      console.log("Local server detected at", DEFAULT_LOCAL_WS_URL);
+      agentStore.setDetectedLocalServer(DEFAULT_LOCAL_WS_URL);
+
+      testTransport.disconnect();
+    } catch {
+      console.log("No local server found on default port");
+      agentStore.setDetectedLocalServer(null);
     }
   }
 

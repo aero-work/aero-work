@@ -67,6 +67,10 @@ export class WebSocketTransport implements Transport {
     this.url = url;
   }
 
+  getUrl(): string {
+    return this.url;
+  }
+
   private connectTimeout = 10000; // 10 seconds connection timeout
 
   async connect(): Promise<void> {

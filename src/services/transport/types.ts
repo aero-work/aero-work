@@ -25,6 +25,7 @@ export interface Transport {
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   isConnected(): boolean;
+  getUrl?(): string;
 
   initialize(): Promise<InitializeResponse>;
 

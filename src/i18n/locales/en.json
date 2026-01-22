@@ -285,7 +285,10 @@
     "connecting": "Connecting",
     "error": "Connection Error",
     "setupDescription": "Connect to an AeroWork server to start",
-    "setupHint": "Enter the WebSocket URL from your AeroWork desktop app, or scan the QR code"
+    "setupHint": "Enter the WebSocket URL from your AeroWork desktop app, or scan the QR code",
+    "localServerDetected": "Local Server Detected",
+    "localServerDetectedDescription": "Connection failed, but a local server was found on the default port. Would you like to connect to it?",
+    "connectToLocal": "Connect to Local Server"
   },
   "time": {
     "justNow": "Just now",

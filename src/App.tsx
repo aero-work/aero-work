@@ -4,6 +4,7 @@ import { useAutoConnect } from "@/hooks/useAutoConnect";
 import { useZoom } from "@/hooks/useZoom";
 import { useTheme } from "@/hooks/useTheme";
 import { InstallPrompt } from "@/components/common/InstallPrompt";
+import { LocalServerDetectedDialog } from "@/components/common/LocalServerDetectedDialog";
 
 function AppContent() {
   // Auto-connect to backend when app loads
@@ -19,6 +20,7 @@ function AppContent() {
     <>
       <MainLayout />
       <InstallPrompt />
+      <LocalServerDetectedDialog />
     </>
   );
 }
