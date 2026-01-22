@@ -168,7 +168,9 @@
     "restartRequired": "需要重启",
     "restartDescription": "模型提供商设置的更改将在重启 Agent 连接后生效。",
     "ollamaModelHint": "输入 Ollama 服务器上的模型名称（如 qwen3:32b、llama3.3）",
-    "ollamaDescription": "Ollama 提供本地 LLM 推理服务。默认地址：http://localhost:11434"
+    "ollamaDescription": "Ollama 提供本地 LLM 推理服务。默认地址：http://localhost:11434",
+    "openrouterModelHint": "输入 OpenRouter 上的模型 ID（如 anthropic/claude-sonnet-4）",
+    "openrouterTokenHint": "您的 OpenRouter API 密钥（以 sk-or- 开头）"
   },
   "mcpSettings": {
     "title": "MCP 服务器",

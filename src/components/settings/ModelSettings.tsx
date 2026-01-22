@@ -34,6 +34,7 @@ import type {
   MiniMaxProvider,
   MoonshotProvider,
   OllamaProvider,
+  OpenRouterProvider,
 } from "@/types/models";
 import {
   createDefaultModelConfig,
@@ -46,7 +47,7 @@ import {
   PROVIDER_NAMES,
 } from "@/types/models";
 
-type BuiltInProviderKey = 'default' | 'anthropic' | 'bedrock' | 'bigmodel' | 'minimax' | 'moonshot' | 'ollama';
+type BuiltInProviderKey = 'default' | 'anthropic' | 'bedrock' | 'bigmodel' | 'minimax' | 'moonshot' | 'ollama' | 'openrouter';
 
 export function ModelSettings() {
   const { t } = useTranslation();
@@ -200,6 +201,20 @@ export function ModelSettings() {
     });
   };
 
+  const handleOpenRouterChange = (field: keyof OpenRouterProvider, value: string) => {
+    if (!config) return;
+    setConfig({
+      ...config,
+      providers: {
+        ...config.providers,
+        openrouter: {
+          ...config.providers.openrouter,
+          [field]: value,
+        },
+      },
+    });
+  };
+
   const handleCustomProviderChange = (id: string, field: keyof CustomProvider, value: string) => {
     if (!config) return;
     setConfig({
@@ -263,7 +278,7 @@ export function ModelSettings() {
     );
   }
 
-  const builtInProviders: BuiltInProviderKey[] = ['default', 'anthropic', 'bedrock', 'bigmodel', 'minimax', 'moonshot', 'ollama'];
+  const builtInProviders: BuiltInProviderKey[] = ['default', 'anthropic', 'bedrock', 'bigmodel', 'minimax', 'moonshot', 'ollama', 'openrouter'];
 
   // Render inline config for each provider
   const renderProviderConfig = (key: string) => {
@@ -904,6 +919,56 @@ export function ModelSettings() {
 
             <div className="text-xs text-muted-foreground">
               {t("modelProvider.ollamaDescription")}
+            </div>
+          </div>
+        );
+
+      case "openrouter":
+        return (
+          <div className="mt-3 pt-3 border-t space-y-3" onClick={(e) => e.stopPropagation()}>
+            <div>
+              <Label className="text-xs">ANTHROPIC_MODEL</Label>
+              <Input
+                className="h-8 text-sm"
+                value={config.providers.openrouter.model}
+                onChange={(e) => handleOpenRouterChange("model", e.target.value)}
+                placeholder="anthropic/claude-sonnet-4"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("modelProvider.openrouterModelHint")}
+              </p>
+            </div>
+
+            <div>
+              <Label className="text-xs">ANTHROPIC_AUTH_TOKEN</Label>
+              <div className="flex gap-2">
+                <Input
+                  className="h-8 text-sm"
+                  type={showSecrets["openrouter-token"] ? "text" : "password"}
+                  value={config.providers.openrouter.authToken}
+                  onChange={(e) => handleOpenRouterChange("authToken", e.target.value)}
+                  placeholder="sk-or-..."
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => toggleSecretVisibility("openrouter-token")}
+                >
+                  {showSecrets["openrouter-token"] ? (
+                    <EyeOff className="w-3.5 h-3.5" />
+                  ) : (
+                    <Eye className="w-3.5 h-3.5" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("modelProvider.openrouterTokenHint")}
+              </p>
+            </div>
+
+            <div className="text-xs text-muted-foreground">
+              Base URL: https://openrouter.ai/api
             </div>
           </div>
         );

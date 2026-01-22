@@ -4,7 +4,7 @@
  * These types match the Rust backend model_config.rs structures
  */
 
-export type ProviderType = 'default' | 'anthropic' | 'bedrock' | 'bigmodel' | 'minimax' | 'moonshot' | 'ollama' | 'custom';
+export type ProviderType = 'default' | 'anthropic' | 'bedrock' | 'bigmodel' | 'minimax' | 'moonshot' | 'ollama' | 'openrouter' | 'custom';
 
 /**
  * Main model configuration structure
@@ -26,6 +26,7 @@ export interface Providers {
   minimax: MiniMaxProvider;
   moonshot: MoonshotProvider;
   ollama: OllamaProvider;
+  openrouter: OpenRouterProvider;
 }
 
 /**
@@ -107,6 +108,16 @@ export interface OllamaProvider {
 }
 
 /**
+ * OpenRouter provider configuration
+ */
+export interface OpenRouterProvider {
+  type: 'openrouter';
+  enabled: boolean;
+  authToken: string;
+  model: string;
+}
+
+/**
  * Custom provider configuration
  */
 export interface CustomProvider {
@@ -182,6 +193,7 @@ export const PROVIDER_NAMES: Record<string, string> = {
   minimax: 'MiniMax',
   moonshot: 'Moonshot AI / Kimi',
   ollama: 'Ollama',
+  openrouter: 'OpenRouter',
 };
 
 /**
@@ -240,6 +252,12 @@ export function createDefaultModelConfig(): ModelProviderConfig {
         apiKey: '',
         model: '',
         baseUrl: 'http://localhost:11434',
+      },
+      openrouter: {
+        type: 'openrouter',
+        enabled: true,
+        authToken: '',
+        model: '',
       },
     },
     customProviders: [],

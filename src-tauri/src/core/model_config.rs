@@ -33,6 +33,8 @@ pub struct Providers {
     pub moonshot: MoonshotProvider,
     #[serde(default)]
     pub ollama: OllamaProvider,
+    #[serde(default)]
+    pub openrouter: OpenRouterProvider,
 }
 
 /// Default provider - no additional environment variables
@@ -148,6 +150,30 @@ impl Default for OllamaProvider {
     }
 }
 
+/// OpenRouter provider configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenRouterProvider {
+    #[serde(rename = "type")]
+    pub provider_type: String,
+    pub enabled: bool,
+    #[serde(default)]
+    pub auth_token: String,
+    #[serde(default)]
+    pub model: String,
+}
+
+impl Default for OpenRouterProvider {
+    fn default() -> Self {
+        Self {
+            provider_type: "openrouter".to_string(),
+            enabled: true,
+            auth_token: String::new(),
+            model: String::new(),
+        }
+    }
+}
+
 /// Custom provider configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -221,6 +247,7 @@ impl Default for ModelConfig {
                     model: "kimi-k2-thinking-turbo".to_string(),
                 },
                 ollama: OllamaProvider::default(),
+                openrouter: OpenRouterProvider::default(),
             },
             custom_providers: vec![],
         }
@@ -323,6 +350,14 @@ impl ModelConfig {
                     Some(p.model.clone())
                 } else {
                     None // Ollama requires user to specify model
+                }
+            }
+            "openrouter" => {
+                let p = &self.providers.openrouter;
+                if !p.model.is_empty() {
+                    Some(p.model.clone())
+                } else {
+                    None // OpenRouter requires user to specify model
                 }
             }
             custom_id => {
@@ -543,6 +578,27 @@ impl ModelConfig {
                 }
                 if !p.api_key.is_empty() {
                     env.insert("ANTHROPIC_API_KEY".to_string(), p.api_key.clone());
+                }
+            }
+            "openrouter" => {
+                let p = &self.providers.openrouter;
+                // Fixed base URL for OpenRouter
+                env.insert(
+                    "ANTHROPIC_BASE_URL".to_string(),
+                    "https://openrouter.ai/api".to_string(),
+                );
+                // OpenRouter requires ANTHROPIC_API_KEY to be explicitly empty
+                env.insert("ANTHROPIC_API_KEY".to_string(), String::new());
+                // Use auth token for OpenRouter API key
+                if !p.auth_token.is_empty() {
+                    env.insert("ANTHROPIC_AUTH_TOKEN".to_string(), p.auth_token.clone());
+                }
+                if !p.model.is_empty() {
+                    env.insert("ANTHROPIC_MODEL".to_string(), p.model.clone());
+                    env.insert("ANTHROPIC_DEFAULT_OPUS_MODEL".to_string(), p.model.clone());
+                    env.insert("ANTHROPIC_DEFAULT_SONNET_MODEL".to_string(), p.model.clone());
+                    env.insert("ANTHROPIC_DEFAULT_HAIKU_MODEL".to_string(), p.model.clone());
+                    env.insert("CLAUDE_CODE_SUBAGENT_MODEL".to_string(), p.model.clone());
                 }
             }
             custom_id => {
