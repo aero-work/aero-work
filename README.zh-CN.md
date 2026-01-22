@@ -4,7 +4,7 @@
 
 ![主界面](./assets/main-window.webp)
 
-灵感来源于 Anthropic 发布的 [Cowork](https://claude.com/blog/cowork-research-preview)，AeroWork 致力于让每个人都能使用 AI Agent 能力，而不仅仅是开发者。Cowork 仅支持 macOS 且需要 Claude Max 订阅，而 AeroWork 是开源的、全平台支持 (Windows, macOS, Linux, Android, Web)，兼容任何 Anthropic 兼容 API。
+灵感来源于 Anthropic 发布的 [Cowork](https://claude.com/blog/cowork-research-preview)，AeroWork 致力于让每个人都能使用 AI Agent 能力，而不仅仅是开发者。Cowork 仅支持 macOS 且需要 Claude Max 订阅，而 AeroWork 是开源的、全平台支持 (macOS, Linux, Android, Web；Windows 即将推出)，兼容任何 Anthropic 兼容 API。
 
 ### 设计原则
 
@@ -53,7 +53,7 @@ bun run dev
 ## 构建
 
 ```bash
-bun run tauri build   # 桌面端 (Windows, macOS, Linux)
+bun run tauri build   # 桌面端 (macOS, Linux)
 bun run build         # 网页端
 ```
 
