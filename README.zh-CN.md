@@ -10,7 +10,7 @@
 
 **速度** - 基于 Tauri + Rust 构建，轻量快速。Rust 后端高效管理所有会话和 Agent 进程，内存占用远低于 Electron 方案。
 
-**协同** - 随时随地工作。桌面端启动，手机 PWA 远程监控。配合 [Tailscale](https://tailscale.com/)/[Headscale](https://github.com/juanfont/headscale) 实现安全远程访问 - 随时随地确认权限、查看任务状态、管理 Agent。
+**协同** - 随时随地工作。桌面端启动，手机 PWA 或 Android 应用全面控制。审批权限、发送消息、实时查看进度、管理会话 - 手机上即可完成所有操作。配合 [Tailscale](https://tailscale.com/)/[Headscale](https://github.com/juanfont/headscale) 实现安全远程访问。
 
 <video src="./assets/desktop-and-mobile-work-together.mp4" autoplay loop muted playsinline width="100%"></video>
 
@@ -29,7 +29,7 @@
 | **多提供商** | Anthropic、Amazon Bedrock、BigModel/智谱、MiniMax、Moonshot AI/Kimi、自定义 |
 | **MCP 服务器** | 可视化管理 Claude Code 的 MCP 服务器 |
 | **Skills** | 通过界面启用/禁用 Claude Code Skills |
-| **远程访问** | 全部功能通过 WebSocket (端口 9527) 远程可用，手机 PWA 或 Android 应用随时访问 |
+| **手机控制** | 手机 PWA 或 Android 应用全面控制 - 审批权限、对话、浏览文件、管理会话 |
 | **多语言** | 中文、英文 |
 | **主题** | 亮色 / 暗色 / 跟随系统 |
 

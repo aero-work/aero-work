@@ -12,7 +12,7 @@ Inspired by Anthropic's [Cowork](https://claude.com/blog/cowork-research-preview
 
 **Speed** - Built with Tauri + Rust for a lightweight, fast experience. The Rust backend manages all sessions and agent processes efficiently, with minimal memory footprint compared to Electron alternatives.
 
-**Collaboration** - Work from anywhere. Start on desktop, monitor and control from your phone via PWA. Combine with [Tailscale](https://tailscale.com/)/[Headscale](https://github.com/juanfont/headscale) for secure remote access - approve permissions, check task status, and manage your agent from anywhere.
+**Collaboration** - Work from anywhere. Start on desktop, fully control from your phone via PWA or Android app. Approve permissions, send messages, view real-time progress, and manage sessions - all from your mobile device. Combine with [Tailscale](https://tailscale.com/)/[Headscale](https://github.com/juanfont/headscale) for secure remote access from anywhere.
 
 <video src="./assets/desktop-and-mobile-work-together.mp4" autoplay loop muted playsinline width="100%"></video>
 
@@ -31,7 +31,7 @@ Inspired by Anthropic's [Cowork](https://claude.com/blog/cowork-research-preview
 | **Multi-Provider** | Anthropic, Amazon Bedrock, BigModel/Zhipu, MiniMax, Moonshot AI/Kimi, Custom |
 | **MCP Servers** | Visual management of Claude Code's MCP servers |
 | **Skills** | Enable/disable Claude Code skills through UI |
-| **Remote Access** | Everything works via WebSocket (port 9527) - use from phone PWA or Android app |
+| **Mobile Control** | Full control from phone PWA or Android app - approve permissions, chat, browse files, manage sessions |
 | **i18n** | English, Chinese |
 | **Themes** | Light / Dark / System |
 
