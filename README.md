@@ -12,7 +12,7 @@ Inspired by Anthropic's [Cowork](https://claude.com/blog/cowork-research-preview
 
 **Speed** - Built with Tauri + Rust for a lightweight, fast experience. The Rust backend manages all sessions and agent processes efficiently, with minimal memory footprint compared to Electron alternatives.
 
-**Collaboration** - Work from anywhere. Start on desktop, monitor and control from your phone via PWA. Combine with [Tailscale](https://tailscale.com/) for secure remote access - approve permissions, check task status, and manage your agent from anywhere.
+**Collaboration** - Work from anywhere. Start on desktop, monitor and control from your phone via PWA. Combine with [Tailscale](https://tailscale.com/)/[Headscale](https://github.com/juanfont/headscale) for secure remote access - approve permissions, check task status, and manage your agent from anywhere.
 
 <video src="./assets/desktop-and-mobile-work-together.mp4" autoplay loop muted playsinline width="100%"></video>
 

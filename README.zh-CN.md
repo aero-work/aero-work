@@ -10,7 +10,7 @@
 
 **速度** - 基于 Tauri + Rust 构建，轻量快速。Rust 后端高效管理所有会话和 Agent 进程，内存占用远低于 Electron 方案。
 
-**协同** - 随时随地工作。桌面端启动，手机 PWA 远程监控。配合 [Tailscale](https://tailscale.com/) 实现安全远程访问 - 随时随地确认权限、查看任务状态、管理 Agent。
+**协同** - 随时随地工作。桌面端启动，手机 PWA 远程监控。配合 [Tailscale](https://tailscale.com/)/[Headscale](https://github.com/juanfont/headscale) 实现安全远程访问 - 随时随地确认权限、查看任务状态、管理 Agent。
 
 <video src="./assets/desktop-and-mobile-work-together.mp4" autoplay loop muted playsinline width="100%"></video>
 
