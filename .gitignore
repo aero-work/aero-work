@@ -31,3 +31,4 @@ src-tauri/target/*
 src-tauri/target
 src-tauri/resources/*
 src-tauri/gen/*
+release/*
