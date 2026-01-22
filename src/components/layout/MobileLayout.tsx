@@ -445,6 +445,23 @@ export function MobileLayout() {
   const connectionStatus = useAgentStore((state) => state.connectionStatus);
   const wsUrl = useSettingsStore((state) => state.wsUrl);
 
+  // Android keyboard height - listen to native events from MainActivity.kt
+  // Note: Android returns physical pixels, need to convert to CSS pixels
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  useEffect(() => {
+    const handler = (e: CustomEvent<{ height: number }>) => {
+      const physicalPx = e.detail?.height || 0;
+      // Convert physical pixels to CSS pixels
+      const cssPx = Math.round(physicalPx / window.devicePixelRatio);
+      setKeyboardHeight(cssPx);
+    };
+    window.addEventListener("androidKeyboardHeight", handler as EventListener);
+    return () => window.removeEventListener("androidKeyboardHeight", handler as EventListener);
+  }, []);
+
+  // Check if TabBar is visible for current view
+  const isTabBarVisible = useMobileNavStore((state) => state.showTabBar)();
+
   // Show WS setup dialog for mobile Tauri app when not configured or connection failed
   const [showWsSetup, setShowWsSetup] = useState(false);
 
@@ -459,8 +476,18 @@ export function MobileLayout() {
     agentAPI.connect().catch(console.error);
   }, []);
 
+  // Calculate container height when keyboard is open
+  // TabBar height: h-14 (56px) - when visible, subtract less so TabBar gets pushed behind keyboard
+  const TAB_BAR_HEIGHT = 56;
+  const keyboardOffset = isTabBarVisible ? keyboardHeight - TAB_BAR_HEIGHT : keyboardHeight;
+
   return (
-    <div className="h-[100dvh] flex flex-col bg-background">
+    <div
+      className="flex flex-col bg-background"
+      style={{
+        height: keyboardHeight > 0 ? `calc(100dvh - ${keyboardOffset}px)` : "100dvh"
+      }}
+    >
       <MobileHeader />
 
       <main className="flex-1 min-h-0 overflow-hidden">

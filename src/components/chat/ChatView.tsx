@@ -14,7 +14,6 @@ import { useSessionStore } from "@/stores/sessionStore";
 import { useAgentStore } from "@/stores/agentStore";
 import { useFileStore } from "@/stores/fileStore";
 import { useSessionData } from "@/hooks/useSessionData";
-import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
 import { agentAPI } from "@/services/api";
 import { isDesktopApp } from "@/services/transport";
 import { ConnectionSetup } from "@/components/common/ConnectionSetup";
@@ -39,9 +38,6 @@ function extractLatestTodos(chatItems: ChatItem[]): TodoItem[] {
 
 export function ChatView() {
   const { t } = useTranslation();
-
-  // Keyboard height for mobile devices (Android virtual keyboard)
-  const keyboardHeight = useKeyboardHeight();
 
   // UI state from stores
   const activeSessionId = useSessionStore((state) => state.activeSessionId);
@@ -222,10 +218,7 @@ export function ChatView() {
   }
 
   return (
-    <div
-      className="flex flex-col h-full relative transition-[padding] duration-200"
-      style={{ paddingBottom: keyboardHeight > 0 ? `${keyboardHeight}px` : undefined }}
-    >
+    <div className="flex flex-col h-full relative">
       {/* Yolo mode toggle - floating in top right corner */}
       <TooltipProvider>
         <Tooltip>

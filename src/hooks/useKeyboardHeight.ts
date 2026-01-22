@@ -1,13 +1,23 @@
 import { useState, useEffect } from "react";
 
+// Extend Window interface for Android keyboard height
+declare global {
+  interface WindowEventMap {
+    androidKeyboardHeight: CustomEvent<{ height: number }>;
+  }
+  interface Window {
+    __ANDROID_KEYBOARD_HEIGHT__?: number;
+  }
+}
+
 /**
  * Hook to detect virtual keyboard height on mobile devices.
- * Uses the Visual Viewport API to detect when the keyboard appears
- * and calculate its height.
  *
- * On Android WebView, windowSoftInputMode="adjustResize" often doesn't work
- * properly with modern browsers. This hook provides a workaround by
- * listening to visualViewport resize events.
+ * On Android Tauri WebView with edge-to-edge mode, the standard visualViewport
+ * API doesn't work. This hook listens for native Android keyboard height events
+ * dispatched from MainActivity.kt via evaluateJavascript.
+ *
+ * Falls back to visualViewport API for other platforms (iOS, PWA, etc.)
  *
  * @returns keyboardHeight - The current keyboard height in pixels (0 when hidden)
  */
@@ -15,61 +25,51 @@ export function useKeyboardHeight(): number {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useEffect(() => {
-    // Only run on touch devices (mobile)
-    const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    if (!isTouchDevice) return;
+    // Check for initial Android keyboard height (in case event fired before mount)
+    if (typeof window.__ANDROID_KEYBOARD_HEIGHT__ === "number") {
+      setKeyboardHeight(window.__ANDROID_KEYBOARD_HEIGHT__);
+    }
 
+    // Listen for Android native keyboard height events
+    const handleAndroidKeyboard = (e: CustomEvent<{ height: number }>) => {
+      const height = e.detail?.height || 0;
+      setKeyboardHeight(height);
+    };
+
+    window.addEventListener("androidKeyboardHeight", handleAndroidKeyboard);
+
+    // Fallback: visualViewport API for non-Android platforms
     const viewport = window.visualViewport;
-    if (!viewport) return;
+    if (viewport) {
+      let initialHeight = viewport.height;
 
-    // Store initial viewport height
-    let initialHeight = viewport.height;
+      const handleResize = () => {
+        const currentHeight = viewport.height;
+        if (currentHeight > initialHeight) {
+          initialHeight = currentHeight;
+        }
 
-    const handleResize = () => {
-      // When keyboard appears, viewport height decreases
-      // Calculate keyboard height as the difference
-      const currentHeight = viewport.height;
+        const heightDiff = Math.max(0, initialHeight - currentHeight);
+        const height = Math.max(heightDiff, viewport.offsetTop);
 
-      // Update initial height if it increases (e.g., after orientation change)
-      if (currentHeight > initialHeight) {
-        initialHeight = currentHeight;
-      }
+        // Only update if significant change and no Android height is set
+        if (height > 50 && !window.__ANDROID_KEYBOARD_HEIGHT__) {
+          setKeyboardHeight(height);
+        } else if (height <= 50 && !window.__ANDROID_KEYBOARD_HEIGHT__) {
+          setKeyboardHeight(0);
+        }
+      };
 
-      const height = Math.max(0, initialHeight - currentHeight);
+      viewport.addEventListener("resize", handleResize);
 
-      // Only update if significant change (> 100px) to avoid false positives
-      // from browser chrome changes
-      if (height > 100) {
-        setKeyboardHeight(height);
-      } else {
-        setKeyboardHeight(0);
-      }
-    };
-
-    // Handle scroll to ensure input stays visible
-    const handleScroll = () => {
-      // On some Android devices, we need to scroll the active element into view
-      const activeElement = document.activeElement;
-      if (
-        activeElement &&
-        (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")
-      ) {
-        // Small delay to let the viewport settle
-        setTimeout(() => {
-          activeElement.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 100);
-      }
-    };
-
-    viewport.addEventListener("resize", handleResize);
-    viewport.addEventListener("scroll", handleScroll);
-
-    // Initial check
-    handleResize();
+      return () => {
+        window.removeEventListener("androidKeyboardHeight", handleAndroidKeyboard);
+        viewport.removeEventListener("resize", handleResize);
+      };
+    }
 
     return () => {
-      viewport.removeEventListener("resize", handleResize);
-      viewport.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("androidKeyboardHeight", handleAndroidKeyboard);
     };
   }, []);
 
