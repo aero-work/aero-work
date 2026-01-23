@@ -69,6 +69,24 @@ curl -fsSL https://raw.githubusercontent.com/aero-work/aero-work/main/scripts/in
 ./scripts/install-local-mac.sh /path/to/AeroWork.dmg
 ```
 
+### Headless Server Mode (Linux without display)
+
+The compiled binary automatically detects headless environments and runs in server-only mode:
+
+```bash
+# Auto-detect: runs headless if no DISPLAY/WAYLAND_DISPLAY
+./aero-work
+
+# Force headless mode
+./aero-work --headless
+
+# Custom port (default: 9527)
+./aero-work --headless --port 8080
+AERO_WS_PORT=8080 ./aero-work --headless
+```
+
+In headless mode, only the WebSocket server starts (no GUI window). Connect from browser or mobile app using the printed WebSocket URL.
+
 ## Architecture
 
 ### Key Design Decisions
@@ -138,6 +156,7 @@ User config files are stored in `~/.config/aerowork/`:
 - Agent spawned via: `npx @zed-industries/claude-code-acp`
 - PTY support via `portable-pty` for terminal feature
 - Desktop app auto-detects local server if connection fails
+- **Headless mode**: Binary auto-detects no display (Linux) and runs WebSocket server only
 
 ### Android
 - Android app is WebView-only client (no backend, connects to desktop server via WebSocket)
