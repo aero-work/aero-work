@@ -15,6 +15,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   ChevronRight,
   ChevronDown,
@@ -661,55 +662,105 @@ export function FileTree() {
 
   if (fileTree.length === 0) {
     return (
-      <div className="p-4 text-sm text-muted-foreground text-center">
-        <Folder className="w-8 h-8 mx-auto mb-2 opacity-50" />
-        Empty folder
+      <div className="flex flex-col h-full">
+        {/* Action buttons toolbar */}
+        <div className="flex items-center gap-1 px-2 py-1.5 border-b border-border bg-muted/30">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleCreateFile(currentWorkingDir)}
+            className="h-7 text-xs"
+          >
+            <FilePlus className="w-3.5 h-3.5 mr-1.5" />
+            New File
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleCreateFolder(currentWorkingDir)}
+            className="h-7 text-xs"
+          >
+            <FolderPlus className="w-3.5 h-3.5 mr-1.5" />
+            New Folder
+          </Button>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-4 text-sm text-muted-foreground text-center">
+          <div>
+            <Folder className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            Empty folder
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger>
-        <div className="py-1">
-          <FileTreeBranch
-            nodes={fileTree}
-            depth={0}
-            expandedPaths={expandedPaths}
-            selectedPath={selectedPath}
-            renamingPath={renamingPath}
-            isMobile={isMobile}
-            onToggle={handleToggle}
-            onSelect={handleSelect}
-            onOpen={handleOpen}
-            onRename={handleRename}
-            onDelete={handleDelete}
-            onCreateFile={handleCreateFile}
-            onCreateFolder={handleCreateFolder}
-            onStartRename={setRenamingPath}
-            onCancelRename={() => setRenamingPath(null)}
-          />
-          {newItem && (
-            <NewItemInput
-              parentPath={newItem.parentPath}
-              type={newItem.type}
-              depth={newItem.depth}
-              onSubmit={handleNewItemSubmit}
-              onCancel={() => setNewItem(null)}
-            />
-          )}
-        </div>
-      </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem onSelect={() => handleCreateFile(currentWorkingDir)}>
-          <FilePlus className="w-4 h-4 mr-2" />
+    <div className="flex flex-col h-full">
+      {/* Action buttons toolbar */}
+      <div className="flex items-center gap-1 px-2 py-1.5 border-b border-border bg-muted/30">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleCreateFile(currentWorkingDir)}
+          className="h-7 text-xs"
+        >
+          <FilePlus className="w-3.5 h-3.5 mr-1.5" />
           New File
-        </ContextMenuItem>
-        <ContextMenuItem onSelect={() => handleCreateFolder(currentWorkingDir)}>
-          <FolderPlus className="w-4 h-4 mr-2" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleCreateFolder(currentWorkingDir)}
+          className="h-7 text-xs"
+        >
+          <FolderPlus className="w-3.5 h-3.5 mr-1.5" />
           New Folder
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
+        </Button>
+      </div>
+
+      {/* File tree with context menu */}
+      <ContextMenu>
+        <ContextMenuTrigger>
+          <div className="flex-1 overflow-auto py-1">
+            <FileTreeBranch
+              nodes={fileTree}
+              depth={0}
+              expandedPaths={expandedPaths}
+              selectedPath={selectedPath}
+              renamingPath={renamingPath}
+              isMobile={isMobile}
+              onToggle={handleToggle}
+              onSelect={handleSelect}
+              onOpen={handleOpen}
+              onRename={handleRename}
+              onDelete={handleDelete}
+              onCreateFile={handleCreateFile}
+              onCreateFolder={handleCreateFolder}
+              onStartRename={setRenamingPath}
+              onCancelRename={() => setRenamingPath(null)}
+            />
+            {newItem && (
+              <NewItemInput
+                parentPath={newItem.parentPath}
+                type={newItem.type}
+                depth={newItem.depth}
+                onSubmit={handleNewItemSubmit}
+                onCancel={() => setNewItem(null)}
+              />
+            )}
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onSelect={() => handleCreateFile(currentWorkingDir)}>
+            <FilePlus className="w-4 h-4 mr-2" />
+            New File
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => handleCreateFolder(currentWorkingDir)}>
+            <FolderPlus className="w-4 h-4 mr-2" />
+            New Folder
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    </div>
   );
 }
