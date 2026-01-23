@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   FolderOpen,
+  FolderPlus,
+  FilePlus,
   Plus,
   X,
   Terminal as TerminalIcon,
@@ -42,9 +44,15 @@ function MobileFilesView() {
   const currentWorkingDir = useFileStore((state) => state.currentWorkingDir);
   const triggerRefresh = useFileStore((state) => state.triggerRefresh);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showFabMenu, setShowFabMenu] = useState(false);
+  const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
+  const [showNewFileDialog, setShowNewFileDialog] = useState(false);
+  const [newItemName, setNewItemName] = useState("");
+  const newItemInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = useCallback(() => {
     fileInputRef.current?.click();
+    setShowFabMenu(false);
   }, []);
 
   const handleFileChange = useCallback(
@@ -76,6 +84,44 @@ function MobileFilesView() {
     [currentWorkingDir, triggerRefresh]
   );
 
+  const handleCreateFolder = useCallback(async () => {
+    if (!newItemName.trim() || !currentWorkingDir) return;
+    try {
+      await fileService.createDirectory(`${currentWorkingDir}/${newItemName.trim()}`);
+      triggerRefresh();
+      setShowNewFolderDialog(false);
+      setNewItemName("");
+    } catch (error) {
+      console.error("Failed to create folder:", error);
+    }
+  }, [newItemName, currentWorkingDir, triggerRefresh]);
+
+  const handleCreateFile = useCallback(async () => {
+    if (!newItemName.trim() || !currentWorkingDir) return;
+    try {
+      await fileService.createFile(`${currentWorkingDir}/${newItemName.trim()}`);
+      triggerRefresh();
+      setShowNewFileDialog(false);
+      setNewItemName("");
+    } catch (error) {
+      console.error("Failed to create file:", error);
+    }
+  }, [newItemName, currentWorkingDir, triggerRefresh]);
+
+  const openNewFolderDialog = useCallback(() => {
+    setShowFabMenu(false);
+    setNewItemName("");
+    setShowNewFolderDialog(true);
+    setTimeout(() => newItemInputRef.current?.focus(), 100);
+  }, []);
+
+  const openNewFileDialog = useCallback(() => {
+    setShowFabMenu(false);
+    setNewItemName("");
+    setShowNewFileDialog(true);
+    setTimeout(() => newItemInputRef.current?.focus(), 100);
+  }, []);
+
   if (!currentWorkingDir) {
     return (
       <div className="flex flex-col h-full items-center justify-center text-muted-foreground px-4">
@@ -93,15 +139,63 @@ function MobileFilesView() {
       <div className="flex-1 overflow-y-auto">
         <FileTree />
       </div>
+
+      {/* FAB Menu Overlay */}
+      {showFabMenu && (
+        <div
+          className="absolute inset-0 bg-black/20 z-10"
+          onClick={() => setShowFabMenu(false)}
+        />
+      )}
+
+      {/* FAB Menu Items */}
+      <div className={cn(
+        "absolute bottom-20 right-4 flex flex-col gap-2 z-20 transition-all duration-200",
+        showFabMenu ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+      )}>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="rounded-full shadow-md px-4 flex items-center gap-2"
+          onClick={openNewFolderDialog}
+        >
+          <FolderPlus className="w-4 h-4" />
+          New Folder
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="rounded-full shadow-md px-4 flex items-center gap-2"
+          onClick={openNewFileDialog}
+        >
+          <FilePlus className="w-4 h-4" />
+          New File
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="rounded-full shadow-md px-4 flex items-center gap-2"
+          onClick={handleUpload}
+        >
+          <Upload className="w-4 h-4" />
+          Upload
+        </Button>
+      </div>
+
+      {/* Main FAB Button */}
       <Button
         variant="default"
         size="icon"
-        className="absolute bottom-4 right-4 h-12 w-12 rounded-full shadow-lg z-10"
-        onClick={handleUpload}
-        title="Upload file"
+        className={cn(
+          "absolute bottom-4 right-4 h-12 w-12 rounded-full shadow-lg z-20 transition-transform duration-200",
+          showFabMenu && "rotate-45"
+        )}
+        onClick={() => setShowFabMenu(!showFabMenu)}
+        title="Add"
       >
-        <Upload className="w-5 h-5" />
+        <Plus className="w-5 h-5" />
       </Button>
+
       <input
         ref={fileInputRef}
         type="file"
@@ -109,6 +203,66 @@ function MobileFilesView() {
         onChange={handleFileChange}
         accept="*/*"
       />
+
+      {/* New Folder Dialog */}
+      {showNewFolderDialog && (
+        <div className="absolute inset-0 bg-black/50 z-30 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg p-4 w-full max-w-sm shadow-xl">
+            <h3 className="text-lg font-medium mb-4">New Folder</h3>
+            <input
+              ref={newItemInputRef}
+              type="text"
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleCreateFolder();
+                if (e.key === "Escape") setShowNewFolderDialog(false);
+              }}
+              placeholder="Folder name"
+              className="w-full px-3 py-2 border rounded-md bg-background text-foreground mb-4"
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowNewFolderDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateFolder} disabled={!newItemName.trim()}>
+                Create
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New File Dialog */}
+      {showNewFileDialog && (
+        <div className="absolute inset-0 bg-black/50 z-30 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg p-4 w-full max-w-sm shadow-xl">
+            <h3 className="text-lg font-medium mb-4">New File</h3>
+            <input
+              ref={newItemInputRef}
+              type="text"
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleCreateFile();
+                if (e.key === "Escape") setShowNewFileDialog(false);
+              }}
+              placeholder="File name"
+              className="w-full px-3 py-2 border rounded-md bg-background text-foreground mb-4"
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowNewFileDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateFile} disabled={!newItemName.trim()}>
+                Create
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
