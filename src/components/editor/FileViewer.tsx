@@ -3,8 +3,30 @@ import { useFileStore, useActiveFile, type OpenFile } from "@/stores/fileStore";
 import { Button } from "@/components/ui/button";
 import * as fileService from "@/services/fileService";
 import { formatFileSize, formatModifiedDate } from "@/lib/fileTypes";
-import { FileQuestion, FileCode, Download } from "lucide-react";
+import { isDesktopApp } from "@/services/transport";
+import { FileQuestion, FileCode, Download, FolderOpen, ExternalLink } from "lucide-react";
 import { CodeEditor } from "./CodeEditor";
+
+// Helper functions for desktop file operations
+async function revealInFinder(path: string) {
+  if (!isDesktopApp()) return;
+  try {
+    const { revealItemInDir } = await import("@tauri-apps/plugin-opener");
+    await revealItemInDir(path);
+  } catch (err) {
+    console.error("Failed to reveal in finder:", err);
+  }
+}
+
+async function openWithDefaultApp(path: string) {
+  if (!isDesktopApp()) return;
+  try {
+    const { openPath } = await import("@tauri-apps/plugin-opener");
+    await openPath(path);
+  } catch (err) {
+    console.error("Failed to open file:", err);
+  }
+}
 
 // Image viewer for desktop
 function ImageViewer({ file }: { file: OpenFile }) {
@@ -106,6 +128,8 @@ function PdfViewer({ file }: { file: OpenFile }) {
 
 // Binary file info viewer for desktop
 function BinaryViewer({ file, onForceEdit }: { file: OpenFile; onForceEdit: () => void }) {
+  const isDesktop = isDesktopApp();
+
   const handleDownload = useCallback(async () => {
     try {
       // Read file as binary for download
@@ -129,6 +153,14 @@ function BinaryViewer({ file, onForceEdit }: { file: OpenFile; onForceEdit: () =
       console.error("Failed to download file:", error);
     }
   }, [file.path, file.name, file.mimeType]);
+
+  const handleRevealInFinder = useCallback(() => {
+    revealInFinder(file.path);
+  }, [file.path]);
+
+  const handleOpenWithDefaultApp = useCallback(() => {
+    openWithDefaultApp(file.path);
+  }, [file.path]);
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
@@ -159,11 +191,24 @@ function BinaryViewer({ file, onForceEdit }: { file: OpenFile; onForceEdit: () =
         </div>
       </div>
 
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={handleDownload}>
-          <Download className="w-4 h-4 mr-2" />
-          Download
-        </Button>
+      <div className="flex gap-3 flex-wrap justify-center">
+        {isDesktop ? (
+          <>
+            <Button variant="outline" onClick={handleRevealInFinder}>
+              <FolderOpen className="w-4 h-4 mr-2" />
+              Reveal in Finder
+            </Button>
+            <Button variant="outline" onClick={handleOpenWithDefaultApp}>
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Open
+            </Button>
+          </>
+        ) : (
+          <Button variant="outline" onClick={handleDownload}>
+            <Download className="w-4 h-4 mr-2" />
+            Download
+          </Button>
+        )}
         <Button variant="secondary" onClick={onForceEdit}>
           <FileCode className="w-4 h-4 mr-2" />
           Force Edit as Text
