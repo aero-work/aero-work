@@ -39,6 +39,8 @@ get_if_addrs = "0.5"
 axum = { version = "0.7", features = ["ws"] }
 tower = "0.4"
 tower-http = { version = "0.5", features = ["cors", "trace", "fs"] }
+rust-embed = "8"
+mime_guess = "2"
 
 [[bin]]
 name = "aero-server"

@@ -33,13 +33,18 @@ pub fn is_headless() -> bool {
 
 use crate::core::AppState;
 
-/// Headless mode - WebSocket server + Web client server, no GUI
+/// Embedded web assets (compiled into binary)
+#[cfg(all(feature = "websocket", not(target_os = "android")))]
+#[derive(rust_embed::RustEmbed)]
+#[folder = "../dist"]
+struct WebAssets;
+
+/// Headless mode - WebSocket server + Web client server (embedded), no GUI
 #[cfg(all(feature = "websocket", not(target_os = "android")))]
 pub fn run_headless() {
     use tokio::runtime::Runtime;
     use std::net::SocketAddr;
-    use axum::Router;
-    use tower_http::services::{ServeDir, ServeFile};
+    use axum::{Router, routing::get};
 
     tracing_subscriber::registry()
         .with(
@@ -54,9 +59,6 @@ pub fn run_headless() {
         // Parse ports from args or env
         let ws_port: u16 = parse_arg_or_env("--ws-port", "AERO_WS_PORT", 9527);
         let web_port: u16 = parse_arg_or_env("--web-port", "AERO_WEB_PORT", 1420);
-
-        // Find web assets directory
-        let web_dir = find_web_assets_dir();
 
         // Create app state
         let state = Arc::new(AppState::new());
@@ -93,53 +95,34 @@ pub fn run_headless() {
             }
         };
 
-        // Start Web client server if assets directory exists
-        let actual_web_port = if let Some(dir) = web_dir {
-            let index_file = dir.join("index.html");
+        // Start Web client server with embedded assets
+        let app = Router::new()
+            .route("/", get(serve_index))
+            .route("/*path", get(serve_embedded_file));
 
-            // SPA fallback: serve index.html for all non-file routes
-            let serve_dir = ServeDir::new(&dir)
-                .not_found_service(ServeFile::new(&index_file));
-
-            let app = Router::new()
-                .fallback_service(serve_dir);
-
-            let addr = SocketAddr::from(([0, 0, 0, 0], web_port));
-            let listener = match tokio::net::TcpListener::bind(addr).await {
-                Ok(l) => l,
-                Err(e) => {
-                    eprintln!("Failed to bind web server to port {}: {}", web_port, e);
-                    std::process::exit(1);
-                }
-            };
-            let actual_port = listener.local_addr().unwrap().port();
-
-            tokio::spawn(async move {
-                axum::serve(listener, app).await.ok();
-            });
-
-            Some(actual_port)
-        } else {
-            tracing::warn!("Web assets directory not found, web client server disabled");
-            None
+        let addr = SocketAddr::from(([0, 0, 0, 0], web_port));
+        let listener = match tokio::net::TcpListener::bind(addr).await {
+            Ok(l) => l,
+            Err(e) => {
+                eprintln!("Failed to bind web server to port {}: {}", web_port, e);
+                std::process::exit(1);
+            }
         };
+        let actual_web_port = listener.local_addr().unwrap().port();
+
+        tokio::spawn(async move {
+            axum::serve(listener, app).await.ok();
+        });
 
         // Print startup info
         println!();
         println!("╔════════════════════════════════════════════════════════╗");
         println!("║           Aero Work - Headless Mode                    ║");
         println!("╠════════════════════════════════════════════════════════╣");
-        if let Some(web_port) = actual_web_port {
-            println!("║  Web Client:       http://0.0.0.0:{:<5}               ║", web_port);
-        }
+        println!("║  Web Client:       http://0.0.0.0:{:<5}               ║", actual_web_port);
         println!("║  WebSocket Server: ws://0.0.0.0:{:<5}/ws              ║", actual_ws_port);
         println!("║                                                        ║");
-        if actual_web_port.is_some() {
-            println!("║  Open the Web Client URL in your browser to start.    ║");
-        } else {
-            println!("║  Web assets not found. Build with: bun run build      ║");
-            println!("║  Or connect mobile app to the WebSocket URL.          ║");
-        }
+        println!("║  Open the Web Client URL in your browser to start.    ║");
         println!("║                                                        ║");
         println!("║  Press Ctrl+C to stop                                  ║");
         println!("╚════════════════════════════════════════════════════════╝");
@@ -151,6 +134,48 @@ pub fn run_headless() {
     });
 }
 
+/// Serve index.html for root path
+#[cfg(all(feature = "websocket", not(target_os = "android")))]
+async fn serve_index() -> impl axum::response::IntoResponse {
+    serve_file("index.html")
+}
+
+/// Serve embedded file or fallback to index.html for SPA routing
+#[cfg(all(feature = "websocket", not(target_os = "android")))]
+async fn serve_embedded_file(
+    axum::extract::Path(path): axum::extract::Path<String>,
+) -> impl axum::response::IntoResponse {
+    // Try to serve the requested file
+    let response = serve_file(&path);
+
+    // If file not found and it's not a file with extension, serve index.html (SPA fallback)
+    if response.status() == axum::http::StatusCode::NOT_FOUND && !path.contains('.') {
+        return serve_file("index.html");
+    }
+
+    response
+}
+
+/// Serve a file from embedded assets
+#[cfg(all(feature = "websocket", not(target_os = "android")))]
+fn serve_file(path: &str) -> axum::response::Response {
+    use axum::http::{header, StatusCode};
+    use axum::response::IntoResponse;
+
+    match WebAssets::get(path) {
+        Some(content) => {
+            let mime = mime_guess::from_path(path).first_or_octet_stream();
+            (
+                StatusCode::OK,
+                [(header::CONTENT_TYPE, mime.as_ref())],
+                content.data.into_owned(),
+            )
+                .into_response()
+        }
+        None => (StatusCode::NOT_FOUND, "Not Found").into_response(),
+    }
+}
+
 /// Parse command line argument or environment variable
 #[cfg(all(feature = "websocket", not(target_os = "android")))]
 fn parse_arg_or_env(arg_name: &str, env_name: &str, default: u16) -> u16 {
@@ -160,35 +185,6 @@ fn parse_arg_or_env(arg_name: &str, env_name: &str, default: u16) -> u16 {
         .and_then(|p| p.parse().ok())
         .or_else(|| std::env::var(env_name).ok().and_then(|p| p.parse().ok()))
         .unwrap_or(default)
-}
-
-/// Find web assets directory (dist folder with index.html)
-#[cfg(all(feature = "websocket", not(target_os = "android")))]
-fn find_web_assets_dir() -> Option<std::path::PathBuf> {
-    use std::path::PathBuf;
-
-    // Check common locations
-    let candidates = [
-        // Relative to executable
-        std::env::current_exe().ok().and_then(|p| p.parent().map(|p| p.join("dist"))),
-        std::env::current_exe().ok().and_then(|p| p.parent().map(|p| p.join("../dist"))),
-        std::env::current_exe().ok().and_then(|p| p.parent().map(|p| p.join("../../dist"))),
-        // Relative to current directory
-        Some(PathBuf::from("dist")),
-        Some(PathBuf::from("../dist")),
-        // Explicit env var
-        std::env::var("AERO_WEB_DIR").ok().map(PathBuf::from),
-    ];
-
-    for candidate in candidates.into_iter().flatten() {
-        let index = candidate.join("index.html");
-        if index.exists() {
-            tracing::info!("Found web assets at: {}", candidate.display());
-            return Some(candidate);
-        }
-    }
-
-    None
 }
 
 /// Desktop entry point - full featured with agent, terminal, WebSocket server

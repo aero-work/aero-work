@@ -71,7 +71,7 @@ curl -fsSL https://raw.githubusercontent.com/aero-work/aero-work/main/scripts/in
 
 ### Headless Server Mode (Linux without display)
 
-The compiled binary automatically detects headless environments and runs in server-only mode:
+The compiled binary automatically detects headless environments and runs in server-only mode. Web frontend assets are embedded in the binary - no external files needed.
 
 ```bash
 # Auto-detect: runs headless if no DISPLAY/WAYLAND_DISPLAY
@@ -85,16 +85,13 @@ The compiled binary automatically detects headless environments and runs in serv
 
 # Or via environment variables
 AERO_WS_PORT=9527 AERO_WEB_PORT=1420 ./aero-work --headless
-
-# Specify web assets directory (if not auto-detected)
-AERO_WEB_DIR=/path/to/dist ./aero-work --headless
 ```
 
 In headless mode, two servers start:
-- **Web Client Server** (default: 1420) - serves the frontend UI
+- **Web Client Server** (default: 1420) - serves the embedded frontend UI
 - **WebSocket Server** (default: 9527) - handles agent communication
 
-The web client server auto-discovers `dist/` directory (requires `bun run build` first).
+**Note**: Build requires `bun run build` before `cargo build` to embed the frontend assets.
 
 ## Architecture
 
