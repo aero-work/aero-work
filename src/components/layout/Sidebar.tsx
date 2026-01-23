@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useAgentStore } from "@/stores/agentStore";
 import { useFileStore } from "@/stores/fileStore";
@@ -152,6 +153,7 @@ export function Sidebar() {
   const [resumingSessionId, setResumingSessionId] = useState<string | null>(null);
   const [stoppingSessionId, setStoppingSessionId] = useState<string | null>(null);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
 
   const activeSessionId = useSessionStore((state) => state.activeSessionId);
   const setActiveSession = useSessionStore((state) => state.setActiveSession);
@@ -217,14 +219,16 @@ export function Sidebar() {
     }
   }, [currentWorkingDir, isCreatingSession, closeSettings, showChat, setActiveSession]);
 
-  const handleDeleteSession = async (
-    e: React.MouseEvent,
-    sessionId: string
-  ) => {
+  const handleDeleteSessionClick = (e: React.MouseEvent, sessionId: string) => {
     e.stopPropagation();
-    if (!confirm("Delete this session? This cannot be undone.")) return;
+    e.preventDefault();
+    setDeleteSessionId(sessionId);
+  };
+
+  const handleDeleteSessionConfirm = async () => {
+    if (!deleteSessionId) return;
     try {
-      await agentAPI.deleteSession(sessionId);
+      await agentAPI.deleteSession(deleteSessionId);
     } catch (error) {
       console.error("Failed to delete session:", error);
     }
@@ -372,7 +376,7 @@ export function Sidebar() {
                               variant="ghost"
                               size="icon"
                               className="h-5 w-5"
-                              onClick={(e) => handleDeleteSession(e, session.id)}
+                              onClick={(e) => handleDeleteSessionClick(e, session.id)}
                               title={t("common.delete")}
                             >
                               <Trash2 className="w-3 h-3" />
@@ -439,7 +443,7 @@ export function Sidebar() {
                               variant="ghost"
                               size="icon"
                               className="h-5 w-5"
-                              onClick={(e) => handleDeleteSession(e, sessionInfo.id)}
+                              onClick={(e) => handleDeleteSessionClick(e, sessionInfo.id)}
                               title={t("common.delete")}
                             >
                               <Trash2 className="w-3 h-3" />
@@ -526,6 +530,18 @@ export function Sidebar() {
         <div className="border-t">
           <SettingsButton />
         </div>
+
+        {/* Delete Session Confirmation Dialog */}
+        <ConfirmDialog
+          open={deleteSessionId !== null}
+          onOpenChange={(open) => !open && setDeleteSessionId(null)}
+          title={t("session.deleteTitle")}
+          description={t("session.deleteDescription")}
+          confirmText={t("common.delete")}
+          cancelText={t("common.cancel")}
+          onConfirm={handleDeleteSessionConfirm}
+          variant="destructive"
+        />
     </div>
   );
 }

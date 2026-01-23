@@ -69,7 +69,9 @@
     "selectProject": {
       "title": "选择项目",
       "message": "点击顶部的打开按钮选择项目文件夹"
-    }
+    },
+    "deleteTitle": "删除会话",
+    "deleteDescription": "确定要删除这个会话吗？此操作无法撤销。"
   },
   "settings": {
     "title": "设置",
