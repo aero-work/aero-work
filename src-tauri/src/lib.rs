@@ -43,7 +43,6 @@ struct WebAssets;
 #[cfg(all(feature = "websocket", not(target_os = "android")))]
 pub fn run_headless() {
     use tokio::runtime::Runtime;
-    use std::net::SocketAddr;
     use axum::{Router, routing::get};
 
     tracing_subscriber::registry()
@@ -58,7 +57,7 @@ pub fn run_headless() {
     rt.block_on(async {
         // Parse ports from args or env
         let ws_port: u16 = parse_arg_or_env("--ws-port", "AERO_WS_PORT", 9527);
-        let web_port: u16 = parse_arg_or_env("--web-port", "AERO_WEB_PORT", 1420);
+        let web_port: u16 = parse_arg_or_env("--web-port", "AERO_WEB_PORT", 9521);
 
         // Create app state
         let state = Arc::new(AppState::new());
@@ -100,15 +99,13 @@ pub fn run_headless() {
             .route("/", get(serve_index))
             .route("/*path", get(serve_embedded_file));
 
-        let addr = SocketAddr::from(([0, 0, 0, 0], web_port));
-        let listener = match tokio::net::TcpListener::bind(addr).await {
-            Ok(l) => l,
+        let (listener, actual_web_port) = match find_available_port(web_port).await {
+            Ok(result) => result,
             Err(e) => {
-                eprintln!("Failed to bind web server to port {}: {}", web_port, e);
+                eprintln!("Failed to bind web server: {}", e);
                 std::process::exit(1);
             }
         };
-        let actual_web_port = listener.local_addr().unwrap().port();
 
         tokio::spawn(async move {
             axum::serve(listener, app).await.ok();
@@ -185,6 +182,37 @@ fn parse_arg_or_env(arg_name: &str, env_name: &str, default: u16) -> u16 {
         .and_then(|p| p.parse().ok())
         .or_else(|| std::env::var(env_name).ok().and_then(|p| p.parse().ok()))
         .unwrap_or(default)
+}
+
+/// Find an available port, starting with preferred port and trying alternatives if occupied
+#[cfg(all(feature = "websocket", not(target_os = "android")))]
+async fn find_available_port(preferred_port: u16) -> Result<(tokio::net::TcpListener, u16), std::io::Error> {
+    use std::net::SocketAddr;
+
+    // Try the preferred port first
+    let addr = SocketAddr::from(([0, 0, 0, 0], preferred_port));
+    match tokio::net::TcpListener::bind(addr).await {
+        Ok(listener) => return Ok((listener, preferred_port)),
+        Err(e) => {
+            tracing::warn!("Port {} is occupied: {}, trying alternative ports...", preferred_port, e);
+        }
+    }
+
+    // Try a range of alternative ports
+    for port in preferred_port.saturating_add(1)..=preferred_port.saturating_add(100) {
+        let addr = SocketAddr::from(([0, 0, 0, 0], port));
+        if let Ok(listener) = tokio::net::TcpListener::bind(addr).await {
+            tracing::info!("Found available port: {}", port);
+            return Ok((listener, port));
+        }
+    }
+
+    // Let the OS choose an available port
+    let addr = SocketAddr::from(([0, 0, 0, 0], 0));
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    let actual_port = listener.local_addr()?.port();
+    tracing::info!("OS assigned port: {}", actual_port);
+    Ok((listener, actual_port))
 }
 
 /// Desktop entry point - full featured with agent, terminal, WebSocket server

@@ -80,16 +80,18 @@ The compiled binary automatically detects headless environments and runs in serv
 # Force headless mode
 ./aero-work --headless
 
-# Custom ports (defaults: ws=9527, web=1420)
-./aero-work --headless --ws-port 9527 --web-port 1420
+# Custom ports (defaults: ws=9527, web=9521)
+./aero-work --headless --ws-port 9527 --web-port 9521
 
 # Or via environment variables
-AERO_WS_PORT=9527 AERO_WEB_PORT=1420 ./aero-work --headless
+AERO_WS_PORT=9527 AERO_WEB_PORT=9521 ./aero-work --headless
 ```
 
 In headless mode, two servers start:
-- **Web Client Server** (default: 1420) - serves the embedded frontend UI
+- **Web Client Server** (default: 9521) - serves the embedded frontend UI
 - **WebSocket Server** (default: 9527) - handles agent communication
+
+Ports auto-increment if occupied (tries +1 to +100, then OS-assigned).
 
 **Note**: Build requires `bun run build` before `cargo build` to embed the frontend assets.
 
