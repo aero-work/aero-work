@@ -214,6 +214,19 @@ impl WebSocketServer {
                         crate::core::SessionStatus::Pending,
                     );
 
+                    // Broadcast session list update for pending status
+                    let session_cwd = state_clone.session_registry.get_session_info(&request.session_id)
+                        .map(|info| info.cwd.clone());
+                    let sessions = state_clone.session_registry.list_sessions(session_cwd.as_deref(), 50, 0);
+                    let sessions_msg = JsonRpcNotification {
+                        jsonrpc: "2.0".to_string(),
+                        method: "sessions/updated".to_string(),
+                        params: serde_json::json!({ "sessions": sessions.sessions }),
+                    };
+                    if let Ok(json) = serde_json::to_string(&sessions_msg) {
+                        let _ = tx.send(json);
+                    }
+
                     let msg = JsonRpcNotification {
                         jsonrpc: "2.0".to_string(),
                         method: "permission/request".to_string(),
@@ -279,6 +292,24 @@ struct ClientState {
 
 async fn health_handler() -> &'static str {
     "OK"
+}
+
+/// Broadcast session list update to all clients
+/// Called when session status changes (running/idle/pending) or sessions are added/removed
+fn broadcast_sessions_update(
+    state: &Arc<AppState>,
+    event_tx: &broadcast::Sender<String>,
+    cwd: Option<&str>,
+) {
+    let sessions = state.session_registry.list_sessions(cwd, 50, 0);
+    let notification = JsonRpcNotification {
+        jsonrpc: "2.0".to_string(),
+        method: "sessions/updated".to_string(),
+        params: serde_json::json!({ "sessions": sessions.sessions }),
+    };
+    if let Ok(json) = serde_json::to_string(&notification) {
+        let _ = event_tx.send(json);
+    }
 }
 
 async fn ws_handler(
@@ -490,6 +521,10 @@ async fn dispatch_method(
                 state.session_state_manager.set_pending_permission(sid, None);
                 // Set session status back to Running (continuing to process)
                 state.session_registry.update_status(sid, crate::core::SessionStatus::Running);
+                // Broadcast session list update for status change
+                let session_cwd = state.session_registry.get_session_info(sid)
+                    .map(|info| info.cwd.clone());
+                broadcast_sessions_update(state, event_tx, session_cwd.as_deref());
             }
             // Also clear global state for backward compatibility
             state.set_pending_permission(None);
@@ -516,7 +551,7 @@ async fn dispatch_method(
             let cwd = params.get("cwd")
                 .and_then(|v| v.as_str())
                 .ok_or("Missing cwd parameter")?;
-            let response = create_session_handler(state, cwd).await?;
+            let response = create_session_handler(state, cwd, event_tx).await?;
             serde_json::to_value(response).map_err(|e| e.to_string())
         }
         "send_prompt" => {
@@ -1323,7 +1358,7 @@ async fn respond_permission_handler(
     manager.respond_permission(request_id, outcome).await.map_err(|e: AcpError| e.to_string())
 }
 
-async fn create_session_handler(state: &Arc<AppState>, cwd: &str) -> Result<NewSessionResponse, String> {
+async fn create_session_handler(state: &Arc<AppState>, cwd: &str, event_tx: &broadcast::Sender<String>) -> Result<NewSessionResponse, String> {
     info!("WebSocket: Creating new session in {}", cwd);
 
     // Ensure ACP agent is running before creating session
@@ -1351,6 +1386,9 @@ async fn create_session_handler(state: &Arc<AppState>, cwd: &str) -> Result<NewS
     // Set as current active session and broadcast to all clients
     state.set_current_session(Some(response.session_id.clone())).await;
 
+    // Broadcast session list update
+    broadcast_sessions_update(state, event_tx, Some(cwd));
+
     info!("WebSocket: Created session: {}", response.session_id);
     Ok(response)
 }
@@ -1358,8 +1396,13 @@ async fn create_session_handler(state: &Arc<AppState>, cwd: &str) -> Result<NewS
 async fn send_prompt_handler(state: &Arc<AppState>, session_id: &str, content: &str, message_id: Option<String>, event_tx: &broadcast::Sender<String>) -> Result<PromptResponse, String> {
     info!("WebSocket: Sending prompt to session {}", session_id);
 
-    // Set session status to Running
+    // Get session cwd for filtering broadcasts
+    let session_cwd = state.session_registry.get_session_info(session_id)
+        .map(|info| info.cwd.clone());
+
+    // Set session status to Running and broadcast
     state.session_registry.update_status(&session_id.to_string(), crate::core::SessionStatus::Running);
+    broadcast_sessions_update(state, event_tx, session_cwd.as_deref());
 
     // Add user message to SessionStateManager (single source of truth)
     // If message_id is provided (from frontend optimistic update), use it to avoid duplicates
@@ -1488,8 +1531,9 @@ async fn send_prompt_handler(state: &Arc<AppState>, session_id: &str, content: &
 
     info!("WebSocket: Prompt completed with stop_reason: {:?}", response.stop_reason);
 
-    // Set session status back to Idle after prompt completes
+    // Set session status back to Idle after prompt completes and broadcast
     state.session_registry.update_status(&session_id.to_string(), crate::core::SessionStatus::Idle);
+    broadcast_sessions_update(state, event_tx, session_cwd.as_deref());
 
     Ok(response)
 }
