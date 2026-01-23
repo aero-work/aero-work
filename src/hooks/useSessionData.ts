@@ -206,8 +206,7 @@ export function useSessionData(sessionId: SessionId | null): UseSessionDataResul
         }
 
         case "tool_call": {
-          // Tool calls are handled by session/state_update (tool_call_added) to avoid duplicates
-          // Only update existing tool calls here (for real-time status updates during execution)
+          // Check if tool call already exists
           const existingIndex = prev.chatItems.findIndex(
             (item) => item.type === "tool_call" && item.toolCall.toolCallId === update.toolCallId
           );
@@ -232,9 +231,23 @@ export function useSessionData(sessionId: SessionId | null): UseSessionDataResul
             return { ...prev, chatItems: newChatItems, updatedAt: Date.now() };
           }
 
-          // Don't add new tool calls here - let session/state_update handle it
-          // This prevents duplicates from both notification types
-          return prev;
+          // New tool call - add it
+          // Note: session/state_update may also send tool_call_added, applyStateUpdate handles dedup
+          const newToolCall: ToolCall = {
+            toolCallId: update.toolCallId,
+            title: update.title ?? "",
+            kind: update.kind,
+            status: update.status,
+            rawInput: update.rawInput,
+            rawOutput: update.rawOutput,
+            content: update.content,
+            locations: update.locations,
+          };
+          return {
+            ...prev,
+            chatItems: [...prev.chatItems, { type: "tool_call", toolCall: newToolCall }],
+            updatedAt: Date.now(),
+          };
         }
 
         case "tool_call_update": {
