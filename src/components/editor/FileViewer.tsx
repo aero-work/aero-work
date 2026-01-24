@@ -131,9 +131,9 @@ function PdfViewer({ file }: { file: OpenFile }) {
   );
 }
 
-// HTML preview viewer
+// HTML preview viewer using iframe for safety and isolation
 function HtmlPreviewViewer({ file, onToggleView }: { file: OpenFile; onToggleView: () => void }) {
-  const content = useMemo(() => {
+  const srcDoc = useMemo(() => {
     if (!file.content) return "";
     return file.content;
   }, [file.content]);
@@ -150,11 +150,13 @@ function HtmlPreviewViewer({ file, onToggleView }: { file: OpenFile; onToggleVie
           View Source
         </Button>
       </div>
-      {/* HTML preview */}
-      <div className="flex-1 overflow-auto p-4 bg-background">
-        <div
-          className="prose prose-slate dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: content }}
+      {/* HTML preview in iframe */}
+      <div className="flex-1 overflow-hidden bg-white dark:bg-gray-900">
+        <iframe
+          srcDoc={srcDoc}
+          title={`Preview of ${file.name}`}
+          className="w-full h-full border-0"
+          sandbox="allow-scripts allow-same-origin"
         />
       </div>
     </div>
