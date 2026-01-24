@@ -386,14 +386,18 @@ export function FileViewer() {
   const ext = getFileExtension(activeFile.path);
   const isHtml = ext === "html" || ext === "htm" || ext === "xhtml";
   const isMarkdown = ext === "md" || ext === "markdown" || ext === "mdx";
-  const shouldShowPreview = previewMode[activeFile.path] && (isHtml || isMarkdown);
 
-  // HTML preview mode
+  // Default to preview mode for HTML/Markdown files (unless explicitly toggled off)
+  const shouldShowPreview = previewMode[activeFile.path] !== undefined
+    ? previewMode[activeFile.path]
+    : (isHtml || isMarkdown);
+
+  // HTML preview mode (default for HTML files)
   if (shouldShowPreview && isHtml) {
     return <HtmlPreviewViewer file={activeFile} onToggleView={togglePreview} />;
   }
 
-  // Markdown preview mode
+  // Markdown preview mode (default for Markdown files)
   if (shouldShowPreview && isMarkdown) {
     return <MarkdownPreviewViewer file={activeFile} onToggleView={togglePreview} />;
   }
