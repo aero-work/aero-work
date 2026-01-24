@@ -151,13 +151,39 @@ class AgentAPI {
         sessionStore.setActiveSession(sessionId);
       });
 
-      // Register reconnect handler to restore terminal state
-      this.reconnectUnsubscribe = transport.onReconnect(() => {
-        console.log("WebSocket reconnected, restoring terminal state...");
-        const terminalStore = useTerminalStore.getState();
-        terminalStore.listTerminals().catch((err) => {
-          console.warn("Failed to restore terminals on reconnect:", err);
-        });
+      // Register reconnect handler to restore client state (server keeps its state)
+      this.reconnectUnsubscribe = transport.onReconnect(async () => {
+        console.log("WebSocket reconnected, restoring client state...");
+        const agentStore = useAgentStore.getState();
+
+        try {
+          // Re-register global permission handler (client-side only)
+          transport.setGlobalPermissionHandler(this.handleGlobalPermissionRequest);
+
+          // Re-register permission resolved handler (client-side only)
+          transport.onPermissionResolved((requestId, sessionId) => {
+            console.log("Permission resolved by another client:", requestId, sessionId);
+            const agentStore = useAgentStore.getState();
+            const pending = agentStore.pendingPermission;
+            if (pending && JSON.stringify(pending.requestId) === JSON.stringify(requestId)) {
+              agentStore.setPendingPermission(null);
+              this.permissionResolver = null;
+            }
+          });
+
+          // Restore terminal list from server (server maintains terminal state)
+          const terminalStore = useTerminalStore.getState();
+          await terminalStore.listTerminals();
+          console.log("Restored terminals:", terminalStore.terminals.length);
+
+          // Update connection status to connected
+          agentStore.setConnectionStatus("connected");
+          console.log("Client state restored after reconnect");
+        } catch (error) {
+          console.error("Failed to restore client state after reconnect:", error);
+          agentStore.setConnectionStatus("error");
+          agentStore.setError("Reconnected but failed to restore state");
+        }
       });
 
       const initResponse = await transport.initialize();

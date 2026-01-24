@@ -174,14 +174,8 @@ export class WebSocketTransport implements Transport {
       setTimeout(() => {
         this.connect()
           .then(() => {
-            // Update status to connected
-            if (typeof window !== 'undefined') {
-              import('@/stores/agentStore').then(({ useAgentStore }) => {
-                const agentStore = useAgentStore.getState();
-                agentStore.setConnectionStatus("connected");
-              }).catch(console.error);
-            }
-            // Notify reconnect handlers
+            // WebSocket reconnected - notify handlers to restore client state
+            // Handler in api.ts will restore handlers and update status to connected
             console.log("Reconnected, notifying handlers...");
             this.reconnectHandlers.forEach((handler) => handler());
           })
