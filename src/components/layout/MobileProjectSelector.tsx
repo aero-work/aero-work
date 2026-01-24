@@ -189,17 +189,39 @@ export function MobileProjectSelector({ open, onClose, onSelect }: MobileProject
     setNewFolderName("");
   }, [activeTab]);
 
+  // Android back button/gesture handling - intercept when this selector is open
+  useEffect(() => {
+    if (!open) return;
+
+    const originalCallback = window.androidBackCallback;
+
+    // Override with our handler
+    window.androidBackCallback = () => {
+      onClose();
+      return false; // Prevent app exit, we handled it
+    };
+
+    // Restore original callback when closed
+    return () => {
+      window.androidBackCallback = originalCallback;
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 h-14 border-b border-border flex-shrink-0">
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-9 w-9">
-          <X className="w-5 h-5" />
-        </Button>
-        <h1 className="font-semibold text-base">Open Project</h1>
-        <div className="w-9" /> {/* Spacer for centering */}
+      <div className="border-b border-border flex-shrink-0">
+        {/* Safe area spacer for status bar */}
+        <div className="safe-area-top" />
+        <div className="flex items-center justify-between px-4 h-14">
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-9 w-9">
+            <X className="w-5 h-5" />
+          </Button>
+          <h1 className="font-semibold text-base">Open Project</h1>
+          <div className="w-9" /> {/* Spacer for centering */}
+        </div>
       </div>
 
       {/* Tabs */}
