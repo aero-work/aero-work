@@ -62,6 +62,11 @@ export class WebSocketTransport implements Transport {
   private sessionActivatedHandler: ((sessionId: string | null) => void) | null = null;
   private permissionResolvedHandler: ((requestId: unknown, sessionId: string | null) => void) | null = null;
   private reconnectHandlers = new Set<() => void>();
+  // Heartbeat mechanism to detect connection loss
+  private heartbeatInterval: number | null = null;
+  private heartbeatTimeout: number | null = null;
+  private readonly HEARTBEAT_INTERVAL = 30000; // 30 seconds
+  private readonly HEARTBEAT_TIMEOUT = 10000; // 10 seconds
 
   constructor(url: string) {
     this.url = url;
@@ -105,6 +110,7 @@ export class WebSocketTransport implements Transport {
           console.log("WebSocket connected to", this.url);
           this.connected = true;
           this.reconnectAttempts = 0;
+          this.startHeartbeat();
           resolve();
         };
 
@@ -133,6 +139,18 @@ export class WebSocketTransport implements Transport {
   }
 
   private handleDisconnect() {
+    // Stop heartbeat
+    this.stopHeartbeat();
+
+    // Update connection status in store
+    if (typeof window !== 'undefined') {
+      // Dynamically import to avoid circular dependency
+      import('@/stores/agentStore').then(({ useAgentStore }) => {
+        const agentStore = useAgentStore.getState();
+        agentStore.setConnectionStatus("disconnected");
+      }).catch(console.error);
+    }
+
     // Reject all pending requests
     for (const [id, pending] of this.pendingRequests) {
       pending.reject(new Error("WebSocket disconnected"));
@@ -144,15 +162,98 @@ export class WebSocketTransport implements Transport {
       this.reconnectAttempts++;
       const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
       console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
+
+      // Update status to connecting before reconnect attempt
+      if (typeof window !== 'undefined') {
+        import('@/stores/agentStore').then(({ useAgentStore }) => {
+          const agentStore = useAgentStore.getState();
+          agentStore.setConnectionStatus("connecting");
+        }).catch(console.error);
+      }
+
       setTimeout(() => {
         this.connect()
           .then(() => {
+            // Update status to connected
+            if (typeof window !== 'undefined') {
+              import('@/stores/agentStore').then(({ useAgentStore }) => {
+                const agentStore = useAgentStore.getState();
+                agentStore.setConnectionStatus("connected");
+              }).catch(console.error);
+            }
             // Notify reconnect handlers
             console.log("Reconnected, notifying handlers...");
             this.reconnectHandlers.forEach((handler) => handler());
           })
-          .catch(console.error);
+          .catch((error) => {
+            console.error("Reconnect failed:", error);
+            // Update status to error on reconnect failure
+            if (typeof window !== 'undefined') {
+              import('@/stores/agentStore').then(({ useAgentStore }) => {
+                const agentStore = useAgentStore.getState();
+                agentStore.setConnectionStatus("error");
+              }).catch(console.error);
+            }
+          });
       }, delay);
+    } else {
+      // Max reconnect attempts exceeded
+      console.error("Max reconnect attempts exceeded");
+      if (typeof window !== 'undefined') {
+        import('@/stores/agentStore').then(({ useAgentStore }) => {
+          const agentStore = useAgentStore.getState();
+          agentStore.setConnectionStatus("error");
+          agentStore.setError("Connection lost - max reconnect attempts exceeded");
+        }).catch(console.error);
+      }
+    }
+  }
+
+  /**
+   * Start heartbeat to detect connection loss
+   */
+  private startHeartbeat() {
+    this.stopHeartbeat(); // Clear any existing heartbeat
+
+    this.heartbeatInterval = window.setInterval(() => {
+      if (!this.isConnected()) {
+        return;
+      }
+
+      // Send ping and wait for pong response
+      this.heartbeatTimeout = window.setTimeout(() => {
+        console.warn("Heartbeat timeout - connection appears to be lost");
+        // Force close the connection to trigger reconnect
+        this.ws?.close();
+      }, this.HEARTBEAT_TIMEOUT);
+
+      // Send a lightweight ping request
+      this.send("ping")
+        .then(() => {
+          // Clear timeout on successful pong
+          if (this.heartbeatTimeout) {
+            window.clearTimeout(this.heartbeatTimeout);
+            this.heartbeatTimeout = null;
+          }
+        })
+        .catch((error) => {
+          console.error("Heartbeat ping failed:", error);
+          // Timeout will handle the reconnect
+        });
+    }, this.HEARTBEAT_INTERVAL);
+  }
+
+  /**
+   * Stop heartbeat
+   */
+  private stopHeartbeat() {
+    if (this.heartbeatInterval) {
+      window.clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+    if (this.heartbeatTimeout) {
+      window.clearTimeout(this.heartbeatTimeout);
+      this.heartbeatTimeout = null;
     }
   }
 
@@ -315,6 +416,9 @@ export class WebSocketTransport implements Transport {
 
   async disconnect(): Promise<void> {
     if (!this.ws) return;
+
+    // Stop heartbeat
+    this.stopHeartbeat();
 
     try {
       await this.send("disconnect");

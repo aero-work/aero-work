@@ -121,8 +121,7 @@ export function GeneralSettings() {
         {/* Server Connection - Always show */}
         <div className="rounded-lg border p-3 sm:p-4 space-y-4">
           <div className="space-y-0.5">
-            <Label className="text-sm sm:text-base flex items-center gap-2">
-              <Wifi className="h-4 w-4" />
+            <Label className="text-sm sm:text-base">
               {t("settings.serverConnection.title")}
             </Label>
             <p className="text-xs sm:text-sm text-muted-foreground">
