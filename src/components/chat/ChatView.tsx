@@ -42,6 +42,7 @@ export function ChatView() {
   // UI state from stores
   const activeSessionId = useSessionStore((state) => state.activeSessionId);
   const isPromptLoading = useSessionStore((state) => state.isLoading);
+  const availableSessions = useSessionStore((state) => state.availableSessions);
   const connectionStatus = useAgentStore((state) => state.connectionStatus);
   const currentWorkingDir = useFileStore((state) => state.currentWorkingDir);
 
@@ -57,6 +58,13 @@ export function ChatView() {
   const isConnected = connectionStatus === "connected";
   const hasSession = !!activeSessionId;
   const isYoloMode = sessionState?.dangerousMode ?? false;
+
+  // Get real session status from server (not just client UI loading state)
+  // This ensures that after reconnection, we show the correct button state
+  const currentSessionInfo = availableSessions.find(s => s.id === activeSessionId);
+  const isSessionRunning = currentSessionInfo?.status === "running" ||
+                          currentSessionInfo?.status === "pending" ||
+                          isPromptLoading;
 
   // Toggle Yolo mode
   const handleToggleYoloMode = useCallback(async () => {
@@ -260,7 +268,7 @@ export function ChatView() {
       <ChatInput
         onSend={handleSend}
         onCancel={handleCancel}
-        isLoading={isPromptLoading}
+        isLoading={isSessionRunning}
         disabled={!isConnected || !hasSession}
       />
     </div>
