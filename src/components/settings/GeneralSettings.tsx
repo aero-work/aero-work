@@ -17,7 +17,7 @@ import {
 import { languages, supportedLanguages } from "@/i18n";
 import { getWebSocketEndpoint, isDesktopApp } from "@/services/transport";
 import { getTransport } from "@/services/transport";
-import { Copy, QrCode, Check, Wifi, ScanLine, RotateCcw } from "lucide-react";
+import { Copy, QrCode, Check, ScanLine, RotateCcw } from "lucide-react";
 import { QrScanner } from "@/components/common/QrScanner";
 import type { ServerInfo } from "@/services/transport";
 
